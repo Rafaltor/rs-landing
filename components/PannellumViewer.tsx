@@ -5,8 +5,7 @@ import { useEffect, useRef } from "react";
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
 
-const PANORAMA_URL =
-  "https://cdn.shopify.com/s/files/1/0997/4821/7214/files/360bg.png";
+const PANORAMA_URL = "/360bg.png";
 
 const TEE_IMAGE_URL = "/tee.png";
 
