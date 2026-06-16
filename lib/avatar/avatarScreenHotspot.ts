@@ -48,15 +48,20 @@ export function createAvatarScreen(
     border: none;
     overflow: visible;
     pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    position: relative;
   `;
+
+  const viewport = document.createElement("div");
+  viewport.className = ghost
+    ? "rs-avatar-screen__viewport rs-avatar-screen__viewport--ghost"
+    : "rs-avatar-screen__viewport rs-avatar-screen__viewport--hero";
+  viewport.setAttribute("aria-hidden", "true");
+  hotSpotDiv.appendChild(viewport);
 
   const pseudoEl = document.createElement("div");
   pseudoEl.className = "rs-avatar-screen__pseudo";
   pseudoEl.setAttribute("aria-hidden", "true");
-  hotSpotDiv.appendChild(pseudoEl);
+  viewport.appendChild(pseudoEl);
 
   const syncPseudo = (pseudo: string) => {
     const text = normalizePseudo(pseudo);
@@ -69,13 +74,6 @@ export function createAvatarScreen(
     }
   };
   syncPseudo(placement.config.pseudo);
-
-  const viewport = document.createElement("div");
-  viewport.className = ghost
-    ? "rs-avatar-screen__viewport rs-avatar-screen__viewport--ghost"
-    : "rs-avatar-screen__viewport rs-avatar-screen__viewport--hero";
-  viewport.setAttribute("aria-hidden", "true");
-  hotSpotDiv.appendChild(viewport);
 
   registerAvatarHotspotElement(
     hotspotIdForPlacement(placement.id),
