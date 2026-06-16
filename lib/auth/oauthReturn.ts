@@ -14,28 +14,29 @@ export function safeReturnPath(value: string | undefined | null): string {
   }
 }
 
+function devOAuthOriginOverride(): string | undefined {
+  if (process.env.NODE_ENV !== "development") return undefined;
+  const origin =
+    process.env.OAUTH_CALLBACK_ORIGIN?.trim() ||
+    process.env.NEXT_PUBLIC_OAUTH_CALLBACK_ORIGIN?.trim();
+  return origin?.replace(/\/$/, "");
+}
+
 /** Origine du callback pour une requête entrante (route handler / API). */
 export function resolveRequestOrigin(request: NextRequest): string {
-  const envOrigin = process.env.NEXT_PUBLIC_OAUTH_CALLBACK_ORIGIN?.trim();
-  if (envOrigin) return envOrigin.replace(/\/$/, "");
+  const devOverride = devOAuthOriginOverride();
+  if (devOverride) return devOverride;
 
-  const { origin } = new URL(request.url);
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-  const isLocalEnv = process.env.NODE_ENV === "development";
-
-  if (isLocalEnv) return origin;
   if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
-  return origin;
+
+  return new URL(request.url).origin;
 }
 
 /** Origine côté navigateur (fallback si pas de route serveur). */
 export function getOAuthAppOrigin(): string {
   if (typeof window === "undefined") return "";
-
-  const envOrigin = process.env.NEXT_PUBLIC_OAUTH_CALLBACK_ORIGIN?.trim();
-  if (envOrigin) return envOrigin.replace(/\/$/, "");
-
   return window.location.origin;
 }
 
