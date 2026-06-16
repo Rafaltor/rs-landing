@@ -1,7 +1,20 @@
 import type { Metadata } from "next";
+import { Manrope, Syne } from "next/font/google";
 import Script from "next/script";
 import { FaviconLinks } from "@/components/FaviconLinks";
 import "./globals.css";
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-syne",
+  weight: ["600", "700", "800"],
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Recrute Stagiaire",
@@ -20,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={`${syne.variable} ${manrope.variable}`}>
       <head>
         <FaviconLinks />
       </head>

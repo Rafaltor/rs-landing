@@ -1,5 +1,28 @@
 @import url("https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css");
 
+/* Tokens RS — alignés sur recrutestagiaire/assets/rs-unified-tokens.css */
+:root {
+  --rs-color-brand: #f472b6;
+  --rs-color-brand-hover: #db2777;
+  --rs-color-brand-pale: #f9a8d4;
+  --rs-color-brand-light: #fdf2f8;
+  --rs-color-ink: #0a0a0a;
+  --rs-color-bg: #ffffff;
+  --rs-color-border: #e8e8e4;
+  --rs-color-muted: #6b6b6b;
+  --rs-color-subtle: #f4f4f2;
+  --rs-eu-blue-core: #0033ab;
+  --rs-eu-blue-light: #5b86e5;
+  --rs-eu-blue-dark: #001a57;
+  --rs-logo-blue-pale: #e8eeff;
+  --rs-font-display: var(--font-syne), "Syne", system-ui, sans-serif;
+  --rs-font-body: var(--font-manrope), "Manrope", system-ui, sans-serif;
+  --rs-radius-md: 8px;
+  --rs-radius-lg: 12px;
+  --rs-shadow-card: 0 12px 40px rgba(0, 0, 0, 0.16);
+  --rs-shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.12);
+}
+
 *,
 *::before,
 *::after {
@@ -18,7 +41,9 @@ body {
   background: #0a0a0a;
   color: #ffffff;
   overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--rs-font-body);
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -89,67 +114,54 @@ img {
   display: none !important;
 }
 
-/* Navigation — ne pas modifier transform sur le div Pannellum */
+/* Navigation — pilules RS (rs-landing-overlay__cta) */
 .pnlm-hotspot-base.rs-nav-hotspot {
-  width: 56px !important;
-  height: 56px !important;
   overflow: visible !important;
-  border-radius: 50% !important;
-  background: rgba(10, 10, 10, 0.6) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(8px) !important;
-  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3) !important;
+  background: transparent !important;
+  border: none !important;
   cursor: pointer !important;
-  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
 }
 
-.rs-nav-hotspot__stack {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rs-nav-hotspot__link {
-  display: block;
-  width: 100%;
-  height: 100%;
-  color: inherit;
-  text-decoration: none;
-}
-
-.rs-nav-hotspot__label {
+.rs-panorama-pill {
   position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
+  color: #fff !important;
+  font-family: var(--rs-font-display);
+  font-weight: 600;
+  font-size: clamp(11px, 1.12vw, 13px);
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none !important;
   white-space: nowrap;
-  pointer-events: none;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.pnlm-hotspot-base.rs-nav-hotspot:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.08) !important;
+.rs-panorama-pill:hover,
+.rs-panorama-pill:focus-visible {
+  background: rgba(0, 0, 0, 0.52);
+  border-color: rgba(255, 255, 255, 0.85);
+  color: #fff !important;
 }
 
-.rs-nav-hotspot__inner {
+.rs-panorama-pill__arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
-  transition: transform 0.2s ease;
-}
-
-.pnlm-hotspot-base.rs-nav-hotspot:hover .rs-nav-hotspot__inner {
-  transform: scale(1.1);
+  line-height: 0;
+  opacity: 0.9;
 }
 
 .pnlm-hotspot-base.rs-nav-hotspot .pnlm-tooltip,
@@ -157,7 +169,7 @@ img {
   display: none !important;
 }
 
-/* Panneau studio Mii — ancré dans le panorama (comme la fiche produit) */
+/* Panneau studio Mii — ancré dans le panorama */
 .pnlm-hotspot-base.rs-mii-studio-hotspot {
   z-index: 50 !important;
   overflow: visible !important;
@@ -166,126 +178,123 @@ img {
   cursor: pointer !important;
 }
 
+/* Carte panorama — DA rs-pro-mock (fiche produit RS) */
+.rs-panorama-card {
+  display: block;
+  width: min(300px, 62vw);
+  padding: 16px 16px 18px;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-lg);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--rs-shadow-card);
+  font-family: var(--rs-font-body);
+  color: var(--rs-eu-blue-dark);
+  text-align: left;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+button.rs-panorama-card,
 .rs-mii-studio-panel {
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  width: min(248px, 62vw);
+}
+
+button.rs-panorama-card {
   margin: 0;
-  padding: 12px 14px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 14px;
-  font: inherit;
   appearance: none;
   -webkit-appearance: none;
   touch-action: manipulation;
-  background: linear-gradient(
-    165deg,
-    rgba(28, 22, 36, 0.92) 0%,
-    rgba(10, 10, 10, 0.88) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow:
-    0 0 0 1px rgba(244, 114, 182, 0.2),
-    0 12px 36px rgba(0, 0, 0, 0.45);
-  color: #fff;
-  text-align: left;
   cursor: pointer;
-  pointer-events: auto;
-  animation: rsMiiPanelPulse 2.8s ease-in-out infinite;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
 }
 
-.rs-mii-studio-panel:hover {
-  border-color: rgba(249, 168, 212, 0.55);
-  box-shadow:
-    0 0 0 1px rgba(244, 114, 182, 0.45),
-    0 16px 40px rgba(244, 114, 182, 0.22);
+.rs-panorama-card:hover {
+  border-color: rgba(0, 51, 171, 0.22);
+  box-shadow: 0 16px 44px rgba(0, 26, 87, 0.14);
 }
 
-.rs-mii-studio-panel__tag {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #f9a8d4;
-}
-
-.rs-mii-studio-panel__row {
+.rs-panorama-card__tags {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.rs-mii-studio-panel__icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(244, 114, 182, 0.18);
-  border: 1px solid rgba(249, 168, 212, 0.35);
-  color: #fce7f3;
-}
-
-.rs-mii-studio-panel__copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.rs-mii-studio-panel__title {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1.15;
-}
-
-.rs-mii-studio-panel__desc {
+.rs-panorama-card__tag {
   font-size: 11px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.62);
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 51, 171, 0.12);
+  color: var(--rs-eu-blue-dark);
+  background: #fff;
 }
 
-.rs-mii-studio-panel__cta {
-  display: block;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #f9a8d4 0%, #f472b6 100%);
-  color: #0a0a0a;
-  font-size: 10px;
+.rs-panorama-card__tag--green {
+  background: linear-gradient(180deg, #f4ffef 0%, #e3f5d8 100%);
+  color: #2d5a0e;
+  border-color: #9bc96a;
+}
+
+.rs-panorama-card__tag--blue {
+  background: linear-gradient(180deg, #f5f8ff 0%, #e8f0ff 100%);
+  color: var(--rs-eu-blue-dark);
+  border-color: rgba(0, 51, 171, 0.2);
+}
+
+.rs-panorama-card__tag--pink {
+  background: linear-gradient(180deg, var(--rs-color-brand-light) 0%, #fce7f3 100%);
+  color: #9d174d;
+  border-color: var(--rs-color-brand-pale);
+}
+
+.rs-panorama-card__title {
+  margin: 0 0 8px;
+  font-family: var(--rs-font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
   font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-panorama-card__desc {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--rs-color-muted);
+}
+
+.rs-panorama-card__cta {
+  display: block;
+  text-align: center;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-color-brand-hover);
+  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
+  color: #fff !important;
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  text-align: center;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.25);
+  transition: filter 0.15s ease, transform 0.15s ease;
 }
 
-@keyframes rsMiiPanelPulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 1px rgba(244, 114, 182, 0.2),
-      0 12px 36px rgba(0, 0, 0, 0.45);
-  }
-
-  50% {
-    box-shadow:
-      0 0 0 1px rgba(244, 114, 182, 0.45),
-      0 12px 40px rgba(244, 114, 182, 0.28);
-  }
+.rs-panorama-card__cta:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  color: #fff !important;
 }
 
-/* Modal studio Mii */
+.rs-mii-studio-panel {
+  width: min(280px, 58vw);
+}
+
+/* Modal studio Mii — panneau blanc RS (rs-home-kit-overlay) */
 .rs-mii-studio-overlay {
   position: fixed;
   inset: 0;
@@ -300,9 +309,7 @@ img {
   position: absolute;
   inset: 0;
   border: none;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(10, 10, 10, 0.88);
   cursor: pointer;
 }
 
@@ -313,15 +320,12 @@ img {
   max-height: min(90vh, 720px);
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(
-    165deg,
-    rgba(22, 28, 42, 0.97) 0%,
-    rgba(10, 10, 10, 0.96) 100%
-  );
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  border-radius: var(--rs-radius-lg);
+  border: 1px solid var(--rs-color-border);
+  background: var(--rs-color-bg);
+  box-shadow: var(--rs-shadow-modal);
   overflow: hidden;
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal__header {
@@ -329,47 +333,51 @@ img {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 24px 14px;
+  border-bottom: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__eyebrow {
   margin: 0;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: var(--rs-color-brand-hover);
 }
 
 .rs-mii-studio-modal__title {
   margin: 4px 0 0;
-  font-size: 1.35rem;
+  font-family: var(--rs-font-display);
+  font-size: clamp(1.2rem, 2.5vw, 1.45rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--rs-eu-blue-dark);
+  line-height: 1.15;
 }
 
 .rs-mii-studio-modal__subtitle {
   margin: 6px 0 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__close {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 22px;
+  background: var(--rs-color-subtle);
+  color: var(--rs-color-muted);
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
 
 .rs-mii-studio-modal__close:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--rs-logo-blue-pale);
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal__auth {
@@ -377,48 +385,62 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 22px;
+  margin: 0 24px;
   padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-subtle);
+  border: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__auth-email {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-eu-blue-dark);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .rs-mii-studio-modal__auth-muted {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__auth-link {
   flex-shrink: 0;
   border: none;
   background: none;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: var(--rs-eu-blue-core);
   cursor: pointer;
+}
+
+.rs-mii-studio-modal__auth-link:hover {
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal__google-btn {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: none;
+  padding: 11px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-color-border);
   background: #fff;
-  color: #0a0a0a;
-  font-size: 11px;
+  color: var(--rs-eu-blue-dark);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.06em;
   cursor: pointer;
+  box-shadow: var(--rs-shadow-card);
+}
+
+.rs-mii-studio-modal__google-btn:hover:not(:disabled) {
+  border-color: rgba(0, 51, 171, 0.25);
+  background: var(--rs-logo-blue-pale);
 }
 
 .rs-mii-studio-modal__body {
@@ -433,8 +455,8 @@ img {
 .rs-mii-studio-modal__preview-wrap {
   position: relative;
   min-height: 280px;
-  background: radial-gradient(ellipse at 50% 35%, #1a2744 0%, #0a0a0a 72%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, var(--rs-logo-blue-pale) 0%, #fff 72%);
+  border-right: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__preview {
@@ -448,11 +470,12 @@ img {
   left: 14px;
   bottom: 12px;
   margin: 0;
+  font-family: var(--rs-font-display);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__panel {
@@ -460,13 +483,14 @@ img {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  background: #fff;
 }
 
 .rs-mii-studio-modal__panel .rs-avatar-controls {
   flex: 1;
   min-height: 0;
   border-left: none;
-  background: transparent;
+  background: #fff;
   padding: 14px 16px;
   overflow-y: auto;
 }
@@ -474,25 +498,26 @@ img {
 .rs-mii-studio-modal__loading,
 .rs-mii-studio-modal__gate {
   padding: 20px 16px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__create {
   flex-shrink: 0;
   margin: 0 16px 16px;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #f9a8d4 0%, #f472b6 100%);
-  color: #0a0a0a;
+  padding: 12px 14px;
+  border: 1px solid var(--rs-color-brand-hover);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
+  color: #fff;
+  font-family: var(--rs-font-display);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(244, 114, 182, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.2);
 }
 
 .rs-mii-studio-modal__create:disabled {
@@ -510,9 +535,9 @@ img {
 
 .rs-mii-studio-modal__saved {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__danger {
@@ -520,16 +545,95 @@ img {
   padding: 0;
   border: none;
   background: none;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--rs-color-muted);
   cursor: pointer;
 }
 
 .rs-mii-studio-modal__danger:hover {
-  color: #f9a8d4;
+  color: var(--rs-color-brand-hover);
+}
+
+/* Contrôles avatar — thème clair dans le modal RS */
+.rs-mii-studio-modal .rs-avatar-controls {
+  background: #fff;
+  border-left: none;
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__header {
+  border-bottom-color: var(--rs-color-border);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__title {
+  color: var(--rs-eu-blue-dark);
+  font-family: var(--rs-font-display);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__subtitle {
+  color: var(--rs-eu-blue-core);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__section-title {
+  color: var(--rs-color-muted);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__label {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__value {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__cycle-btn {
+  border-color: var(--rs-color-border);
+  background: var(--rs-color-subtle);
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__cycle-btn:hover {
+  border-color: var(--rs-color-brand);
+  color: var(--rs-color-brand-hover);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__swatch {
+  border-color: var(--rs-color-border);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__swatch--active {
+  border-color: var(--rs-color-brand);
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.3);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__toggle {
+  border-color: var(--rs-color-border);
+  background: var(--rs-color-subtle);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__toggle--on {
+  background: var(--rs-color-brand-light);
+  border-color: var(--rs-color-brand);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__toggle-knob {
+  background: #cbd5e1;
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__toggle--on .rs-avatar-controls__toggle-knob {
+  background: var(--rs-color-brand);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__toggle-text {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls__random {
+  border-color: var(--rs-color-brand-hover);
+  color: #fff;
 }
 
 @media (max-width: 768px) {
@@ -541,7 +645,7 @@ img {
   .rs-mii-studio-modal {
     width: 100%;
     max-height: 92vh;
-    border-radius: 18px 18px 0 0;
+    border-radius: var(--rs-radius-lg) var(--rs-radius-lg) 0 0;
   }
 
   .rs-mii-studio-modal__body {
@@ -551,7 +655,7 @@ img {
 
   .rs-mii-studio-modal__preview-wrap {
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--rs-color-border);
   }
 
   .rs-mii-studio-modal__preview {
@@ -626,20 +730,15 @@ img {
   z-index: 100;
 }
 
-/* Fiche produit — inspirée rs-pro-mock (recrutestagiaire.eu) */
-.rs-product-card {
+/* Fiche produit — rs-pro-mock Recrute Stagiaire */
+.rs-product-card,
+.rs-panorama-card.rs-product-card {
   width: 340px;
   padding: 18px 18px 20px;
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 12px;
-  box-shadow: none;
-  overflow: hidden;
 }
 
-.rs-product-card__tags {
+.rs-product-card__tags,
+.rs-panorama-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -649,10 +748,10 @@ img {
 .rs-product-card__tag {
   font-size: 11px;
   font-weight: 600;
-  padding: 5px 12px;
+  padding: 4px 11px;
   border-radius: 20px;
   border: 1px solid rgba(0, 51, 171, 0.12);
-  color: #001a57;
+  color: var(--rs-eu-blue-dark);
   background: #fff;
 }
 
@@ -664,17 +763,18 @@ img {
 
 .rs-product-card__tag--blue {
   background: linear-gradient(180deg, #f5f8ff 0%, #e8f0ff 100%);
-  color: #001a57;
+  color: var(--rs-eu-blue-dark);
   border-color: rgba(0, 51, 171, 0.2);
 }
 
 .rs-product-card__title {
   margin: 0 0 14px;
-  font-size: 1.45rem;
+  font-family: var(--rs-font-display);
+  font-size: clamp(1.2rem, 2.4vw, 1.45rem);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: 0.01em;
-  color: #001a57;
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-product-card__img-block {
@@ -711,35 +811,39 @@ img {
 }
 
 .rs-product-card__price-label {
+  font-family: var(--rs-font-display);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #001a57;
+  color: var(--rs-eu-blue-dark);
   margin-bottom: 4px;
 }
 
 .rs-product-card__price {
+  font-family: var(--rs-font-display);
   font-size: 32px;
   font-weight: 700;
-  color: #001a57;
+  color: var(--rs-eu-blue-dark);
   line-height: 1.1;
 }
 
 .rs-product-card__cta {
   display: block;
   text-align: center;
-  padding: 13px 16px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #f9a8d4 0%, #f472b6 100%);
-  border: 1px solid #db2777;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
+  border: 1px solid var(--rs-color-brand-hover);
   color: #ffffff;
+  font-family: var(--rs-font-display);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: opacity 0.15s, transform 0.15s;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.2);
+  transition: filter 0.15s ease, transform 0.15s ease;
 }
 
 .rs-product-card__cta:hover {
@@ -839,12 +943,12 @@ img {
   align-items: center;
   gap: 12px;
   padding: 11px 18px 11px 14px;
-  background: rgba(10, 10, 10, 0.52);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 999px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
   color: rgba(255, 255, 255, 0.95);
 }
 
@@ -853,7 +957,7 @@ img {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #f9a8d4;
+  color: var(--rs-color-brand-pale);
 }
 
 .rs-panorama-hint__arrow--left {
@@ -872,9 +976,10 @@ img {
 }
 
 .rs-panorama-hint__title {
+  font-family: var(--rs-font-display);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -882,18 +987,19 @@ img {
 .rs-panorama-hint__sub {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.78);
   white-space: nowrap;
 }
 
 .rs-panorama-hint__tag {
+  font-family: var(--rs-font-display);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: var(--rs-color-brand-pale);
   margin-top: 2px;
 }
 
