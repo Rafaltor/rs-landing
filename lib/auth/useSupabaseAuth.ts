@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
   buildOAuthReturnPath,
-  getOAuthAppOrigin,
   OAUTH_RETURN_COOKIE,
 } from "@/lib/auth/oauthReturn";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -54,25 +53,12 @@ export function useSupabaseAuth() {
     };
   }, [supabase]);
 
-  const signInWithGoogle = useCallback(async () => {
-    if (!supabase) return;
-
+  const signInWithGoogle = useCallback(() => {
     const returnPath = buildOAuthReturnPath(true);
     setOAuthReturnCookie(returnPath);
-
-    const origin = getOAuthAppOrigin();
-    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(returnPath)}`;
-
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        queryParams: {
-          prompt: "select_account",
-        },
-      },
-    });
-  }, [supabase]);
+    const next = encodeURIComponent(returnPath);
+    window.location.assign(`/api/auth/google?next=${next}`);
+  }, []);
 
   const signOut = useCallback(async () => {
     if (!supabase) return;

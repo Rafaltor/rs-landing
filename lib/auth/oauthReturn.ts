@@ -1,3 +1,5 @@
+import type { NextRequest } from "next/server";
+
 export const OAUTH_RETURN_COOKIE = "rs_oauth_return";
 
 /** Chemin interne uniquement (évite les open redirects). */
@@ -12,38 +14,29 @@ export function safeReturnPath(value: string | undefined | null): string {
   }
 }
 
-/** Origine canonique pour le callback OAuth (prod Vercel + localhost). */
+/** Origine du callback pour une requête entrante (route handler / API). */
+export function resolveRequestOrigin(request: NextRequest): string {
+  const envOrigin = process.env.NEXT_PUBLIC_OAUTH_CALLBACK_ORIGIN?.trim();
+  if (envOrigin) return envOrigin.replace(/\/$/, "");
+
+  const { origin } = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
+  const isLocalEnv = process.env.NODE_ENV === "development";
+
+  if (isLocalEnv) return origin;
+  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
+  return origin;
+}
+
+/** Origine côté navigateur (fallback si pas de route serveur). */
 export function getOAuthAppOrigin(): string {
   if (typeof window === "undefined") return "";
 
-  const { hostname, origin } = window.location;
-  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
-  if (isLocal) return origin;
+  const envOrigin = process.env.NEXT_PUBLIC_OAUTH_CALLBACK_ORIGIN?.trim();
+  if (envOrigin) return envOrigin.replace(/\/$/, "");
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (siteUrl) {
-    try {
-      if (new URL(siteUrl).hostname === hostname) return siteUrl;
-    } catch {
-      /* ignore */
-    }
-  }
-
-  const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
-  if (vercelUrl) {
-    const resolved = vercelUrl.startsWith("http")
-      ? vercelUrl
-      : `https://${vercelUrl}`;
-    try {
-      if (new URL(resolved).hostname === hostname) {
-        return resolved.replace(/\/$/, "");
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  return origin;
+  return window.location.origin;
 }
 
 export function buildOAuthReturnPath(includeStudio = false): string {
