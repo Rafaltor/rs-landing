@@ -12,7 +12,6 @@ import {
 } from "@/lib/avatar/avatarPlacements";
 import {
   clearAvatarHotspotRegistry,
-  layoutAllAvatarHotspots,
   syncAvatarHotspots,
 } from "@/lib/panorama/syncAvatarHotspots";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
@@ -119,9 +118,17 @@ const bindMiiStudioOpen = (el: HTMLElement) => {
 
   el.addEventListener("pointerdown", stop);
   el.addEventListener("mousedown", stop);
+  el.addEventListener("mouseup", stop);
   el.addEventListener("touchstart", stop, { passive: true });
-  el.addEventListener("pointerup", open);
-  el.addEventListener("click", open);
+  el.addEventListener("touchend", stop, { passive: true });
+  el.addEventListener("pointerup", (e) => {
+    stop(e);
+    open(e);
+  });
+  el.addEventListener("click", (e) => {
+    stop(e);
+    open(e);
+  });
 };
 
 const centerHotspotPanel = (
@@ -442,14 +449,12 @@ export default function PannellumViewer() {
       const viewer = viewerRef.current;
       if (!viewer) return;
       viewer.setHfov?.(getSceneHfov(), false);
-      layoutAllAvatarHotspots(viewer);
       layoutRegisteredAvatarHotspots(viewer);
     };
 
     const onViewerViewChange = () => {
       const viewer = viewerRef.current;
       if (!viewer) return;
-      layoutAllAvatarHotspots(viewer);
       layoutRegisteredAvatarHotspots(viewer);
     };
 
@@ -480,7 +485,6 @@ export default function PannellumViewer() {
           if (cancelled || !viewerRef.current) return;
           syncAvatarHotspots(viewerRef.current);
           startAvatarWanderLoop(viewerRef.current);
-          layoutAllAvatarHotspots(viewerRef.current);
           layoutRegisteredAvatarHotspots(viewerRef.current);
         };
 
@@ -500,7 +504,6 @@ export default function PannellumViewer() {
             disposeAllAvatarScreens();
             syncAvatarHotspots(viewerRef.current);
             refreshAvatarWanderLoop();
-            layoutAllAvatarHotspots(viewerRef.current);
             layoutRegisteredAvatarHotspots(viewerRef.current);
           }
         });

@@ -8,6 +8,7 @@ import {
   layoutRegisteredAvatarHotspots,
   updateAvatarHotspotAngles,
 } from "@/lib/panorama/avatarHotspotElements";
+import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import {
   getAvatarRuntimeHotspots,
   getActiveSceneHotspots,
@@ -72,15 +73,16 @@ function syncHotspotConfig(
   pitch: number,
   yaw: number,
 ): void {
+  const displayPitch = layoutPitchForAvatarHotspot(pitch);
   const runtime = getAvatarRuntimeHotspots().get(hotspotId);
   if (runtime) {
-    runtime.pitch = pitch;
+    runtime.pitch = displayPitch;
     runtime.yaw = yaw;
     return;
   }
   const hs = getActiveSceneHotspots(viewer).find((h) => h.id === hotspotId);
   if (hs) {
-    hs.pitch = pitch;
+    hs.pitch = displayPitch;
     hs.yaw = yaw;
   }
 }

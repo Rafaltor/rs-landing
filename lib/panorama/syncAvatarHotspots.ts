@@ -8,6 +8,7 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { clearAvatarHotspotElements } from "@/lib/panorama/avatarHotspotElements";
+import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import { layoutPannellumHotspot } from "@/lib/panorama/layoutPannellumHotspot";
 
 const SCENE_ID = "salon";
@@ -25,7 +26,7 @@ function buildHotSpot(
 
   return {
     id: hotspotIdForPlacement(placement.id),
-    pitch: placement.pitch,
+    pitch: layoutPitchForAvatarHotspot(placement.pitch),
     yaw: placement.yaw,
     type: "info",
     scale: false,
