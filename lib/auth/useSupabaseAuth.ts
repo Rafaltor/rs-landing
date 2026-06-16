@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import {
+  buildOAuthReturnPath,
+  getOAuthAppOrigin,
+  OAUTH_RETURN_COOKIE,
+} from "@/lib/auth/oauthReturn";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
-const RETURN_COOKIE = "rs_oauth_return";
-
-function setOAuthReturnCookie(): void {
-  const returnPath = `${window.location.pathname}${window.location.search}`;
+function setOAuthReturnCookie(returnPath: string): void {
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${RETURN_COOKIE}=${encodeURIComponent(returnPath)}; Path=/; Max-Age=600; SameSite=Lax${secure}`;
+  document.cookie = `${OAUTH_RETURN_COOKIE}=${encodeURIComponent(returnPath)}; Path=/; Max-Age=600; SameSite=Lax${secure}`;
 }
 
 export function useSupabaseAuth() {
@@ -55,9 +57,11 @@ export function useSupabaseAuth() {
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) return;
 
-    setOAuthReturnCookie();
+    const returnPath = buildOAuthReturnPath(true);
+    setOAuthReturnCookie(returnPath);
 
-    const redirectTo = `${window.location.origin}/auth/callback`;
+    const origin = getOAuthAppOrigin();
+    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(returnPath)}`;
 
     await supabase.auth.signInWithOAuth({
       provider: "google",

@@ -23,6 +23,19 @@ export default function LandingScene() {
     });
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("studio") !== "mii") return;
+
+    setMiiStudioOpen(true);
+    params.delete("studio");
+    const qs = params.toString();
+    const cleanUrl = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(null, "", cleanUrl);
+  }, []);
+
   return (
     <>
       <PannellumViewer />

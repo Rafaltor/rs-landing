@@ -1,41 +1,60 @@
-import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import {
+  OAUTH_RETURN_COOKIE,
+  safeReturnPath,
+} from "@/lib/auth/oauthReturn";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-const RETURN_COOKIE = "rs_oauth_return";
+function redirectTarget(request: NextRequest, path: string): string {
+  const { origin } = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isLocalEnv = process.env.NODE_ENV === "development";
 
-/** Chemin interne uniquement (évite les open redirects). */
-function safeReturnPath(value: string | undefined): string {
-  if (!value) return "/";
-  try {
-    const decoded = decodeURIComponent(value);
-    if (!decoded.startsWith("/") || decoded.startsWith("//")) return "/";
-    return decoded;
-  } catch {
-    return "/";
-  }
+  if (isLocalEnv) return `${origin}${path}`;
+  if (forwardedHost) return `https://${forwardedHost}${path}`;
+  return `${origin}${path}`;
 }
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
 
-  const cookieStore = await cookies();
-  const fromCookie = cookieStore.get(RETURN_COOKIE)?.value;
-  const fromQuery = searchParams.get("next") ?? undefined;
+  const fromCookie = request.cookies.get(OAUTH_RETURN_COOKIE)?.value;
+  const fromQuery = searchParams.get("next");
   const returnPath = safeReturnPath(fromCookie ?? fromQuery);
 
-  if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      const response = NextResponse.redirect(`${origin}${returnPath}`);
-      response.cookies.set(RETURN_COOKIE, "", { path: "/", maxAge: 0 });
-      return response;
-    }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!code || !supabaseUrl || !supabaseKey) {
+    const response = NextResponse.redirect(
+      redirectTarget(request, "/?auth=error"),
+    );
+    response.cookies.set(OAUTH_RETURN_COOKIE, "", { path: "/", maxAge: 0 });
+    return response;
   }
 
-  const response = NextResponse.redirect(`${origin}/?auth=error`);
-  response.cookies.set(RETURN_COOKIE, "", { path: "/", maxAge: 0 });
+  let response = NextResponse.redirect(redirectTarget(request, returnPath));
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    response = NextResponse.redirect(redirectTarget(request, "/?auth=error"));
+  }
+
+  response.cookies.set(OAUTH_RETURN_COOKIE, "", { path: "/", maxAge: 0 });
   return response;
 }
