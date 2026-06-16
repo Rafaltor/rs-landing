@@ -57,6 +57,11 @@ img {
   pointer-events: auto !important;
 }
 
+/* Bouton gyro Pannellum natif — remplacé par notre contrôle RS */
+#pannellum-viewer .pnlm-orientation-button {
+  display: none !important;
+}
+
 /* Navigation — ne pas modifier transform sur le div Pannellum */
 .pnlm-hotspot-base.rs-nav-hotspot {
   width: 56px !important;
@@ -448,9 +453,19 @@ img {
 .rs-panorama-hint__sub {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+}
+
+.rs-panorama-hint__tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f9a8d4;
+  margin-top: 2px;
 }
 
 @keyframes rsHintIn {
@@ -531,6 +546,118 @@ img {
   .rs-panorama-hint__arrow--left,
   .rs-panorama-hint__arrow--right {
     animation: none;
+    opacity: 1;
+  }
+
+  .rs-gyro-btn__pulse {
+    animation: none;
+  }
+}
+
+/* Bouton gyroscope — mobile */
+.rs-gyro-btn {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top, 0px) + 12px);
+  right: max(14px, env(safe-area-inset-right, 0px) + 10px);
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 14px;
+  border: 2px solid #f472b6;
+  background: linear-gradient(
+    180deg,
+    rgba(244, 114, 182, 0.95) 0%,
+    rgba(219, 39, 119, 0.92) 100%
+  );
+  color: #ffffff;
+  box-shadow:
+    0 4px 20px rgba(244, 114, 182, 0.45),
+    0 0 0 4px rgba(244, 114, 182, 0.18);
+  cursor: pointer;
+  text-align: left;
+  animation: rsGyroPulse 2.4s ease-in-out infinite;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.rs-gyro-btn:active {
+  transform: scale(0.97);
+}
+
+.rs-gyro-btn--active {
+  border-color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(253, 242, 248, 0.96) 100%
+  );
+  color: #db2777;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    0 0 0 4px rgba(244, 114, 182, 0.35);
+  animation: none;
+}
+
+.rs-gyro-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rs-gyro-btn__pulse {
+  animation: rsGyroIconPulse 2.4s ease-in-out infinite;
+}
+
+.rs-gyro-btn__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.rs-gyro-btn__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rs-gyro-btn__sub {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.88;
+  white-space: nowrap;
+}
+
+@keyframes rsGyroPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 20px rgba(244, 114, 182, 0.45),
+      0 0 0 4px rgba(244, 114, 182, 0.18);
+  }
+
+  50% {
+    box-shadow:
+      0 6px 28px rgba(244, 114, 182, 0.6),
+      0 0 0 7px rgba(244, 114, 182, 0.28);
+  }
+}
+
+@keyframes rsGyroIconPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+
+  50% {
     opacity: 1;
   }
 }

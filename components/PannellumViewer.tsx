@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import GyroscopeButton from "./GyroscopeButton";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
 
-const PANORAMA_URL = "/360bg.png";
+const PANORAMA_URL = "/360bg.jpeg";
 
 const TEE_IMAGE_URL = "/tee.png";
 
@@ -200,6 +201,11 @@ const createProductHotspot = (
   }, 100);
 };
 
+function getMouseZoom(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth > 768;
+}
+
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
   if (window.innerWidth <= 390) return 126;
@@ -228,7 +234,7 @@ function buildViewerConfig() {
         compass: false,
         showZoomCtrl: false,
         showFullscreenCtrl: false,
-        mouseZoom: false,
+        mouseZoom: getMouseZoom(),
         hfov: getSceneHfov(),
         hotSpotDebug: HOTSPOT_DEBUG,
         hotSpots: [
@@ -321,6 +327,7 @@ function loadPannellumScript(): Promise<void> {
 export default function PannellumViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<PannellumViewer | null>(null);
+  const [viewerReady, setViewerReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -347,6 +354,7 @@ export default function PannellumViewer() {
           containerRef.current,
           buildViewerConfig() as PannellumTourConfig,
         );
+        setViewerReady(true);
 
         window.addEventListener("resize", onResize);
       } catch {
@@ -358,6 +366,7 @@ export default function PannellumViewer() {
 
     return () => {
       cancelled = true;
+      setViewerReady(false);
       window.removeEventListener("resize", onResize);
       viewerRef.current?.destroy();
       viewerRef.current = null;
@@ -365,16 +374,19 @@ export default function PannellumViewer() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      id="pannellum-viewer"
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        zIndex: 0,
-      }}
-    />
+    <>
+      <div
+        ref={containerRef}
+        id="pannellum-viewer"
+        style={{
+          position: "fixed",
+          inset: 0,
+          width: "100vw",
+          height: "100vh",
+          zIndex: 0,
+        }}
+      />
+      <GyroscopeButton viewerRef={viewerRef} viewerReady={viewerReady} />
+    </>
   );
 }

@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 
-const DISMISS_MS = 4500;
+const DISMISS_MS = 5000;
 const FADE_MS = 600;
 
 export default function PanoramaHint() {
   const [phase, setPhase] = useState<"visible" | "fading" | "hidden">("visible");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     if (phase !== "visible") return;
@@ -61,7 +70,12 @@ export default function PanoramaHint() {
         </span>
         <span className="rs-panorama-hint__copy">
           <span className="rs-panorama-hint__title">Glissez pour explorer</span>
-          <span className="rs-panorama-hint__sub">Vue 360°</span>
+          <span className="rs-panorama-hint__sub">
+            {isMobile
+              ? "Pincez pour zoomer · dézoomer"
+              : "Molette pour zoomer · dézoomer"}
+          </span>
+          <span className="rs-panorama-hint__tag">Vue 360°</span>
         </span>
       </div>
     </div>

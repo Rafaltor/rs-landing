@@ -52,6 +52,10 @@ interface PannellumTourConfig {
 interface PannellumViewer {
   destroy: () => void;
   setHfov?: (hfov: number, animated?: boolean) => void;
+  isOrientationSupported?: () => boolean;
+  isOrientationActive?: () => boolean;
+  startOrientation?: () => void;
+  stopOrientation?: () => void;
 }
 
 interface PannellumStatic {
