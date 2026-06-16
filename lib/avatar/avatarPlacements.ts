@@ -74,6 +74,7 @@ function randomConfig(): AvatarConfig {
     shirt: r(5),
     acc: r(4),
     accColor: r(6),
+    pseudo: "",
   });
 }
 

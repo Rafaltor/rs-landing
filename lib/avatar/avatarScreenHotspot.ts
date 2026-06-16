@@ -1,4 +1,5 @@
 import { AvatarScene } from "./AvatarScene";
+import { normalizePseudo } from "./avatarConfig";
 import { clearAvatarWalkMotions } from "./avatarWalkHeading";
 import {
   getAvatarPlacement,
@@ -47,7 +48,27 @@ export function createAvatarScreen(
     border: none;
     overflow: visible;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   `;
+
+  const pseudoEl = document.createElement("div");
+  pseudoEl.className = "rs-avatar-screen__pseudo";
+  pseudoEl.setAttribute("aria-hidden", "true");
+  hotSpotDiv.appendChild(pseudoEl);
+
+  const syncPseudo = (pseudo: string) => {
+    const text = normalizePseudo(pseudo);
+    if (text) {
+      pseudoEl.textContent = text;
+      pseudoEl.hidden = false;
+    } else {
+      pseudoEl.textContent = "";
+      pseudoEl.hidden = true;
+    }
+  };
+  syncPseudo(placement.config.pseudo);
 
   const viewport = document.createElement("div");
   viewport.className = ghost
@@ -76,7 +97,10 @@ export function createAvatarScreen(
 
   const unsubscribe = subscribeAvatarPlacements((placements) => {
     const next = placements.find((p) => p.id === args.id);
-    if (next) scene.setConfig(next.config);
+    if (next) {
+      scene.setConfig(next.config);
+      syncPseudo(next.config.pseudo);
+    }
   });
 
   const disconnectObserver = new MutationObserver(() => {

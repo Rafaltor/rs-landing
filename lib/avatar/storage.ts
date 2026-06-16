@@ -1,4 +1,5 @@
 import { DEFAULT_AVATAR_CONFIG, type AvatarConfig } from "./palettes";
+import { normalizeAvatarConfig as normalizeCfg } from "./avatarConfig";
 
 export const AVATAR_STORAGE_KEY = "rs-avatar";
 
@@ -38,24 +39,13 @@ function isAvatarConfig(value: unknown): value is AvatarConfig {
     typeof v.suit === "number" &&
     typeof v.shirt === "number" &&
     typeof v.acc === "number" &&
-    typeof v.accColor === "number"
+    typeof v.accColor === "number" &&
+    (v.pseudo === undefined || typeof v.pseudo === "string")
   );
 }
 
 function normalizeAvatarConfig(cfg: AvatarConfig): AvatarConfig {
-  return {
-    body: Math.max(0, Math.floor(cfg.body)),
-    skin: Math.max(0, Math.floor(cfg.skin)),
-    hair: Math.max(0, Math.floor(cfg.hair)),
-    hairColor: Math.max(0, Math.floor(cfg.hairColor)),
-    eyes: Math.max(0, Math.floor(cfg.eyes)),
-    nose: Math.max(0, Math.floor(cfg.nose)),
-    glasses: cfg.glasses,
-    suit: Math.max(0, Math.floor(cfg.suit)),
-    shirt: Math.max(0, Math.floor(cfg.shirt)),
-    acc: Math.max(0, Math.floor(cfg.acc)),
-    accColor: Math.max(0, Math.floor(cfg.accColor)),
-  };
+  return normalizeCfg(cfg);
 }
 
 function readFromLocalStorage(): AvatarConfig | null {

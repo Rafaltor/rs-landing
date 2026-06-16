@@ -80,6 +80,8 @@ export type AvatarConfig = {
   shirt: number;
   acc: number;
   accColor: number;
+  /** Pseudo affiché au-dessus du stagiaire dans le salon. */
+  pseudo: string;
 };
 
 /** Look corporate soigné par défaut (HTML source). */
@@ -95,6 +97,7 @@ export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
   shirt: 0,
   acc: 0,
   accColor: 1,
+  pseudo: "",
 };
 
 export function paletteIndex<T extends readonly unknown[]>(

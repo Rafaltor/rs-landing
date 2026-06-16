@@ -31,7 +31,20 @@ function parseConfig(value: unknown): AvatarConfig | null {
   ) {
     return null;
   }
-  return normalizeAvatarConfig(v as AvatarConfig);
+  return normalizeAvatarConfig({
+    body: v.body as number,
+    skin: v.skin as number,
+    hair: v.hair as number,
+    hairColor: v.hairColor as number,
+    eyes: v.eyes as number,
+    nose: v.nose as number,
+    glasses: v.glasses as boolean,
+    suit: v.suit as number,
+    shirt: v.shirt as number,
+    acc: v.acc as number,
+    accColor: v.accColor as number,
+    pseudo: typeof v.pseudo === "string" ? v.pseudo : "",
+  });
 }
 
 function rowToMii(row: Record<string, unknown>): UserMiiRow | null {

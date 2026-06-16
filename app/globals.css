@@ -632,6 +632,21 @@ img {
   color: #fff;
 }
 
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input {
+  border-color: var(--rs-color-border);
+  background: #fff;
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input::placeholder {
+  color: rgba(10, 10, 10, 0.35);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input:focus {
+  border-color: var(--rs-color-brand-hover);
+  box-shadow: 0 0 0 2px rgba(0, 51, 160, 0.12);
+}
+
 @media (max-width: 768px) {
   .rs-mii-studio-overlay {
     padding: 0;
@@ -1245,7 +1260,36 @@ img {
 
 .pnlm-hotspot-base.rs-avatar-screen--ghost {
   width: 130px;
-  height: 210px;
+  height: auto;
+  min-height: 210px;
+}
+
+.rs-avatar-screen__pseudo {
+  max-width: 140px;
+  margin-bottom: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(10, 10, 10, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.rs-avatar-screen__pseudo[hidden] {
+  display: none !important;
 }
 
 .pnlm-hotspot-base.rs-avatar-screen--hero {
@@ -1671,6 +1715,37 @@ img {
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
+}
+
+.rs-avatar-controls__row--field {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.rs-avatar-controls__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.rs-avatar-controls__input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 500;
+}
+
+.rs-avatar-controls__input:focus {
+  outline: none;
+  border-color: #f9a8d4;
+  box-shadow: 0 0 0 2px rgba(249, 168, 212, 0.25);
 }
 
 .rs-avatar-controls__label {

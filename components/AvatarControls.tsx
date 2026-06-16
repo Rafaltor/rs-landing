@@ -14,6 +14,7 @@ import {
   paletteIndex,
   type AvatarConfig,
 } from "@/lib/avatar/palettes";
+import { PSEUDO_MAX_LENGTH } from "@/lib/avatar/avatarConfig";
 
 type AvatarControlsProps = {
   cfg: AvatarConfig;
@@ -49,6 +50,7 @@ function randomConfig(): AvatarConfig {
     shirt: randomInt(SHIRT.length),
     acc: randomInt(ACCS.length),
     accColor: randomInt(ACCC.length),
+    pseudo: "",
   };
 }
 
@@ -176,6 +178,25 @@ export default function AvatarControls({
           <p className="rs-avatar-controls__subtitle">Studio avatar</p>
         </header>
       )}
+
+      <section className="rs-avatar-controls__section">
+        <h3 className="rs-avatar-controls__section-title">Profil</h3>
+        <div className="rs-avatar-controls__row rs-avatar-controls__row--field">
+          <label className="rs-avatar-controls__label" htmlFor="rs-avatar-pseudo">
+            Pseudo
+          </label>
+          <input
+            id="rs-avatar-pseudo"
+            type="text"
+            className="rs-avatar-controls__input"
+            value={cfg.pseudo}
+            maxLength={PSEUDO_MAX_LENGTH}
+            placeholder="Ton pseudo"
+            autoComplete="nickname"
+            onChange={(e) => patch({ pseudo: e.target.value })}
+          />
+        </div>
+      </section>
 
       <section className="rs-avatar-controls__section">
         <h3 className="rs-avatar-controls__section-title">Silhouette</h3>
