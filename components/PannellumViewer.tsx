@@ -202,8 +202,8 @@ const createProductHotspot = (
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 118;
-  if (window.innerWidth <= 768) return 112;
+  if (window.innerWidth <= 390) return 126;
+  if (window.innerWidth <= 768) return 120;
   return 100;
 }
 
@@ -241,7 +241,7 @@ function buildViewerConfig() {
             createTooltipArgs: {
               title:
                 process.env.NEXT_PUBLIC_PRODUCT_TITLE || "Stagiaire",
-              price: process.env.NEXT_PUBLIC_PRODUCT_PRICE || "60,00 €",
+              price: process.env.NEXT_PUBLIC_PRODUCT_PRICE || "50,00 €",
               image:
                 process.env.NEXT_PUBLIC_PRODUCT_IMAGE || TEE_IMAGE_URL,
               href: productHref,
