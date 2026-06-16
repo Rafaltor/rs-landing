@@ -48,7 +48,6 @@ export function createAvatarScreen(
     border: none;
     overflow: visible;
     pointer-events: none;
-    position: relative;
   `;
 
   const viewport = document.createElement("div");
@@ -61,7 +60,7 @@ export function createAvatarScreen(
   const pseudoEl = document.createElement("div");
   pseudoEl.className = "rs-avatar-screen__pseudo";
   pseudoEl.setAttribute("aria-hidden", "true");
-  viewport.appendChild(pseudoEl);
+  hotSpotDiv.appendChild(pseudoEl);
 
   const syncPseudo = (pseudo: string) => {
     const text = normalizePseudo(pseudo);
