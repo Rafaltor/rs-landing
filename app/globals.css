@@ -277,10 +277,9 @@ img {
   background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
   color: #fff !important;
   font-family: var(--rs-font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.25);
   transition: filter 0.15s ease, transform 0.15s ease;
 }
@@ -290,7 +289,7 @@ img {
   transform: translateY(-1px);
 }
 
-/* Modal studio Mii */
+/* Modal configurateur — DA RS (rs-home-kit-overlay) */
 .rs-mii-studio-overlay {
   position: fixed;
   inset: 0;
@@ -305,9 +304,7 @@ img {
   position: absolute;
   inset: 0;
   border: none;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(10, 10, 10, 0.88);
   cursor: pointer;
 }
 
@@ -318,15 +315,13 @@ img {
   max-height: min(90vh, 720px);
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(
-    165deg,
-    rgba(22, 28, 42, 0.97) 0%,
-    rgba(10, 10, 10, 0.96) 100%
-  );
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  border-radius: var(--rs-radius-lg);
+  border: 1px solid var(--rs-color-border);
+  background: var(--rs-color-bg);
+  box-shadow: var(--rs-shadow-modal);
   overflow: hidden;
+  color: var(--rs-eu-blue-dark);
+  font-family: var(--rs-font-body);
 }
 
 .rs-mii-studio-modal__header {
@@ -334,47 +329,52 @@ img {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 24px 14px;
+  border-bottom: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__eyebrow {
   margin: 0;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: var(--rs-color-brand-hover);
 }
 
 .rs-mii-studio-modal__title {
   margin: 4px 0 0;
-  font-size: 1.35rem;
+  font-family: var(--rs-font-display);
+  font-size: clamp(1.2rem, 2.5vw, 1.45rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--rs-eu-blue-dark);
+  line-height: 1.15;
 }
 
 .rs-mii-studio-modal__subtitle {
   margin: 6px 0 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  color: var(--rs-color-muted);
+  line-height: 1.45;
 }
 
 .rs-mii-studio-modal__close {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 22px;
+  background: var(--rs-color-subtle);
+  color: var(--rs-color-muted);
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
 
 .rs-mii-studio-modal__close:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--rs-logo-blue-pale);
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal__auth {
@@ -382,48 +382,61 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 22px;
+  margin: 0 24px;
   padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--rs-radius-md);
+  background: var(--rs-color-subtle);
+  border: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__auth-email {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-eu-blue-dark);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .rs-mii-studio-modal__auth-muted {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__auth-link {
   flex-shrink: 0;
   border: none;
   background: none;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: var(--rs-eu-blue-core);
   cursor: pointer;
+}
+
+.rs-mii-studio-modal__auth-link:hover {
+  color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal__google-btn {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: none;
+  padding: 11px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-color-border);
   background: #fff;
-  color: #0a0a0a;
-  font-size: 11px;
+  color: var(--rs-eu-blue-dark);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--rs-shadow-card);
+}
+
+.rs-mii-studio-modal__google-btn:hover:not(:disabled) {
+  border-color: rgba(0, 51, 171, 0.25);
+  background: var(--rs-logo-blue-pale);
 }
 
 .rs-mii-studio-modal__body {
@@ -438,8 +451,8 @@ img {
 .rs-mii-studio-modal__preview-wrap {
   position: relative;
   min-height: 280px;
-  background: radial-gradient(ellipse at 50% 35%, #1a2744 0%, #0a0a0a 72%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, var(--rs-logo-blue-pale) 0%, #fff 72%);
+  border-right: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__preview {
@@ -453,11 +466,12 @@ img {
   left: 14px;
   bottom: 12px;
   margin: 0;
+  font-family: var(--rs-font-display);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__panel {
@@ -465,13 +479,13 @@ img {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+  background: #fff;
 }
 
 .rs-mii-studio-modal__panel .rs-avatar-controls {
   flex: 1;
   min-height: 0;
   border-left: none;
-  background: transparent;
   padding: 14px 16px;
   overflow-y: auto;
 }
@@ -479,25 +493,25 @@ img {
 .rs-mii-studio-modal__loading,
 .rs-mii-studio-modal__gate {
   padding: 20px 16px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__create {
   flex-shrink: 0;
   margin: 0 16px 16px;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #f9a8d4 0%, #f472b6 100%);
-  color: #0a0a0a;
+  padding: 12px 14px;
+  border: 1px solid var(--rs-color-brand-hover);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
+  color: #fff;
+  font-family: var(--rs-font-display);
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(244, 114, 182, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.2);
 }
 
 .rs-mii-studio-modal__create:disabled {
@@ -515,9 +529,9 @@ img {
 
 .rs-mii-studio-modal__saved {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal__danger {
@@ -525,16 +539,97 @@ img {
   padding: 0;
   border: none;
   background: none;
+  font-family: var(--rs-font-display);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--rs-color-muted);
   cursor: pointer;
 }
 
 .rs-mii-studio-modal__danger:hover {
-  color: #f9a8d4;
+  color: var(--rs-color-brand-hover);
+}
+
+/* Contrôles avatar — thème clair (modal RS) */
+.rs-mii-studio-modal .rs-avatar-controls--light {
+  background: #fff;
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__header {
+  border-bottom-color: var(--rs-color-border);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__title {
+  color: var(--rs-eu-blue-dark);
+  font-family: var(--rs-font-display);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__subtitle {
+  color: var(--rs-eu-blue-core);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__section-title {
+  color: var(--rs-color-muted);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__label {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__value {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__cycle-btn {
+  border-color: var(--rs-color-border);
+  background: var(--rs-color-subtle);
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__cycle-btn:hover {
+  border-color: var(--rs-color-brand);
+  color: var(--rs-color-brand-hover);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__swatch {
+  border-color: var(--rs-color-border);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__swatch--active {
+  border-color: var(--rs-color-brand);
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.3);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__toggle {
+  border-color: var(--rs-color-border);
+  background: var(--rs-color-subtle);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__toggle--on {
+  background: var(--rs-color-brand-light);
+  border-color: var(--rs-color-brand);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__toggle-knob {
+  background: #cbd5e1;
+}
+
+.rs-mii-studio-modal
+  .rs-avatar-controls--light
+  .rs-avatar-controls__toggle--on
+  .rs-avatar-controls__toggle-knob {
+  background: var(--rs-color-brand);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__toggle-text {
+  color: var(--rs-eu-blue-dark);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__random {
+  border-color: var(--rs-color-brand-hover);
+  color: #fff;
 }
 
 @media (max-width: 768px) {
@@ -546,7 +641,7 @@ img {
   .rs-mii-studio-modal {
     width: 100%;
     max-height: 92vh;
-    border-radius: 18px 18px 0 0;
+    border-radius: var(--rs-radius-lg) var(--rs-radius-lg) 0 0;
   }
 
   .rs-mii-studio-modal__body {
@@ -556,7 +651,7 @@ img {
 
   .rs-mii-studio-modal__preview-wrap {
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--rs-color-border);
   }
 
   .rs-mii-studio-modal__preview {

@@ -21,6 +21,8 @@ type AvatarControlsProps = {
   /** Intégré dans le panneau landing (pas le studio plein écran). */
   embedded?: boolean;
   showHeader?: boolean;
+  /** Thème clair pour le modal RS. */
+  variant?: "dark" | "light";
 };
 
 function formatLabel(value: string): string {
@@ -137,6 +139,7 @@ export default function AvatarControls({
   onChange,
   embedded = false,
   showHeader = true,
+  variant = "dark",
 }: AvatarControlsProps) {
   const patch = (partial: Partial<AvatarConfig>) => {
     onChange({ ...cfg, ...partial });
@@ -157,18 +160,19 @@ export default function AvatarControls({
   const noseIdx = paletteIndex(NOSES, cfg.nose);
   const accIdx = paletteIndex(ACCS, cfg.acc);
 
+  const controlClass = [
+    "rs-avatar-controls",
+    embedded ? "rs-avatar-controls--embedded" : "",
+    variant === "light" ? "rs-avatar-controls--light" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <aside
-      className={
-        embedded
-          ? "rs-avatar-controls rs-avatar-controls--embedded"
-          : "rs-avatar-controls"
-      }
-      aria-label="Personnalisation avatar"
-    >
+    <aside className={controlClass} aria-label="Personnalisation avatar">
       {showHeader && (
         <header className="rs-avatar-controls__header">
-          <h2 className="rs-avatar-controls__title">Corporate Mii</h2>
+          <h2 className="rs-avatar-controls__title">Corporate Stagiaire</h2>
           <p className="rs-avatar-controls__subtitle">Studio avatar</p>
         </header>
       )}

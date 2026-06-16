@@ -17,7 +17,6 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
-import { openMiiStudio } from "@/lib/landing/miiStudioBus";
 
 type LandingAvatarPanelProps = {
   open: boolean;
@@ -161,7 +160,7 @@ export default function LandingAvatarPanel({
       <button
         type="button"
         className="rs-mii-studio-overlay__backdrop"
-        aria-label="Fermer le studio Mii"
+        aria-label="Fermer le configurateur"
         onClick={() => onOpenChange(false)}
       />
 
@@ -170,10 +169,10 @@ export default function LandingAvatarPanel({
           <div>
             <p className="rs-mii-studio-modal__eyebrow">Studio avatar</p>
             <h2 id="rs-mii-studio-title" className="rs-mii-studio-modal__title">
-              Créer mon Corporate Mii
+              Mon stagiaire
             </h2>
             <p className="rs-mii-studio-modal__subtitle">
-              Un Mii par compte portail · visible dans le salon 360°
+              Créez votre Corporate Stagiaire et posez-le dans le salon
             </p>
           </div>
           <button
@@ -209,7 +208,7 @@ export default function LandingAvatarPanel({
               disabled={!configured}
               onClick={() => signInWithGoogle()}
             >
-              Continuer avec Google pour créer mon Mii
+              Continuer avec Google
             </button>
           )}
         </div>
@@ -231,17 +230,21 @@ export default function LandingAvatarPanel({
               <div className="rs-mii-studio-modal__gate">
                 <p>
                   Connectez-vous avec le même compte que le portail pour
-                  personnaliser votre Mii et le publier dans le salon.
+                  personnaliser votre Corporate Stagiaire.
                 </p>
               </div>
             ) : (
               <>
-                <AvatarControls cfg={draftConfig} onChange={handleConfigChange} />
+                <AvatarControls
+                  cfg={draftConfig}
+                  onChange={handleConfigChange}
+                  variant="light"
+                />
 
                 {myMii ? (
                   <div className="rs-mii-studio-modal__actions">
                     <p className="rs-mii-studio-modal__saved">
-                      Votre Mii est dans le salon — les changements sont
+                      Votre stagiaire est dans le salon — les changements sont
                       enregistrés automatiquement.
                     </p>
                     <button
@@ -260,7 +263,7 @@ export default function LandingAvatarPanel({
                     disabled={busy}
                     onClick={handleCreate}
                   >
-                    {busy ? "Publication…" : "Publier mon Mii dans le salon"}
+                    {busy ? "Dépôt…" : "Déposer son Stagiaire"}
                   </button>
                 )}
               </>

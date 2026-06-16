@@ -68,7 +68,6 @@ const HOTSPOT_CONFIG = {
     /** Mur vide à droite — loin produit (-104), fantômes, portail (-11) et grillz (153). */
     pitch: -3,
     yaw: 58,
-    label: "MON MII",
   },
   ghosts: GHOST_OFFSETS.map((o) => ({
     pitch: PRODUCT_HOTSPOT.pitch + o.dp,
@@ -100,9 +99,13 @@ type GhostHotspotArgs = {
   delay: number;
 };
 
-type MiiStudioHotspotArgs = {
-  label: string;
-};
+type MiiStudioHotspotArgs = Record<string, never>;
+
+const MII_PANEL_COPY = {
+  title: "Mon stagiaire",
+  desc: "Créez votre Corporate Stagiaire et posez-le dans le salon.",
+  cta: "Déposer son Stagiaire",
+} as const;
 
 const bindMiiStudioOpen = (el: HTMLElement) => {
   const stop = (e: Event) => {
@@ -134,7 +137,7 @@ const centerHotspotPanel = (
 
 const createMiiStudioHotspot = (
   hotSpotDiv: HTMLElement,
-  args: MiiStudioHotspotArgs,
+  _args: MiiStudioHotspotArgs,
 ) => {
   hotSpotDiv.classList.add("rs-mii-studio-hotspot", "pnlm-pointer");
   hotSpotDiv.style.width = "10px";
@@ -146,15 +149,15 @@ const createMiiStudioHotspot = (
   const panel = document.createElement("button");
   panel.type = "button";
   panel.className = "rs-mii-studio-panel";
-  panel.setAttribute("aria-label", "Ouvrir le studio Mii");
+  panel.setAttribute("aria-label", "Ouvrir le configurateur stagiaire");
   panel.innerHTML = `
     <span class="rs-mii-studio-panel__tags">
       <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--pink">Studio avatar</span>
       <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--blue">Salon 360°</span>
     </span>
-    <span class="rs-mii-studio-panel__title">${args.label}</span>
-    <span class="rs-mii-studio-panel__desc">Créez votre Corporate Mii et publiez-le dans le salon.</span>
-    <span class="rs-mii-studio-panel__cta">Ouvrir le configurateur →</span>
+    <span class="rs-mii-studio-panel__title">${MII_PANEL_COPY.title}</span>
+    <span class="rs-mii-studio-panel__desc">${MII_PANEL_COPY.desc}</span>
+    <span class="rs-mii-studio-panel__cta">${MII_PANEL_COPY.cta}</span>
   `;
 
   bindMiiStudioOpen(panel);
@@ -375,9 +378,7 @@ function buildViewerConfig() {
             scale: false,
             cssClass: "rs-mii-studio-hotspot",
             createTooltipFunc: createMiiStudioHotspot,
-            createTooltipArgs: {
-              label: HOTSPOT_CONFIG.miiStudio.label,
-            },
+            createTooltipArgs: {},
             clickHandlerFunc: () => openMiiStudio(),
           },
           ...HOTSPOT_CONFIG.ghosts.map((g) => ({
