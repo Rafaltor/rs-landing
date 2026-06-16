@@ -1259,7 +1259,6 @@ img {
 }
 
 .pnlm-hotspot-base.rs-avatar-screen--ghost {
-  position: relative;
   width: 130px;
   height: 210px;
 }
@@ -1303,6 +1302,7 @@ img {
 }
 
 .rs-avatar-screen__viewport--ghost {
+  position: relative;
   width: 130px;
   height: 210px;
   background: transparent;

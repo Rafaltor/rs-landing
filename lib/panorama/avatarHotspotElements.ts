@@ -1,3 +1,4 @@
+import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import { layoutPannellumHotspot } from "@/lib/panorama/layoutPannellumHotspot";
 
 type AvatarHotspotEntry = {
@@ -38,7 +39,11 @@ export function getAvatarHotspotElement(
 export function layoutRegisteredAvatarHotspots(viewer: PannellumViewer): void {
   for (const entry of entries.values()) {
     layoutPannellumHotspot(
-      { pitch: entry.pitch, yaw: entry.yaw, scale: false },
+      {
+        pitch: layoutPitchForAvatarHotspot(entry.pitch),
+        yaw: entry.yaw,
+        scale: false,
+      },
       viewer,
       0,
       entry.element,

@@ -80,7 +80,7 @@ function randomConfig(): AvatarConfig {
 
 export function randomScenePosition(): { pitch: number; yaw: number } {
   return {
-    pitch: -14 + Math.random() * 10,
+    pitch: -5 + Math.random() * 8,
     yaw: Math.random() * 300 - 150,
   };
 }
