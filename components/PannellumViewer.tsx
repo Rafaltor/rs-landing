@@ -145,16 +145,16 @@ const createMiiStudioHotspot = (
 
   const panel = document.createElement("button");
   panel.type = "button";
-  panel.className = "rs-panorama-card rs-mii-studio-panel";
+  panel.className = "rs-mii-studio-panel";
   panel.setAttribute("aria-label", "Ouvrir le studio Mii");
   panel.innerHTML = `
-    <span class="rs-panorama-card__tags">
-      <span class="rs-panorama-card__tag rs-panorama-card__tag--pink">Studio avatar</span>
-      <span class="rs-panorama-card__tag rs-panorama-card__tag--blue">Salon 360°</span>
+    <span class="rs-mii-studio-panel__tags">
+      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--pink">Studio avatar</span>
+      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--blue">Salon 360°</span>
     </span>
-    <span class="rs-panorama-card__title">${args.label}</span>
-    <span class="rs-panorama-card__desc">Créez votre Corporate Mii et publiez-le dans le salon.</span>
-    <span class="rs-panorama-card__cta">Ouvrir le configurateur →</span>
+    <span class="rs-mii-studio-panel__title">${args.label}</span>
+    <span class="rs-mii-studio-panel__desc">Créez votre Corporate Mii et publiez-le dans le salon.</span>
+    <span class="rs-mii-studio-panel__cta">Ouvrir le configurateur →</span>
   `;
 
   bindMiiStudioOpen(panel);
@@ -166,39 +166,46 @@ const createMiiStudioHotspot = (
   setTimeout(() => centerHotspotPanel(hotSpotDiv, panel), 120);
 };
 
-const bindNavHotspot = (el: HTMLElement) => {
-  el.addEventListener("mousedown", (e) => e.stopPropagation());
-  el.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
-  el.addEventListener("click", (e) => e.stopPropagation());
-};
+const NAV_ARROW_SVG = {
+  right: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+  left: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`,
+  down: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg>`,
+} as const;
 
 const createNavHotspot = (
   hotSpotDiv: HTMLElement,
   args: NavHotspotArgs,
 ) => {
   hotSpotDiv.classList.add("rs-nav-hotspot", "pnlm-pointer");
-  hotSpotDiv.style.width = "10px";
-  hotSpotDiv.style.height = "10px";
-  hotSpotDiv.style.background = "transparent";
-  hotSpotDiv.style.border = "none";
-  hotSpotDiv.style.overflow = "visible";
 
-  const pill = document.createElement(args.href ? "a" : "button");
+  const stack = document.createElement("div");
+  stack.className = "rs-nav-hotspot__stack";
+
+  const label = document.createElement("div");
+  label.className = "rs-nav-hotspot__label";
+  label.textContent = args.label;
+
+  const inner = document.createElement("div");
+  inner.className = "rs-nav-hotspot__inner";
+  inner.innerHTML = NAV_ARROW_SVG[args.direction];
+
+  stack.appendChild(label);
+  stack.appendChild(inner);
+
   if (args.href) {
-    (pill as HTMLAnchorElement).href = args.href;
-    (pill as HTMLAnchorElement).target = "_blank";
-    (pill as HTMLAnchorElement).rel = "noopener noreferrer";
+    const link = document.createElement("a");
+    link.href = args.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "rs-nav-hotspot__link";
+    link.appendChild(stack);
+    link.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    hotSpotDiv.appendChild(link);
   } else {
-    (pill as HTMLButtonElement).type = "button";
+    hotSpotDiv.appendChild(stack);
   }
-  pill.className = "rs-panorama-pill";
-  pill.innerHTML = `<span class="rs-panorama-pill__label">${args.label}</span><span class="rs-panorama-pill__arrow">${NAV_ARROW_SVG[args.direction]}</span>`;
-
-  bindNavHotspot(pill);
-  hotSpotDiv.appendChild(pill);
-
-  requestAnimationFrame(() => centerHotspotPanel(hotSpotDiv, pill));
-  setTimeout(() => centerHotspotPanel(hotSpotDiv, pill), 120);
 };
 
 const createGhostHotspot = (
@@ -225,12 +232,6 @@ const createGhostHotspot = (
   hotSpotDiv.appendChild(img);
 };
 
-const NAV_ARROW_SVG = {
-  right: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
-  left: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`,
-  down: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg>`,
-} as const;
-
 const createProductHotspot = (
   hotSpotDiv: HTMLElement,
   args: ProductHotspotArgs,
@@ -248,7 +249,7 @@ const createProductHotspot = (
   const tooltip = document.createElement("div");
   tooltip.classList.add("rs-product-tooltip");
   tooltip.innerHTML = `
-    <article class="rs-panorama-card rs-product-card">
+    <article class="rs-product-card">
       <div class="rs-product-card__tags">
         <span class="rs-product-card__tag rs-product-card__tag--green">Candidatures ouvertes</span>
         <span class="rs-product-card__tag rs-product-card__tag--blue">Boutique</span>
