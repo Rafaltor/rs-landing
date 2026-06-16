@@ -13,6 +13,7 @@ interface NavHotspotArgs {
 }
 
 interface PannellumHotSpot {
+  id?: string;
   pitch: number;
   yaw: number;
   type?: string;
@@ -23,6 +24,10 @@ interface PannellumHotSpot {
   cssClass?: string;
   createTooltipFunc?: (hotSpotDiv: HTMLElement, args: unknown) => void;
   createTooltipArgs?: unknown;
+  clickHandlerFunc?: (event: MouseEvent, args?: unknown) => void;
+  clickHandlerArgs?: unknown;
+  /** Présent sur les hotspots runtime après création DOM (Pannellum). */
+  div?: HTMLElement;
 }
 
 interface PannellumSceneConfig {
@@ -52,10 +57,23 @@ interface PannellumTourConfig {
 interface PannellumViewer {
   destroy: () => void;
   setHfov?: (hfov: number, animated?: boolean) => void;
+  getPitch?: () => number;
+  getYaw?: () => number;
+  getHfov?: () => number;
+  getCanvas?: () => HTMLCanvasElement;
+  getContainer?: () => HTMLElement;
+  isLoaded?: () => boolean;
   isOrientationSupported?: () => boolean;
   isOrientationActive?: () => boolean;
   startOrientation?: () => void;
   stopOrientation?: () => void;
+  addHotSpot?: (hotSpot: PannellumHotSpot, sceneId?: string) => void;
+  removeHotSpot?: (hotSpotId: string, sceneId?: string) => void;
+  /** Config de la scène active (contient `hotSpots`, pas `scenes`). */
+  getConfig?: () => PannellumSceneConfig;
+  setUpdate?: (enabled: boolean) => void;
+  on?: (event: string, handler: (...args: unknown[]) => void) => PannellumViewer;
+  off?: (event: string, handler: (...args: unknown[]) => void) => PannellumViewer;
 }
 
 interface PannellumStatic {

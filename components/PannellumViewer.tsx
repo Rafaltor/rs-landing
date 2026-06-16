@@ -2,6 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import GyroscopeButton from "./GyroscopeButton";
+import {
+  createAvatarScreen,
+  disposeAllAvatarScreens,
+} from "@/lib/avatar/avatarScreenHotspot";
+import {
+  ensureAvatarPlacementsHydrated,
+  subscribeAvatarPlacements,
+} from "@/lib/avatar/avatarPlacements";
+import {
+  clearAvatarHotspotRegistry,
+  layoutAllAvatarHotspots,
+  syncAvatarHotspots,
+} from "@/lib/panorama/syncAvatarHotspots";
+import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
+import {
+  refreshAvatarWanderLoop,
+  startAvatarWanderLoop,
+  stopAvatarWanderLoop,
+} from "@/lib/panorama/avatarWanderLoop";
+import { openMiiStudio } from "@/lib/landing/miiStudioBus";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
@@ -44,6 +64,12 @@ const HOTSPOT_CONFIG = {
     label: "GRILLZ",
     href: "https://recrutestagiaire.eu/pages/grillz",
   },
+  miiStudio: {
+    /** Mur vide à droite — loin produit (-104), fantômes, portail (-11) et grillz (153). */
+    pitch: -3,
+    yaw: 58,
+    label: "MON MII",
+  },
   ghosts: GHOST_OFFSETS.map((o) => ({
     pitch: PRODUCT_HOTSPOT.pitch + o.dp,
     yaw: PRODUCT_HOTSPOT.yaw + o.dy,
@@ -72,6 +98,76 @@ type NavHotspotArgs = {
 type GhostHotspotArgs = {
   image: string;
   delay: number;
+};
+
+type MiiStudioHotspotArgs = {
+  label: string;
+};
+
+const MII_ICON_SVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3.5"/><path d="M5 20c.6-3.2 3-5 7-5s6.4 1.8 7 5"/></svg>`;
+
+const bindMiiStudioOpen = (el: HTMLElement) => {
+  const stop = (e: Event) => {
+    e.stopPropagation();
+  };
+  const open = (e: Event) => {
+    e.stopPropagation();
+    e.preventDefault();
+    openMiiStudio();
+  };
+
+  el.addEventListener("pointerdown", stop);
+  el.addEventListener("mousedown", stop);
+  el.addEventListener("touchstart", stop, { passive: true });
+  el.addEventListener("pointerup", open);
+  el.addEventListener("click", open);
+};
+
+const centerHotspotPanel = (
+  hotSpotDiv: HTMLElement,
+  panel: HTMLElement,
+) => {
+  const tw = panel.offsetWidth;
+  const th = panel.offsetHeight;
+  const dw = hotSpotDiv.offsetWidth;
+  panel.style.marginLeft = `${-((tw - dw) / 2)}px`;
+  panel.style.marginTop = `${-(th / 2)}px`;
+};
+
+const createMiiStudioHotspot = (
+  hotSpotDiv: HTMLElement,
+  args: MiiStudioHotspotArgs,
+) => {
+  hotSpotDiv.classList.add("rs-mii-studio-hotspot", "pnlm-pointer");
+  hotSpotDiv.style.width = "10px";
+  hotSpotDiv.style.height = "10px";
+  hotSpotDiv.style.background = "transparent";
+  hotSpotDiv.style.border = "none";
+  hotSpotDiv.style.overflow = "visible";
+
+  const panel = document.createElement("button");
+  panel.type = "button";
+  panel.className = "rs-mii-studio-panel";
+  panel.setAttribute("aria-label", "Ouvrir le studio Mii");
+  panel.innerHTML = `
+    <span class="rs-mii-studio-panel__tag">Studio avatar</span>
+    <span class="rs-mii-studio-panel__row">
+      <span class="rs-mii-studio-panel__icon">${MII_ICON_SVG}</span>
+      <span class="rs-mii-studio-panel__copy">
+        <span class="rs-mii-studio-panel__title">${args.label}</span>
+        <span class="rs-mii-studio-panel__desc">Créez votre Corporate Mii et publiez-le dans le salon</span>
+      </span>
+    </span>
+    <span class="rs-mii-studio-panel__cta">Ouvrir le configurateur →</span>
+  `;
+
+  bindMiiStudioOpen(panel);
+  hotSpotDiv.appendChild(panel);
+
+  bindMiiStudioOpen(hotSpotDiv);
+
+  requestAnimationFrame(() => centerHotspotPanel(hotSpotDiv, panel));
+  setTimeout(() => centerHotspotPanel(hotSpotDiv, panel), 120);
 };
 
 const createGhostHotspot = (
@@ -277,6 +373,17 @@ function buildViewerConfig() {
               href: HOTSPOT_CONFIG.grillz.href,
             },
           },
+          {
+            pitch: HOTSPOT_CONFIG.miiStudio.pitch,
+            yaw: HOTSPOT_CONFIG.miiStudio.yaw,
+            scale: false,
+            cssClass: "rs-mii-studio-hotspot",
+            createTooltipFunc: createMiiStudioHotspot,
+            createTooltipArgs: {
+              label: HOTSPOT_CONFIG.miiStudio.label,
+            },
+            clickHandlerFunc: () => openMiiStudio(),
+          },
           ...HOTSPOT_CONFIG.ghosts.map((g) => ({
             pitch: g.pitch,
             yaw: g.yaw,
@@ -335,8 +442,22 @@ export default function PannellumViewer() {
     if (!container) return;
 
     const onResize = () => {
-      viewerRef.current?.setHfov?.(getSceneHfov(), false);
+      const viewer = viewerRef.current;
+      if (!viewer) return;
+      viewer.setHfov?.(getSceneHfov(), false);
+      layoutAllAvatarHotspots(viewer);
+      layoutRegisteredAvatarHotspots(viewer);
     };
+
+    const onViewerViewChange = () => {
+      const viewer = viewerRef.current;
+      if (!viewer) return;
+      layoutAllAvatarHotspots(viewer);
+      layoutRegisteredAvatarHotspots(viewer);
+    };
+
+    let unsubPlacements: (() => void) | null = null;
+    let bootAvatars: (() => void) | null = null;
 
     async function init() {
       try {
@@ -354,7 +475,38 @@ export default function PannellumViewer() {
           containerRef.current,
           buildViewerConfig() as PannellumTourConfig,
         );
+        const viewer = viewerRef.current;
+
+        await ensureAvatarPlacementsHydrated();
+
+        bootAvatars = () => {
+          if (cancelled || !viewerRef.current) return;
+          syncAvatarHotspots(viewerRef.current);
+          startAvatarWanderLoop(viewerRef.current);
+          layoutAllAvatarHotspots(viewerRef.current);
+          layoutRegisteredAvatarHotspots(viewerRef.current);
+        };
+
+        if (viewer.isLoaded?.()) {
+          bootAvatars();
+        } else {
+          viewer.on?.("load", bootAvatars);
+        }
+
+        viewer.on?.("mouseup", onViewerViewChange);
+        viewer.on?.("touchend", onViewerViewChange);
+        viewer.on?.("zoomchange", onViewerViewChange);
         setViewerReady(true);
+
+        unsubPlacements = subscribeAvatarPlacements(() => {
+          if (viewerRef.current) {
+            disposeAllAvatarScreens();
+            syncAvatarHotspots(viewerRef.current);
+            refreshAvatarWanderLoop();
+            layoutAllAvatarHotspots(viewerRef.current);
+            layoutRegisteredAvatarHotspots(viewerRef.current);
+          }
+        });
 
         window.addEventListener("resize", onResize);
       } catch {
@@ -367,7 +519,17 @@ export default function PannellumViewer() {
     return () => {
       cancelled = true;
       setViewerReady(false);
+      unsubPlacements?.();
+      stopAvatarWanderLoop();
+      if (bootAvatars) {
+        viewerRef.current?.off?.("load", bootAvatars);
+      }
+      viewerRef.current?.off?.("mouseup", onViewerViewChange);
+      viewerRef.current?.off?.("touchend", onViewerViewChange);
+      viewerRef.current?.off?.("zoomchange", onViewerViewChange);
       window.removeEventListener("resize", onResize);
+      disposeAllAvatarScreens();
+      clearAvatarHotspotRegistry();
       viewerRef.current?.destroy();
       viewerRef.current = null;
     };
