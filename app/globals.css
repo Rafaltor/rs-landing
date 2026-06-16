@@ -1259,8 +1259,9 @@ img {
 }
 
 .pnlm-hotspot-base.rs-avatar-screen--ghost {
-  width: 168px;
-  height: 272px;
+  /* Boîte d’ancrage Pannellum (inchangée) — le viewport déborde vers le haut. */
+  width: 130px;
+  height: 210px;
 }
 
 .rs-avatar-screen__pseudo {
@@ -1302,10 +1303,12 @@ img {
 }
 
 .rs-avatar-screen__viewport--ghost {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
   width: 168px;
   height: 272px;
-  flex-shrink: 0;
   background: transparent;
   overflow: visible;
 }
