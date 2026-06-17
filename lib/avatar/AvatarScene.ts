@@ -9,7 +9,11 @@ import {
 import { disposeAvatarGeometries } from "./disposeAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 import type { AvatarConfig } from "./palettes";
-import { getAvatarWalkMotion } from "./avatarWalkHeading";
+import { applyFightPose } from "./fightPose";
+import {
+  decayAvatarFightState,
+  getAvatarWalkMotion,
+} from "./avatarWalkHeading";
 import { applyWalkPose } from "./walkPose";
 
 export type AvatarSceneOptions = {
@@ -362,15 +366,18 @@ export class AvatarScene {
 
     if (avatar && !this.reducedMotion) {
       if (this.options.walk) {
-        const motion = this.options.placementId
-          ? getAvatarWalkMotion(this.options.placementId)
-          : null;
-        applyWalkPose(avatar, elapsed, {
-          speed: motion?.speed ?? 3.6,
-          headingY: motion?.headingY ?? 0,
-          turnLean: motion?.turnLean ?? 0,
-          pitchLean: motion?.pitchLean ?? 0,
-        });
+        const placementId = this.options.placementId;
+        if (placementId) decayAvatarFightState(placementId, delta);
+        const motion = placementId ? getAvatarWalkMotion(placementId) : null;
+        if (motion && motion.fightPhase > 0.05) {
+          applyFightPose(avatar, elapsed, motion.fightPhase, motion.fightSeed);
+        } else {
+          applyWalkPose(avatar, elapsed, {
+            speed: motion?.speed ?? 3.6,
+            headingY: motion?.headingY ?? 0,
+            turnLean: motion?.turnLean ?? 0,
+          });
+        }
       } else {
         avatar.group.rotation.y = elapsed * 0.32;
         avatar.group.rotation.z = Math.sin(elapsed * 0.85) * 0.01;
@@ -400,7 +407,7 @@ export class AvatarScene {
       const motion = this.options.placementId
         ? getAvatarWalkMotion(this.options.placementId)
         : null;
-      avatar.group.rotation.x = this.options.walk ? (motion?.pitchLean ?? 0) : 0;
+      avatar.group.rotation.x = 0;
       avatar.group.rotation.y = this.options.walk ? (motion?.headingY ?? 0) : 0.4;
       avatar.group.rotation.z = this.options.walk ? (motion?.turnLean ?? 0) : 0;
       avatar.group.position.y = 0;

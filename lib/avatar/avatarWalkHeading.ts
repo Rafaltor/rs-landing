@@ -1,12 +1,13 @@
 export type AvatarWalkMotion = {
   /** Rotation Y du corps (radians), alignée sur la direction de déplacement. */
   headingY: number;
-  /** Inclinaison latérale dans les virages. */
+  /** Inclinaison latérale gauche / droite pendant le déplacement. */
   turnLean: number;
-  /** Inclinaison avant/arrière quand le Mii monte ou descend dans le panorama. */
-  pitchLean: number;
   /** Multiplicateur vitesse d'animation de marche. */
   speed: number;
+  /** Intensité bagarre (décroît vers 0). */
+  fightPhase: number;
+  fightSeed: number;
 };
 
 const motions = new Map<string, AvatarWalkMotion>();
@@ -14,8 +15,9 @@ const motions = new Map<string, AvatarWalkMotion>();
 const DEFAULT_MOTION: AvatarWalkMotion = {
   headingY: 0,
   turnLean: 0,
-  pitchLean: 0,
   speed: 3.6,
+  fightPhase: 0,
+  fightSeed: 0,
 };
 
 function lerpAngle(from: number, to: number, t: number): number {
@@ -38,6 +40,14 @@ export function updateAvatarWalkMotion(
   deltaPitch: number,
 ): void {
   const prev = motions.get(placementId) ?? DEFAULT_MOTION;
+  if (prev.fightPhase > 0.15) {
+    motions.set(placementId, {
+      ...prev,
+      turnLean: lerpAngle(prev.turnLean, 0, 0.12),
+    });
+    return;
+  }
+
   const move = Math.hypot(deltaYaw, deltaPitch);
 
   let targetHeading = prev.headingY;
@@ -47,15 +57,16 @@ export function updateAvatarWalkMotion(
   }
 
   const headingY = lerpAngle(prev.headingY, targetHeading, 0.2);
-  const turnLean = lerpAngle(prev.turnLean, deltaYaw * 0.022, 0.25);
-  const targetPitchLean = Math.max(
-    -0.48,
-    Math.min(0.48, -deltaPitch * 0.062),
-  );
-  const pitchLean = lerpAngle(prev.pitchLean, targetPitchLean, 0.2);
+  const targetLean = Math.max(-0.38, Math.min(0.38, deltaYaw * 0.052));
+  const turnLean = lerpAngle(prev.turnLean, targetLean, 0.28);
   const speed = 3.6 * Math.min(2.1, Math.max(0.45, move / 0.09));
 
-  motions.set(placementId, { headingY, turnLean, pitchLean, speed });
+  motions.set(placementId, {
+    ...prev,
+    headingY,
+    turnLean,
+    speed,
+  });
 }
 
 export function updateAvatarWalkMotionForHotspot(
@@ -66,6 +77,29 @@ export function updateAvatarWalkMotionForHotspot(
   const placementId = placementIdFromHotspotId(hotspotId);
   if (!placementId) return;
   updateAvatarWalkMotion(placementId, deltaYaw, deltaPitch);
+}
+
+export function triggerAvatarFight(placementId: string): void {
+  const prev = motions.get(placementId) ?? DEFAULT_MOTION;
+  motions.set(placementId, {
+    ...prev,
+    fightPhase: 1.2,
+    fightSeed: Math.random() * 100,
+    speed: 5.4,
+    turnLean: 0,
+  });
+}
+
+export function triggerAvatarFightForHotspot(hotspotId: string): void {
+  const placementId = placementIdFromHotspotId(hotspotId);
+  if (!placementId) return;
+  triggerAvatarFight(placementId);
+}
+
+export function decayAvatarFightState(placementId: string, delta: number): void {
+  const motion = motions.get(placementId);
+  if (!motion || motion.fightPhase <= 0) return;
+  motion.fightPhase = Math.max(0, motion.fightPhase - delta * 1.15);
 }
 
 export function getAvatarWalkMotion(placementId: string): AvatarWalkMotion {

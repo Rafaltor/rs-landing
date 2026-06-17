@@ -5,10 +5,8 @@ export type WalkPoseOptions = {
   speed?: number;
   /** Orientation du corps (radians). */
   headingY?: number;
-  /** Inclinaison dans les virages. */
+  /** Inclinaison latérale gauche / droite. */
   turnLean?: number;
-  /** Inclinaison avant/arrière (montée / descente). */
-  pitchLean?: number;
 };
 
 /** Pose de marche procédurale (jambes + bras + balancement). */
@@ -22,7 +20,6 @@ export function applyWalkPose(
   const speed = resolved.speed ?? 3.6;
   const headingY = resolved.headingY ?? 0;
   const turnLean = resolved.turnLean ?? 0;
-  const pitchLean = resolved.pitchLean ?? 0;
   const t = elapsed * speed;
 
   for (const leg of avatar.parts.legs) {
@@ -39,11 +36,12 @@ export function applyWalkPose(
 
   const bob = Math.abs(Math.sin(t * 2));
   avatar.group.position.y = bob * 0.024;
-  avatar.group.rotation.x = pitchLean;
+  avatar.group.rotation.x = 0;
   avatar.group.rotation.y = headingY;
   avatar.group.rotation.z = turnLean;
   avatar.parts.body.scale.y = 1 + bob * 0.008;
   avatar.parts.head.position.y = HEAD_BASE_Y + bob * 0.012;
   avatar.parts.head.rotation.y =
     Math.sin(t * 0.6) * 0.03 - turnLean * 0.45 + headingY * 0.08;
+  avatar.parts.head.rotation.z = turnLean * 0.25;
 }

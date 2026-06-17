@@ -10,28 +10,20 @@ import {
 } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import {
+  resolveAvatarCollisions,
+  type WanderWalker,
+} from "@/lib/panorama/avatarWanderCollisions";
+import {
   getAvatarRuntimeHotspots,
   getActiveSceneHotspots,
 } from "@/lib/panorama/syncAvatarHotspots";
 
-type Walker = {
-  hotspotId: string;
-  basePitch: number;
-  baseYaw: number;
-  phase: number;
-  yawRate: number;
-  pitchAmp: number;
-  yawAmp: number;
-  prevPitch: number;
-  prevYaw: number;
-};
-
 let rafId = 0;
 let activeViewer: PannellumViewer | null = null;
 let repaintTick = 0;
-const walkers: Walker[] = [];
+const walkers: WanderWalker[] = [];
 
-function wanderPosition(w: Walker): { pitch: number; yaw: number } {
+function wanderPosition(w: WanderWalker): { pitch: number; yaw: number } {
   const pitchWave =
     Math.sin(w.phase * 0.75) * w.pitchAmp +
     Math.sin(w.phase * 1.35 + 0.6) * w.pitchAmp * 0.38;
@@ -53,16 +45,17 @@ function rebuildWalkers(): void {
   for (const p of getAvatarPlacements()) {
     const seed = Math.abs(p.id.charCodeAt(0) + p.yaw);
     const phase = seed * 0.11;
-    const walker: Walker = {
+    const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
       basePitch: p.pitch,
       baseYaw: p.yaw,
       phase,
-      yawRate: 0.22 + (seed % 7) * 0.04,
-      pitchAmp: 3.4 + (seed % 6) * 1.15,
-      yawAmp: 10 + (seed % 6) * 2.5,
+      yawRate: 0.26 + (seed % 7) * 0.05,
+      pitchAmp: 4.2 + (seed % 6) * 1.25,
+      yawAmp: 14 + (seed % 6) * 3,
       prevPitch: 0,
       prevYaw: 0,
+      collisionCooldown: 0,
     };
     const pos = wanderPosition(walker);
     walker.prevPitch = pos.pitch;
@@ -103,7 +96,12 @@ export function startAvatarWanderLoop(viewer: PannellumViewer): void {
     if (!viewerRef) return;
 
     for (const w of walkers) {
-      w.phase += 0.014;
+      w.phase += 0.016;
+    }
+
+    resolveAvatarCollisions(walkers, wanderPosition, normalizeYawDelta);
+
+    for (const w of walkers) {
       const pos = wanderPosition(w);
       const deltaYaw = normalizeYawDelta(pos.yaw - w.prevYaw);
       const deltaPitch = pos.pitch - w.prevPitch;
