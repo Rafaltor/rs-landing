@@ -1,4 +1,7 @@
-import { triggerAvatarFightForHotspot } from "@/lib/avatar/avatarWalkHeading";
+import {
+  isAvatarBumping,
+  triggerAvatarBumpForHotspot,
+} from "@/lib/avatar/avatarWalkHeading";
 
 export type WanderWalker = {
   hotspotId: string;
@@ -15,11 +18,15 @@ export type WanderWalker = {
 
 const COLLISION_DIST_DEG = 11;
 const SEPARATION_PUSH = 3.4;
-const COOLDOWN_FRAMES = 110;
+const COOLDOWN_FRAMES = 75;
 
 type SamplePosition = (walker: WanderWalker) => { pitch: number; yaw: number };
 
-/** Détection + répulsion + déclenchement bagarre entre Mii proches. */
+function facingToward(dy: number, dp: number): number {
+  return Math.atan2(dy, dp * 0.42 + 0.06);
+}
+
+/** Détection, répulsion, réaction courte, puis reprise du parcours en sens inverse. */
 export function resolveAvatarCollisions(
   walkers: WanderWalker[],
   samplePosition: SamplePosition,
@@ -35,7 +42,15 @@ export function resolveAvatarCollisions(
     for (let j = i + 1; j < walkers.length; j++) {
       const a = walkers[i];
       const b = walkers[j];
-      if (a.collisionCooldown > 0 && b.collisionCooldown > 0) continue;
+
+      if (
+        a.collisionCooldown > 0 ||
+        b.collisionCooldown > 0 ||
+        isAvatarBumping(a.hotspotId) ||
+        isAvatarBumping(b.hotspotId)
+      ) {
+        continue;
+      }
 
       const posA = samplePosition(a);
       const posB = samplePosition(b);
@@ -57,14 +72,14 @@ export function resolveAvatarCollisions(
 
       a.yawRate *= -1;
       b.yawRate *= -1;
-      a.phase += 0.35;
-      b.phase += 0.35;
+      a.phase += 0.4;
+      b.phase += 0.4;
 
       a.collisionCooldown = COOLDOWN_FRAMES;
       b.collisionCooldown = COOLDOWN_FRAMES;
 
-      triggerAvatarFightForHotspot(a.hotspotId);
-      triggerAvatarFightForHotspot(b.hotspotId);
+      triggerAvatarBumpForHotspot(a.hotspotId, facingToward(dy, dp));
+      triggerAvatarBumpForHotspot(b.hotspotId, facingToward(-dy, -dp));
     }
   }
 }

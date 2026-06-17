@@ -1,53 +1,47 @@
 import type { AvatarBuildResult } from "./buildAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 
-/** Pose de bagarre procédurale (coups de poing alternés). */
-export function applyFightPose(
+/**
+ * Réaction courte à la collision : profil fixe, bras qui bougent, puis retour marche.
+ * @param bumpPhase temps restant (1 → 0)
+ * @param facingY rotation Y (profil vers l'autre Mii)
+ */
+export function applyBumpPose(
   avatar: AvatarBuildResult,
-  elapsed: number,
-  fightPhase: number,
-  seed: number,
+  bumpPhase: number,
+  facingY: number,
 ): void {
-  const intensity = Math.min(1, fightPhase / 0.35);
-  const fade = fightPhase < 0.25 ? fightPhase / 0.25 : 1;
-  const k = intensity * fade;
-  const t = elapsed * 9 + seed;
-
-  const punchSide = Math.sin(t * 4.2) > 0 ? 1 : -1;
-  const windup = (Math.sin(t * 4.2) + 1) * 0.5;
+  const progress = 1 - bumpPhase;
+  const k = Math.sin(progress * Math.PI);
 
   for (const arm of avatar.parts.arms) {
-    const punching = arm.side === punchSide;
+    const push = arm.side > 0 ? 1 : -1;
     if (arm.shoulder) {
-      if (punching) {
-        arm.shoulder.rotation.x = -0.35 - windup * 1.35 * k;
-        arm.shoulder.rotation.z = arm.side * (-0.22 - windup * 0.35) * k;
-        arm.shoulder.rotation.y = arm.side * 0.18 * k;
-      } else {
-        arm.shoulder.rotation.x = -0.55 * k;
-        arm.shoulder.rotation.z = arm.side * 0.42 * k;
-        arm.shoulder.rotation.y = 0;
-      }
+      arm.shoulder.rotation.x = -0.25 - k * 0.95;
+      arm.shoulder.rotation.z = push * (0.18 + k * 0.62);
+      arm.shoulder.rotation.y = push * k * 0.12;
     }
     if (arm.elbow) {
-      arm.elbow.rotation.x = punching
-        ? -0.25 - windup * 1.05 * k
-        : 0.35 * k;
+      arm.elbow.rotation.x = -0.1 - k * 0.75;
     }
   }
 
   for (const leg of avatar.parts.legs) {
-    const stagger = leg.side === punchSide ? 0.28 : 0.08;
-    if (leg.hip) leg.hip.rotation.x = stagger * k;
-    if (leg.knee) leg.knee.rotation.x = Math.max(0, stagger * 0.55 * k);
+    const brace = leg.side > 0 ? 0.12 : 0.22;
+    if (leg.hip) leg.hip.rotation.x = brace * k;
+    if (leg.knee) leg.knee.rotation.x = Math.max(0, brace * 0.4 * k);
   }
 
-  const sway = Math.sin(t * 8) * 0.11 * k;
-  avatar.group.position.y = Math.abs(Math.sin(t * 6.5)) * 0.035 * k;
-  avatar.group.rotation.y = sway * 0.35;
-  avatar.group.rotation.z = sway;
-  avatar.parts.body.scale.y = 1 + Math.sin(t * 10) * 0.012 * k;
-  avatar.parts.head.position.y = HEAD_BASE_Y + Math.sin(t * 7) * 0.018 * k;
-  avatar.parts.head.rotation.y = punchSide * 0.22 * k;
-  avatar.parts.head.rotation.z = sway * 0.5;
+  avatar.group.position.y = k * 0.018;
+  avatar.group.rotation.x = 0;
+  avatar.group.rotation.y = facingY;
+  avatar.group.rotation.z = pushLean(progress, facingY) * k * 0.06;
+  avatar.parts.body.scale.y = 1 + k * 0.006;
+  avatar.parts.head.position.y = HEAD_BASE_Y + k * 0.008;
+  avatar.parts.head.rotation.y = facingY * 0.08;
+  avatar.parts.head.rotation.z = 0;
+}
+
+function pushLean(progress: number, facingY: number): number {
+  return Math.sin(progress * Math.PI * 2 + facingY) > 0 ? 1 : -1;
 }

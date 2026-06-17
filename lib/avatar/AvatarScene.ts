@@ -9,9 +9,9 @@ import {
 import { disposeAvatarGeometries } from "./disposeAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 import type { AvatarConfig } from "./palettes";
-import { applyFightPose } from "./fightPose";
+import { applyBumpPose } from "./fightPose";
 import {
-  decayAvatarFightState,
+  decayAvatarBumpState,
   getAvatarWalkMotion,
 } from "./avatarWalkHeading";
 import { applyWalkPose } from "./walkPose";
@@ -367,10 +367,10 @@ export class AvatarScene {
     if (avatar && !this.reducedMotion) {
       if (this.options.walk) {
         const placementId = this.options.placementId;
-        if (placementId) decayAvatarFightState(placementId, delta);
+        if (placementId) decayAvatarBumpState(placementId, delta);
         const motion = placementId ? getAvatarWalkMotion(placementId) : null;
-        if (motion && motion.fightPhase > 0.05) {
-          applyFightPose(avatar, elapsed, motion.fightPhase, motion.fightSeed);
+        if (motion && motion.bumpPhase > 0.02) {
+          applyBumpPose(avatar, motion.bumpPhase, motion.bumpFacingY);
         } else {
           applyWalkPose(avatar, elapsed, {
             speed: motion?.speed ?? 3.6,

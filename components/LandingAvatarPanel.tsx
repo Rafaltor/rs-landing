@@ -7,6 +7,7 @@ import {
   DEFAULT_AVATAR_CONFIG,
   type AvatarConfig,
 } from "@/lib/avatar/palettes";
+import { getAvatar, setAvatar } from "@/lib/avatar/storage";
 import {
   ensureMyAvatarPlacement,
   ensureAvatarPlacementsHydrated,
@@ -18,10 +19,17 @@ import {
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
 
+const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
+
 type LandingAvatarPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
+function readInitialDraft(): AvatarConfig {
+  if (typeof window === "undefined") return DEFAULT_AVATAR_CONFIG;
+  return getAvatar();
+}
 
 export default function LandingAvatarPanel({
   open,
@@ -32,10 +40,9 @@ export default function LandingAvatarPanel({
   const [placements, setPlacements] = useState<AvatarPlacement[]>([]);
   const [hydrating, setHydrating] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [draftConfig, setDraftConfig] = useState<AvatarConfig>(
-    DEFAULT_AVATAR_CONFIG,
-  );
+  const [draftConfig, setDraftConfig] = useState<AvatarConfig>(readInitialDraft);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingDepositRef = useRef(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<AvatarScene | null>(null);
 
@@ -76,7 +83,7 @@ export default function LandingAvatarPanel({
     if (myMii) {
       setDraftConfig(myMii.config);
     } else {
-      setDraftConfig(DEFAULT_AVATAR_CONFIG);
+      setDraftConfig(getAvatar());
     }
   }, [open, myMii?.id, myMii?.config]);
 
@@ -108,7 +115,7 @@ export default function LandingAvatarPanel({
     sceneRef.current?.setConfig(draftConfig);
   }, [draftConfig]);
 
-  const persistConfig = useCallback(
+  const persistToSalon = useCallback(
     (config: AvatarConfig) => {
       if (!user || !myMii) return;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -122,9 +129,10 @@ export default function LandingAvatarPanel({
   const handleConfigChange = useCallback(
     (config: AvatarConfig) => {
       setDraftConfig(config);
-      if (myMii) persistConfig(config);
+      setAvatar(config);
+      if (myMii) persistToSalon(config);
     },
-    [myMii, persistConfig],
+    [myMii, persistToSalon],
   );
 
   const handleCreate = useCallback(async () => {
@@ -137,18 +145,71 @@ export default function LandingAvatarPanel({
     }
   }, [draftConfig, user]);
 
+  const handleDeposit = useCallback(() => {
+    if (!configured || busy) return;
+
+    if (!user) {
+      try {
+        sessionStorage.setItem(PENDING_DEPOSIT_KEY, "1");
+      } catch {
+        // sessionStorage indisponible — le brouillon local reste dans getAvatar()
+      }
+      signInWithGoogle();
+      return;
+    }
+
+    void handleCreate();
+  }, [busy, configured, handleCreate, signInWithGoogle, user]);
+
+  useEffect(() => {
+    if (!user || authLoading || hydrating || myMii || busy) return;
+    if (pendingDepositRef.current) return;
+
+    let pending = false;
+    try {
+      pending = sessionStorage.getItem(PENDING_DEPOSIT_KEY) === "1";
+    } catch {
+      pending = false;
+    }
+    if (!pending) return;
+
+    pendingDepositRef.current = true;
+    try {
+      sessionStorage.removeItem(PENDING_DEPOSIT_KEY);
+    } catch {
+      // ignore
+    }
+
+    void (async () => {
+      setBusy(true);
+      try {
+        await ensureMyAvatarPlacement(user.id, getAvatar());
+      } finally {
+        setBusy(false);
+        pendingDepositRef.current = false;
+      }
+    })();
+  }, [user, authLoading, hydrating, myMii, busy]);
+
   const handleRemove = useCallback(async () => {
     if (!user || !myMii) return;
     setBusy(true);
     try {
       await removeAvatarPlacement(myMii.id, user.id);
-      setDraftConfig(DEFAULT_AVATAR_CONFIG);
+      setDraftConfig(getAvatar());
     } finally {
       setBusy(false);
     }
   }, [myMii, user]);
 
   if (!open) return null;
+
+  const depositDisabled = busy || !configured;
+  const depositLabel = busy
+    ? "Dépôt…"
+    : !configured
+      ? "Indisponible"
+      : "Déposer son Stagiaire";
 
   return (
     <div
@@ -226,13 +287,6 @@ export default function LandingAvatarPanel({
           <div className="rs-mii-studio-modal__panel">
             {hydrating ? (
               <p className="rs-mii-studio-modal__loading">Chargement…</p>
-            ) : !user ? (
-              <div className="rs-mii-studio-modal__gate">
-                <p>
-                  Connectez-vous avec le même compte que le portail pour
-                  personnaliser votre Corporate Stagiaire.
-                </p>
-              </div>
             ) : (
               <>
                 <AvatarControls
@@ -257,14 +311,37 @@ export default function LandingAvatarPanel({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    className="rs-mii-studio-modal__create"
-                    disabled={busy}
-                    onClick={handleCreate}
-                  >
-                    {busy ? "Dépôt…" : "Déposer son Stagiaire"}
-                  </button>
+                  <div className="rs-mii-studio-modal__actions">
+                    {!configured ? (
+                      <p className="rs-mii-studio-modal__saved">
+                        Dépôt temporairement indisponible — vous pouvez quand
+                        même personnaliser votre stagiaire.
+                      </p>
+                    ) : !user ? (
+                      <p className="rs-mii-studio-modal__saved">
+                        Connectez-vous avec Google pour déposer votre stagiaire
+                        dans le salon.
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="rs-mii-studio-modal__create"
+                      disabled={depositDisabled}
+                      title={
+                        !configured
+                          ? "Connexion au salon indisponible"
+                          : undefined
+                      }
+                      aria-label={
+                        !configured
+                          ? "Déposer son Stagiaire — indisponible"
+                          : "Déposer son Stagiaire"
+                      }
+                      onClick={handleDeposit}
+                    >
+                      {depositLabel}
+                    </button>
+                  </div>
                 )}
               </>
             )}
