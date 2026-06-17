@@ -82,7 +82,10 @@ export function createAvatarScreen(
   );
 
   const scene = new AvatarScene(viewport, placement.config, {
-    pixelRatio: ghost ? 1.2 : 1.5,
+    pixelRatio:
+      ghost && typeof window !== "undefined"
+        ? Math.min(window.devicePixelRatio, window.innerWidth <= 768 ? 1 : 1.2)
+        : 1.5,
     lite: true,
     pauseWhenHidden: false,
     walk: ghost,

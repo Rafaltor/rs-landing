@@ -369,6 +369,7 @@ export class AvatarScene {
           speed: motion?.speed ?? 3.6,
           headingY: motion?.headingY ?? 0,
           turnLean: motion?.turnLean ?? 0,
+          pitchLean: motion?.pitchLean ?? 0,
         });
       } else {
         avatar.group.rotation.y = elapsed * 0.32;
@@ -399,6 +400,7 @@ export class AvatarScene {
       const motion = this.options.placementId
         ? getAvatarWalkMotion(this.options.placementId)
         : null;
+      avatar.group.rotation.x = this.options.walk ? (motion?.pitchLean ?? 0) : 0;
       avatar.group.rotation.y = this.options.walk ? (motion?.headingY ?? 0) : 0.4;
       avatar.group.rotation.z = this.options.walk ? (motion?.turnLean ?? 0) : 0;
       avatar.group.position.y = 0;

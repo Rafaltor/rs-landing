@@ -28,11 +28,15 @@ type Walker = {
 
 let rafId = 0;
 let activeViewer: PannellumViewer | null = null;
+let repaintTick = 0;
 const walkers: Walker[] = [];
 
 function wanderPosition(w: Walker): { pitch: number; yaw: number } {
+  const pitchWave =
+    Math.sin(w.phase * 0.75) * w.pitchAmp +
+    Math.sin(w.phase * 1.35 + 0.6) * w.pitchAmp * 0.38;
   return {
-    pitch: w.basePitch + Math.sin(w.phase * 0.75) * w.pitchAmp,
+    pitch: w.basePitch + pitchWave,
     yaw: w.baseYaw + Math.sin(w.phase * 0.5) * w.yawAmp + w.phase * w.yawRate,
   };
 }
@@ -55,7 +59,7 @@ function rebuildWalkers(): void {
       baseYaw: p.yaw,
       phase,
       yawRate: 0.22 + (seed % 7) * 0.04,
-      pitchAmp: 1.2 + (seed % 5) * 0.25,
+      pitchAmp: 3.4 + (seed % 6) * 1.15,
       yawAmp: 10 + (seed % 6) * 2.5,
       prevPitch: 0,
       prevYaw: 0,
@@ -113,7 +117,12 @@ export function startAvatarWanderLoop(viewer: PannellumViewer): void {
     }
 
     layoutRegisteredAvatarHotspots(viewerRef);
-    forcePannellumHotspotRepaint(viewerRef);
+    repaintTick += 1;
+    const mobile =
+      typeof window !== "undefined" && window.innerWidth <= 768;
+    if (!mobile || repaintTick % 3 === 0) {
+      forcePannellumHotspotRepaint(viewerRef);
+    }
   };
 
   tick();
@@ -127,5 +136,6 @@ export function stopAvatarWanderLoop(): void {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = 0;
   activeViewer = null;
+  repaintTick = 0;
   walkers.length = 0;
 }

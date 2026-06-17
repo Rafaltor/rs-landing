@@ -3,6 +3,8 @@ export type AvatarWalkMotion = {
   headingY: number;
   /** Inclinaison latérale dans les virages. */
   turnLean: number;
+  /** Inclinaison avant/arrière quand le Mii monte ou descend dans le panorama. */
+  pitchLean: number;
   /** Multiplicateur vitesse d'animation de marche. */
   speed: number;
 };
@@ -12,6 +14,7 @@ const motions = new Map<string, AvatarWalkMotion>();
 const DEFAULT_MOTION: AvatarWalkMotion = {
   headingY: 0,
   turnLean: 0,
+  pitchLean: 0,
   speed: 3.6,
 };
 
@@ -45,9 +48,14 @@ export function updateAvatarWalkMotion(
 
   const headingY = lerpAngle(prev.headingY, targetHeading, 0.2);
   const turnLean = lerpAngle(prev.turnLean, deltaYaw * 0.022, 0.25);
+  const targetPitchLean = Math.max(
+    -0.48,
+    Math.min(0.48, -deltaPitch * 0.062),
+  );
+  const pitchLean = lerpAngle(prev.pitchLean, targetPitchLean, 0.2);
   const speed = 3.6 * Math.min(2.1, Math.max(0.45, move / 0.09));
 
-  motions.set(placementId, { headingY, turnLean, speed });
+  motions.set(placementId, { headingY, turnLean, pitchLean, speed });
 }
 
 export function updateAvatarWalkMotionForHotspot(
