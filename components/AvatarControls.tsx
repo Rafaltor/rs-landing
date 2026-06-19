@@ -3,7 +3,6 @@
 import {
   ACCC,
   ACCS,
-  BODIES,
   EYESL,
   HAIRC,
   HAIRS,
@@ -39,7 +38,6 @@ function randomInt(max: number): number {
 
 function randomConfig(): AvatarConfig {
   return {
-    body: randomInt(BODIES.length),
     skin: randomInt(SKIN.length),
     hair: randomInt(HAIRS.length),
     hairColor: randomInt(HAIRC.length),
@@ -148,7 +146,7 @@ export default function AvatarControls({
   };
 
   const cycleIndex = (
-    key: "body" | "hair" | "eyes" | "nose" | "acc",
+    key: "hair" | "eyes" | "nose" | "acc",
     length: number,
     delta: number,
   ) => {
@@ -156,7 +154,6 @@ export default function AvatarControls({
     patch({ [key]: (current + delta + length) % length });
   };
 
-  const bodyIdx = paletteIndex(BODIES, cfg.body);
   const hairIdx = paletteIndex(HAIRS, cfg.hair);
   const eyesIdx = paletteIndex(EYESL, cfg.eyes);
   const noseIdx = paletteIndex(NOSES, cfg.nose);
@@ -200,12 +197,6 @@ export default function AvatarControls({
 
       <section className="rs-avatar-controls__section">
         <h3 className="rs-avatar-controls__section-title">Silhouette</h3>
-        <Cycler
-          label="Silhouette"
-          valueLabel={BODIES[bodyIdx]}
-          onPrev={() => cycleIndex("body", BODIES.length, -1)}
-          onNext={() => cycleIndex("body", BODIES.length, 1)}
-        />
         <Cycler
           label="Coiffure"
           valueLabel={formatLabel(HAIRS[hairIdx])}

@@ -29,7 +29,6 @@ function isAvatarConfig(value: unknown): value is AvatarConfig {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.body === "number" &&
     typeof v.skin === "number" &&
     typeof v.hair === "number" &&
     typeof v.hairColor === "number" &&

@@ -8,10 +8,16 @@ export function normalizePseudo(value: string | undefined | null): string {
   return value.trim().slice(0, PSEUDO_MAX_LENGTH);
 }
 
+/** Champs legacy ignorés à la lecture (ex. `body` des anciens MII). */
+type LegacyAvatarFields = {
+  body?: number;
+};
+
 /** Normalise les indices de palette (entiers positifs). */
-export function normalizeAvatarConfig(cfg: AvatarConfig): AvatarConfig {
+export function normalizeAvatarConfig(
+  cfg: AvatarConfig & LegacyAvatarFields,
+): AvatarConfig {
   return {
-    body: Math.max(0, Math.floor(cfg.body)),
     skin: Math.max(0, Math.floor(cfg.skin)),
     hair: Math.max(0, Math.floor(cfg.hair)),
     hairColor: Math.max(0, Math.floor(cfg.hairColor)),

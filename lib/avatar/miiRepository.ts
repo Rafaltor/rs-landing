@@ -17,7 +17,6 @@ function parseConfig(value: unknown): AvatarConfig | null {
   if (!value || typeof value !== "object") return null;
   const v = value as Record<string, unknown>;
   if (
-    typeof v.body !== "number" ||
     typeof v.skin !== "number" ||
     typeof v.hair !== "number" ||
     typeof v.hairColor !== "number" ||
@@ -32,7 +31,6 @@ function parseConfig(value: unknown): AvatarConfig | null {
     return null;
   }
   return normalizeAvatarConfig({
-    body: v.body as number,
     skin: v.skin as number,
     hair: v.hair as number,
     hairColor: v.hairColor as number,
@@ -44,6 +42,7 @@ function parseConfig(value: unknown): AvatarConfig | null {
     acc: v.acc as number,
     accColor: v.accColor as number,
     pseudo: typeof v.pseudo === "string" ? v.pseudo : "",
+    body: typeof v.body === "number" ? v.body : undefined,
   });
 }
 

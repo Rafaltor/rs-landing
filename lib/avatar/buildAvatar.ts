@@ -20,7 +20,7 @@ import {
   chestTiltAt,
   chestZ,
   torsoRadiusAt,
-  TORSO_PROFILES,
+  TORSO_PROFILE,
 } from "./torsoProfile";
 import type { ThreeNamespace } from "./types";
 
@@ -525,12 +525,10 @@ function buildLeg(
   mat: AvatarMaterials,
   body: Group,
   side: -1 | 1,
-  bodyIdx: number,
-  legSep: number,
 ): AvatarLimb {
   const hipY = LIMBS.hipY;
   const hip = new THREE.Group();
-  hip.position.set(side * legSep, hipY, 0.015);
+  hip.position.set(side * LIMBS.legSep, hipY, 0.015);
   body.add(hip);
 
   add(THREE, hip, sphere(THREE), mat.pants, [0, 0.025, 0], undefined, LIMBS.hipBridge);
@@ -580,11 +578,10 @@ function buildArm(
   THREE: ThreeNamespace,
   mat: AvatarMaterials,
   body: Group,
-  bodyIdx: number,
   side: -1 | 1,
 ): { limb: AvatarLimb; shoulder: Group } {
   const shoulderY = 1.48;
-  const torsoR = torsoRadiusAt(bodyIdx, shoulderY);
+  const torsoR = torsoRadiusAt(shoulderY);
   const shoulderX = side * (torsoR + 0.01);
 
   add(THREE, body, sphere(THREE), mat.suit, [shoulderX * 0.97, shoulderY, -0.018], undefined, LIMBS.shoulderPad);
@@ -653,8 +650,7 @@ export function buildAvatar(
   const body = new THREE.Group();
   avatar.add(body);
 
-  const bodyIdx = paletteIndex([0, 1] as const, cfg.body);
-  const profPoints = (TORSO_PROFILES[bodyIdx] ?? TORSO_PROFILES[0]).map(
+  const profPoints = TORSO_PROFILE.map(
     (p) => new THREE.Vector2(p[0], p[1]),
   );
   const torsoGeo = new THREE.LatheGeometry(profPoints, 72);
@@ -668,7 +664,7 @@ export function buildAvatar(
   body.add(front);
 
   const shirtY = 1.32;
-  const shirtTilt = chestTiltAt(bodyIdx, shirtY);
+  const shirtTilt = chestTiltAt(shirtY);
   const shirtShape = new THREE.Shape();
   shirtShape.moveTo(0, 0.16);
   shirtShape.lineTo(0.14, -0.02);
@@ -681,7 +677,7 @@ export function buildAvatar(
     front,
     shirtGeo,
     materials.shirt,
-    [0, shirtY, chestZ(bodyIdx, shirtY, 0.008)],
+    [0, shirtY, chestZ(shirtY, 0.008)],
     [shirtTilt, 0, 0],
     1,
     false,
@@ -689,9 +685,9 @@ export function buildAvatar(
   );
 
   const colY = 1.45;
-  const colZ = chestZ(bodyIdx, colY, 0.03);
-  const colTilt = chestTiltAt(bodyIdx, colY);
-  const colX = torsoRadiusAt(bodyIdx, colY) * 0.2;
+  const colZ = chestZ(colY, 0.03);
+  const colTilt = chestTiltAt(colY);
+  const colX = torsoRadiusAt(colY) * 0.2;
   add(THREE, front, rbox(THREE, 0.11, 0.045, 0.028, 0.015), materials.white, [
     colX, colY, colZ,
   ], [colTilt, 0, -0.48]);
@@ -700,9 +696,9 @@ export function buildAvatar(
   ], [colTilt, 0, 0.48]);
 
   const lapelY = 1.33;
-  const lapelZ = chestZ(bodyIdx, lapelY, 0.028);
-  const lapelTilt = chestTiltAt(bodyIdx, lapelY);
-  const lapelX = torsoRadiusAt(bodyIdx, lapelY) * 0.36;
+  const lapelZ = chestZ(lapelY, 0.028);
+  const lapelTilt = chestTiltAt(lapelY);
+  const lapelX = torsoRadiusAt(lapelY) * 0.36;
   const lapel = lapelMaterial(THREE, cfg);
   add(THREE, front, rbox(THREE, 0.1, 0.34, 0.028, 0.018), lapel, [
     lapelX, lapelY, lapelZ,
@@ -714,25 +710,25 @@ export function buildAvatar(
   const acc = paletteIndex([0, 1, 2, 3] as const, cfg.acc);
   if (acc === 0) {
     const tieTopY = 1.43;
-    const tieZ = chestZ(bodyIdx, tieTopY, 0.035);
-    const tieTilt = chestTiltAt(bodyIdx, tieTopY);
+    const tieZ = chestZ(tieTopY, 0.035);
+    const tieTilt = chestTiltAt(tieTopY);
     add(THREE, front, rbox(THREE, 0.065, 0.08, 0.028, 0.015), materials.acc, [
       0, tieTopY, tieZ,
     ], [tieTilt, 0, 0]);
-    add(THREE, front, sphere(THREE), materials.acc, [0, 1.47, chestZ(bodyIdx, 1.47, 0.03)], undefined, 0.03);
+    add(THREE, front, sphere(THREE), materials.acc, [0, 1.47, chestZ(1.47, 0.03)], undefined, 0.03);
     add(
       THREE,
       front,
       geo("tieBlade", () => new THREE.ConeGeometry(0.055, 0.34, 8)),
       materials.acc,
-      [0, 1.2, chestZ(bodyIdx, 1.2, 0.02)],
+      [0, 1.2, chestZ(1.2, 0.02)],
       [Math.PI - 0.3 + tieTilt, Math.PI / 4, 0],
       [1, 1, 0.4],
     );
   } else if (acc === 1) {
     const bowY = 1.45;
-    const bowZ = chestZ(bodyIdx, bowY, 0.03);
-    const bowTilt = chestTiltAt(bodyIdx, bowY);
+    const bowZ = chestZ(bowY, 0.03);
+    const bowTilt = chestTiltAt(bowY);
     const bc = geo("bow", () => new THREE.ConeGeometry(0.05, 0.1, 14));
     add(THREE, front, bc, materials.acc, [-0.08, bowY, bowZ], [bowTilt, 0, -Math.PI / 2], [
       1, 1, 0.42,
@@ -743,27 +739,27 @@ export function buildAvatar(
     add(THREE, front, sphere(THREE), materials.acc, [0, bowY + 0.01, bowZ], undefined, 0.028);
   } else if (acc === 2) {
     const badgeY = 1.26;
-    const badgeZ = chestZ(bodyIdx, badgeY, 0.02);
-    const badgeTilt = chestTiltAt(bodyIdx, badgeY);
+    const badgeZ = chestZ(badgeY, 0.02);
+    const badgeTilt = chestTiltAt(badgeY);
     add(THREE, front, rbox(THREE, 0.014, 0.28, 0.014, 0.005), materials.acc, [
-      0.08, 1.32, chestZ(bodyIdx, 1.32, 0.014),
-    ], [chestTiltAt(bodyIdx, 1.32), 0, -0.48]);
+      0.08, 1.32, chestZ(1.32, 0.014),
+    ], [chestTiltAt(1.32), 0, -0.48]);
     add(THREE, front, rbox(THREE, 0.014, 0.28, 0.014, 0.005), materials.acc, [
-      -0.02, 1.3, chestZ(bodyIdx, 1.3, 0.014),
-    ], [chestTiltAt(bodyIdx, 1.3), 0, 0.34]);
+      -0.02, 1.3, chestZ(1.3, 0.014),
+    ], [chestTiltAt(1.3), 0, 0.34]);
     add(THREE, front, rbox(THREE, 0.15, 0.19, 0.018, 0.015), materials.white, [
       0.04, badgeY, badgeZ,
     ], [badgeTilt, 0, 0]);
     add(THREE, front, rbox(THREE, 0.09, 0.028, 0.018, 0.008), materials.acc, [
-      0.04, badgeY + 0.06, chestZ(bodyIdx, badgeY + 0.06, 0.018),
+      0.04, badgeY + 0.06, chestZ(badgeY + 0.06, 0.018),
     ], [badgeTilt, 0, 0]);
     add(THREE, front, rbox(THREE, 0.08, 0.018, 0.018, 0.006), materials.dark, [
-      0.04, badgeY - 0.03, chestZ(bodyIdx, badgeY - 0.03, 0.018),
+      0.04, badgeY - 0.03, chestZ(badgeY - 0.03, 0.018),
     ], [badgeTilt, 0, 0]);
   }
 
   const beltY = 1.5;
-  const beltR = torsoRadiusAt(bodyIdx, beltY) * 0.96;
+  const beltR = torsoRadiusAt(beltY) * 0.96;
   add(
     THREE,
     body,
@@ -778,7 +774,6 @@ export function buildAvatar(
   ]);
 
   const pelvisY = PELVIS.y;
-  const pelvisScale = cfg.body === 1 ? PELVIS.scale.femme : PELVIS.scale.homme;
   add(
     THREE,
     body,
@@ -786,19 +781,18 @@ export function buildAvatar(
     materials.pants,
     [0, pelvisY, 0.01],
     undefined,
-    [...pelvisScale],
+    [...PELVIS.scale],
   );
 
-  const legSep = cfg.body === 1 ? LIMBS.legSep.femme : LIMBS.legSep.homme;
   const legs = [
-    buildLeg(THREE, materials, body, -1, bodyIdx, legSep),
-    buildLeg(THREE, materials, body, 1, bodyIdx, legSep),
+    buildLeg(THREE, materials, body, -1),
+    buildLeg(THREE, materials, body, 1),
   ];
 
   const arms: AvatarLimb[] = [];
   let armR: Group | undefined;
   for (const side of [-1, 1] as const) {
-    const { limb, shoulder } = buildArm(THREE, materials, body, bodyIdx, side);
+    const { limb, shoulder } = buildArm(THREE, materials, body, side);
     arms.push(limb);
     if (side === 1) armR = shoulder;
   }
@@ -826,7 +820,7 @@ export function buildAvatar(
 
   if (cfg.glasses) buildGlasses(THREE, materials, head);
 
-  buildPremiumDetails(THREE, cfg, materials, bodyIdx, body, front, head, add, {
+  buildPremiumDetails(THREE, cfg, materials, body, front, head, add, {
     sphere,
     rbox,
     capsule,

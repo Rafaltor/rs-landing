@@ -25,8 +25,6 @@ export const ACCC = [
   0xb23b3b, 0x2c7fb8, 0xd8a33b, 0x3f8f57, 0x7c54ad, 0xc85a86,
 ] as const;
 
-export const BODIES = ["Homme", "Femme"] as const;
-
 export const HAIRS = [
   "Court",
   "Soigné (raie)",
@@ -69,7 +67,6 @@ export const NOSES = [
 export const ACCS = ["Cravate", "Nœud pap'", "Badge", "Aucun"] as const;
 
 export type AvatarConfig = {
-  body: number;
   skin: number;
   hair: number;
   hairColor: number;
@@ -86,7 +83,6 @@ export type AvatarConfig = {
 
 /** Look corporate soigné par défaut (HTML source). */
 export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
-  body: 0,
   skin: 1,
   hair: 1,
   hairColor: 1,

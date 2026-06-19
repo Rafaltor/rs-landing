@@ -21,7 +21,6 @@ export function buildPremiumDetails(
   THREE: ThreeNamespace,
   cfg: AvatarConfig,
   mat: AvatarMaterials,
-  bodyIdx: number,
   body: Group,
   front: Group,
   head: Group,
@@ -42,7 +41,7 @@ export function buildPremiumDetails(
     ) => import("three").BufferGeometry;
   },
 ): void {
-  buildSuitDetails(THREE, cfg, mat, bodyIdx, front, add, helpers);
+  buildSuitDetails(THREE, cfg, mat, front, add, helpers);
   buildFaceDetails(THREE, mat, head, add, helpers);
 }
 
@@ -50,7 +49,6 @@ function buildSuitDetails(
   THREE: ThreeNamespace,
   cfg: AvatarConfig,
   mat: AvatarMaterials,
-  bodyIdx: number,
   front: Group,
   add: AddFn,
   helpers: {
@@ -66,8 +64,8 @@ function buildSuitDetails(
 ): void {
   const buttonY = [1.4, 1.3, 1.2];
   for (const y of buttonY) {
-    const z = chestZ(bodyIdx, y, 0.012);
-    const tilt = chestTiltAt(bodyIdx, y);
+    const z = chestZ(y, 0.012);
+    const tilt = chestTiltAt(y);
     add(THREE, front, helpers.sphere(THREE), mat.metal, [0, y, z], undefined, 0.015, false);
     add(
       THREE,
@@ -82,9 +80,9 @@ function buildSuitDetails(
   }
 
   const pocketY = 1.28;
-  const pocketX = -torsoRadiusAt(bodyIdx, pocketY) * 0.52;
-  const pocketZ = chestZ(bodyIdx, pocketY, 0.012);
-  const pocketTilt = chestTiltAt(bodyIdx, pocketY);
+  const pocketX = -torsoRadiusAt(pocketY) * 0.52;
+  const pocketZ = chestZ(pocketY, 0.012);
+  const pocketTilt = chestTiltAt(pocketY);
   add(
     THREE,
     front,
@@ -109,18 +107,18 @@ function buildSuitDetails(
     front,
     helpers.rbox(THREE, 0.08, 0.06, 0.008, 0.004),
     pocketSquare,
-    [pocketX, pocketY + 0.02, chestZ(bodyIdx, pocketY + 0.02, 0.008)],
+    [pocketX, pocketY + 0.02, chestZ(pocketY + 0.02, 0.008)],
     [pocketTilt, 0, 0.28],
   );
 
-  const seamY = 1.08;
+  const seamY = 1.36;
   add(
     THREE,
     front,
     helpers.rbox(THREE, 0.004, 0.5, 0.006, 0.001),
     mat.dark,
-    [0, seamY, chestZ(bodyIdx, seamY, 0.006)],
-    [chestTiltAt(bodyIdx, seamY), 0, 0],
+    [0, seamY, chestZ(seamY, 0.006)],
+    [chestTiltAt(seamY), 0, 0],
     1,
     false,
   );

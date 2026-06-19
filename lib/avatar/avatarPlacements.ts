@@ -63,7 +63,6 @@ function setCache(placements: AvatarPlacement[]): AvatarPlacement[] {
 function randomConfig(): AvatarConfig {
   const r = (n: number) => Math.floor(Math.random() * n);
   return normalizeAvatarConfig({
-    body: r(2),
     skin: r(6),
     hair: r(12),
     hairColor: r(8),
