@@ -3,39 +3,47 @@ import {
   triggerAvatarBumpForHotspot,
 } from "@/lib/avatar/avatarWalkHeading";
 
+/** Distance angulaire (degrés) pour déclencher une collision. */
+export const COLLISION_DIST_DEG = 11;
+
+/** Écartement immédiat le long de la normale (degrés). */
+export const SEPARATION_PUSH_DEG = 2.6;
+
+/** Délai avant une nouvelle collision entre les mêmes Mii (secondes). */
+export const COOLDOWN_SEC = 0.8;
+
 export type WanderWalker = {
   hotspotId: string;
+  /** Position courante intégrée (degrés). */
+  yaw: number;
+  pitch: number;
+  /** Centre de l'oscillation verticale (degrés). */
   basePitch: number;
-  baseYaw: number;
+  /** Vitesse de marche horizontale (degrés / seconde). */
+  dir: number;
+  /** Phase de l'oscillation pitch (radians, bornée). */
   phase: number;
-  yawRate: number;
+  /** Vitesse de la phase pitch (rad / s). */
+  phaseRate: number;
+  /** Amplitude pitch (degrés). */
   pitchAmp: number;
-  yawAmp: number;
-  prevPitch: number;
   prevYaw: number;
+  prevPitch: number;
+  /** Secondes restantes avant nouvelle collision. */
   collisionCooldown: number;
 };
-
-const COLLISION_DIST_DEG = 11;
-const SEPARATION_PUSH = 3.4;
-const COOLDOWN_FRAMES = 75;
-
-type SamplePosition = (walker: WanderWalker) => { pitch: number; yaw: number };
 
 function facingToward(dy: number, dp: number): number {
   return Math.atan2(dy, dp * 0.42 + 0.06);
 }
 
-/** Détection, répulsion, réaction courte, puis reprise du parcours en sens inverse. */
+/**
+ * Détection sur positions courantes, réaction bras, séparation, demi-tour via `dir`.
+ */
 export function resolveAvatarCollisions(
   walkers: WanderWalker[],
-  samplePosition: SamplePosition,
   normalizeYawDelta: (delta: number) => number,
 ): void {
-  for (const w of walkers) {
-    if (w.collisionCooldown > 0) w.collisionCooldown -= 1;
-  }
-
   if (walkers.length < 2) return;
 
   for (let i = 0; i < walkers.length; i++) {
@@ -52,10 +60,8 @@ export function resolveAvatarCollisions(
         continue;
       }
 
-      const posA = samplePosition(a);
-      const posB = samplePosition(b);
-      const dy = normalizeYawDelta(posB.yaw - posA.yaw);
-      const dp = posB.pitch - posA.pitch;
+      const dy = normalizeYawDelta(b.yaw - a.yaw);
+      const dp = b.pitch - a.pitch;
       const dist = Math.hypot(dp, dy * 0.9);
 
       if (dist >= COLLISION_DIST_DEG) continue;
@@ -63,20 +69,19 @@ export function resolveAvatarCollisions(
       const inv = dist > 0.001 ? 1 / dist : 1;
       const nx = dy * inv;
       const ny = dp * inv;
-      const push = SEPARATION_PUSH * (1 - dist / COLLISION_DIST_DEG);
+      const push =
+        SEPARATION_PUSH_DEG * (1 - dist / COLLISION_DIST_DEG) + 0.8;
 
-      a.baseYaw -= nx * push;
-      a.basePitch -= ny * push;
-      b.baseYaw += nx * push;
-      b.basePitch += ny * push;
+      a.yaw -= nx * push;
+      a.pitch -= ny * push;
+      b.yaw += nx * push;
+      b.pitch += ny * push;
 
-      a.yawRate *= -1;
-      b.yawRate *= -1;
-      a.phase += 0.4;
-      b.phase += 0.4;
+      a.dir *= -1;
+      b.dir *= -1;
 
-      a.collisionCooldown = COOLDOWN_FRAMES;
-      b.collisionCooldown = COOLDOWN_FRAMES;
+      a.collisionCooldown = COOLDOWN_SEC;
+      b.collisionCooldown = COOLDOWN_SEC;
 
       triggerAvatarBumpForHotspot(a.hotspotId, facingToward(dy, dp));
       triggerAvatarBumpForHotspot(b.hotspotId, facingToward(-dy, -dp));

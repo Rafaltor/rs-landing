@@ -2,36 +2,41 @@ import {
   getAvatarPlacements,
   hotspotIdForPlacement,
 } from "@/lib/avatar/avatarPlacements";
-import { updateAvatarWalkMotionForHotspot } from "@/lib/avatar/avatarWalkHeading";
+import {
+  decayAvatarBumpForHotspot,
+  isAvatarBumping,
+  updateAvatarWalkMotionForHotspot,
+} from "@/lib/avatar/avatarWalkHeading";
 import {
   forcePannellumHotspotRepaint,
   layoutRegisteredAvatarHotspots,
   updateAvatarHotspotAngles,
 } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
-import {
-  resolveAvatarCollisions,
-  type WanderWalker,
-} from "@/lib/panorama/avatarWanderCollisions";
+import { resolveAvatarCollisions, type WanderWalker } from "@/lib/panorama/avatarWanderCollisions";
 import {
   getAvatarRuntimeHotspots,
   getActiveSceneHotspots,
 } from "@/lib/panorama/syncAvatarHotspots";
 
+/** Pas de simulation par défaut (~60 fps). */
+export const WANDER_DT_DEFAULT = 1 / 60;
+
+/** Vitesse de marche (degrés / seconde). */
+export const WANDER_DIR_MIN = 7;
+export const WANDER_DIR_MAX = 16;
+
+/** Oscillation verticale bornée. */
+export const WANDER_PITCH_AMP_MIN = 3.5;
+export const WANDER_PITCH_AMP_MAX = 8.5;
+export const WANDER_PHASE_RATE_MIN = 0.75;
+export const WANDER_PHASE_RATE_MAX = 1.15;
+
 let rafId = 0;
 let activeViewer: PannellumViewer | null = null;
 let repaintTick = 0;
+let lastTickMs = 0;
 const walkers: WanderWalker[] = [];
-
-function wanderPosition(w: WanderWalker): { pitch: number; yaw: number } {
-  const pitchWave =
-    Math.sin(w.phase * 0.75) * w.pitchAmp +
-    Math.sin(w.phase * 1.35 + 0.6) * w.pitchAmp * 0.38;
-  return {
-    pitch: w.basePitch + pitchWave,
-    yaw: w.baseYaw + Math.sin(w.phase * 0.5) * w.yawAmp + w.phase * w.yawRate,
-  };
-}
 
 function normalizeYawDelta(delta: number): number {
   let d = delta;
@@ -40,26 +45,48 @@ function normalizeYawDelta(delta: number): number {
   return d;
 }
 
+function integrateWalker(w: WanderWalker, dt: number): void {
+  w.phase += w.phaseRate * dt;
+  w.pitch = w.basePitch + Math.sin(w.phase) * w.pitchAmp;
+
+  if (!isAvatarBumping(w.hotspotId)) {
+    w.yaw += w.dir * dt;
+  }
+
+  if (w.collisionCooldown > 0) {
+    w.collisionCooldown = Math.max(0, w.collisionCooldown - dt);
+  }
+
+  decayAvatarBumpForHotspot(w.hotspotId, dt);
+}
+
 function rebuildWalkers(): void {
   walkers.length = 0;
   for (const p of getAvatarPlacements()) {
     const seed = Math.abs(p.id.charCodeAt(0) + p.yaw);
-    const phase = seed * 0.11;
+    const dirSign = seed % 2 === 0 ? 1 : -1;
+    const dirMag =
+      WANDER_DIR_MIN + (seed % 5) * ((WANDER_DIR_MAX - WANDER_DIR_MIN) / 4);
+
     const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
+      yaw: p.yaw,
+      pitch: p.pitch,
       basePitch: p.pitch,
-      baseYaw: p.yaw,
-      phase,
-      yawRate: 0.26 + (seed % 7) * 0.05,
-      pitchAmp: 4.2 + (seed % 6) * 1.25,
-      yawAmp: 14 + (seed % 6) * 3,
-      prevPitch: 0,
-      prevYaw: 0,
+      dir: dirSign * dirMag,
+      phase: seed * 0.11,
+      phaseRate:
+        WANDER_PHASE_RATE_MIN +
+        (seed % 4) *
+          ((WANDER_PHASE_RATE_MAX - WANDER_PHASE_RATE_MIN) / 3),
+      pitchAmp:
+        WANDER_PITCH_AMP_MIN +
+        (seed % 6) *
+          ((WANDER_PITCH_AMP_MAX - WANDER_PITCH_AMP_MIN) / 5),
+      prevYaw: p.yaw,
+      prevPitch: p.pitch,
       collisionCooldown: 0,
     };
-    const pos = wanderPosition(walker);
-    walker.prevPitch = pos.pitch;
-    walker.prevYaw = pos.yaw;
     walkers.push(walker);
   }
 }
@@ -84,34 +111,40 @@ function syncHotspotConfig(
   }
 }
 
-/** Déplace les hotspots avatar dans le panorama (parcours lent). */
+/** Déplace les hotspots avatar dans le panorama (parcours intégré). */
 export function startAvatarWanderLoop(viewer: PannellumViewer): void {
   stopAvatarWanderLoop();
   activeViewer = viewer;
+  lastTickMs = 0;
   rebuildWalkers();
 
-  const tick = () => {
+  const tick = (now: number) => {
     rafId = requestAnimationFrame(tick);
     const viewerRef = activeViewer;
     if (!viewerRef) return;
 
+    const dt =
+      lastTickMs > 0
+        ? Math.min(0.05, (now - lastTickMs) / 1000)
+        : WANDER_DT_DEFAULT;
+    lastTickMs = now;
+
     for (const w of walkers) {
-      w.phase += 0.016;
+      integrateWalker(w, dt);
     }
 
-    resolveAvatarCollisions(walkers, wanderPosition, normalizeYawDelta);
+    resolveAvatarCollisions(walkers, normalizeYawDelta);
 
     for (const w of walkers) {
-      const pos = wanderPosition(w);
-      const deltaYaw = normalizeYawDelta(pos.yaw - w.prevYaw);
-      const deltaPitch = pos.pitch - w.prevPitch;
+      const deltaYaw = normalizeYawDelta(w.yaw - w.prevYaw);
+      const deltaPitch = w.pitch - w.prevPitch;
 
       updateAvatarWalkMotionForHotspot(w.hotspotId, deltaYaw, deltaPitch);
-      updateAvatarHotspotAngles(w.hotspotId, pos.pitch, pos.yaw);
-      syncHotspotConfig(viewerRef, w.hotspotId, pos.pitch, pos.yaw);
+      updateAvatarHotspotAngles(w.hotspotId, w.pitch, w.yaw);
+      syncHotspotConfig(viewerRef, w.hotspotId, w.pitch, w.yaw);
 
-      w.prevYaw = pos.yaw;
-      w.prevPitch = pos.pitch;
+      w.prevYaw = w.yaw;
+      w.prevPitch = w.pitch;
     }
 
     layoutRegisteredAvatarHotspots(viewerRef);
@@ -123,7 +156,7 @@ export function startAvatarWanderLoop(viewer: PannellumViewer): void {
     }
   };
 
-  tick();
+  requestAnimationFrame(tick);
 }
 
 export function refreshAvatarWanderLoop(): void {
@@ -135,5 +168,6 @@ export function stopAvatarWanderLoop(): void {
   rafId = 0;
   activeViewer = null;
   repaintTick = 0;
+  lastTickMs = 0;
   walkers.length = 0;
 }

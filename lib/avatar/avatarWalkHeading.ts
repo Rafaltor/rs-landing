@@ -1,3 +1,6 @@
+/** Durée de la réaction collision (secondes) — réglage global. */
+export const BUMP_DURATION = 0.5;
+
 export type AvatarWalkMotion = {
   headingY: number;
   turnLean: number;
@@ -17,9 +20,6 @@ const DEFAULT_MOTION: AvatarWalkMotion = {
   bumpPhase: 0,
   bumpFacingY: 0,
 };
-
-/** Durée de la réaction collision (secondes). */
-const BUMP_DURATION = 0.52;
 
 function lerpAngle(from: number, to: number, t: number): number {
   let delta = to - from;
@@ -92,7 +92,7 @@ export function triggerAvatarBump(
     bumpFacingY: facingY,
     headingY: facingY,
     turnLean: 0,
-    speed: 2.4,
+    speed: 2.2,
   });
 }
 
@@ -109,6 +109,15 @@ export function decayAvatarBumpState(placementId: string, delta: number): void {
   const motion = motions.get(placementId);
   if (!motion || motion.bumpPhase <= 0) return;
   motion.bumpPhase = Math.max(0, motion.bumpPhase - delta / BUMP_DURATION);
+}
+
+export function decayAvatarBumpForHotspot(
+  hotspotId: string,
+  delta: number,
+): void {
+  const placementId = placementIdFromHotspotId(hotspotId);
+  if (!placementId) return;
+  decayAvatarBumpState(placementId, delta);
 }
 
 export function getAvatarWalkMotion(placementId: string): AvatarWalkMotion {
