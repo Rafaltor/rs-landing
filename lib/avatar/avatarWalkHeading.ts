@@ -1,5 +1,7 @@
-/** Durée totale de la séquence collision (secondes) — réglage global. */
-export const BUMP_DURATION = 1.3;
+import { BUMP_TOTAL } from "./fightPose";
+
+/** Durée totale de la séquence collision (secondes) — alignée sur fightPose.BUMP_TOTAL. */
+export const BUMP_DURATION = BUMP_TOTAL;
 
 export type AvatarWalkMotion = {
   headingY: number;

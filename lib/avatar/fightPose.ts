@@ -1,14 +1,25 @@
 import type { AvatarBuildResult } from "./buildAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 
+export const TURN_DUR = 0.3;
+export const WAIT1_DUR = 0.7;
+export const FLAP_DUR = 0.4;
+export const WAIT2_DUR = 0.7;
+export const LEAVE_DUR = 0.3;
+export const BUMP_TOTAL =
+  TURN_DUR + WAIT1_DUR + FLAP_DUR + WAIT2_DUR + LEAVE_DUR;
+
 /** Nombre de battements bras pendant la phase FLAP. */
-export const FLAP_CYCLES = 5;
+export const FLAP_CYCLES = 8;
 
-/** Fin de la phase TURN (fraction de progress 0→1). */
-export const TURN_END = 0.3;
+const TURN_END = TURN_DUR;
+const WAIT1_END = TURN_END + WAIT1_DUR;
+const FLAP_END = WAIT1_END + FLAP_DUR;
+const WAIT2_END = FLAP_END + WAIT2_DUR;
 
-/** Fin de la phase FLAP (fraction de progress 0→1). */
-export const FLAP_END = 0.75;
+function clamp01(t: number): number {
+  return Math.max(0, Math.min(1, t));
+}
 
 function lerpAngle(from: number, to: number, t: number): number {
   let delta = to - from;
@@ -18,7 +29,7 @@ function lerpAngle(from: number, to: number, t: number): number {
 }
 
 function easeInOut(t: number): number {
-  const c = Math.max(0, Math.min(1, t));
+  const c = clamp01(t);
   return c * c * (3 - 2 * c);
 }
 
@@ -80,8 +91,8 @@ function applyFlapArms(avatar: AvatarBuildResult, env: number, flap: number): vo
 }
 
 /**
- * Séquence collision en 3 temps : TURN → FLAP → LEAVE.
- * @param bumpPhase temps restant (1 → 0) — à 0, applyWalkPose reprend la pose neutre.
+ * Séquence collision en 5 temps : TURN → WAIT1 → FLAP → WAIT2 → LEAVE.
+ * @param bumpPhase temps restant normalisé (1 → 0) — à 0, applyWalkPose reprend la pose neutre.
  */
 export function applyBumpPose(
   avatar: AvatarBuildResult,
@@ -89,18 +100,21 @@ export function applyBumpPose(
   facingY: number,
   leaveFacingY: number,
 ): void {
-  const progress = 1 - bumpPhase;
+  const tSec = (1 - bumpPhase) * BUMP_TOTAL;
   let bodyY = 0;
   let bodyRotY = 0;
   let headRotY = 0;
   let bodyScale = 1;
 
-  if (progress < TURN_END) {
-    const t = easeInOut(progress / TURN_END);
-    bodyRotY = lerpAngle(facingY, 0, t);
+  if (tSec < TURN_END) {
+    const t01 = tSec / TURN_DUR;
+    bodyRotY = lerpAngle(facingY, 0, easeInOut(t01));
     resetLimbRotations(avatar);
-  } else if (progress < FLAP_END) {
-    const f = (progress - TURN_END) / (FLAP_END - TURN_END);
+  } else if (tSec < WAIT1_END) {
+    bodyRotY = 0;
+    resetLimbRotations(avatar);
+  } else if (tSec < FLAP_END) {
+    const f = (tSec - WAIT1_END) / FLAP_DUR;
     const env = Math.sin(f * Math.PI);
     const flap = Math.sin(f * Math.PI * 2 * FLAP_CYCLES);
     bodyRotY = 0;
@@ -108,10 +122,13 @@ export function applyBumpPose(
     bodyScale = 1 + env * 0.005;
     headRotY = env * 0.06;
     applyFlapArms(avatar, env, flap);
+  } else if (tSec < WAIT2_END) {
+    bodyRotY = 0;
+    resetLimbRotations(avatar);
   } else {
-    const l = easeInOut((progress - FLAP_END) / (1 - FLAP_END));
-    bodyRotY = lerpAngle(0, leaveFacingY, l);
-    headRotY = leaveFacingY * l * 0.06;
+    const l = (tSec - WAIT2_END) / LEAVE_DUR;
+    bodyRotY = lerpAngle(0, leaveFacingY, easeInOut(l));
+    headRotY = leaveFacingY * clamp01(l) * 0.06;
     resetLimbRotations(avatar);
   }
 
