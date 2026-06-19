@@ -25,7 +25,7 @@ function isLocalStorageAvailable(): boolean {
   }
 }
 
-function isAvatarConfig(value: unknown): value is AvatarConfig {
+function isAvatarConfig(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return (
@@ -39,12 +39,13 @@ function isAvatarConfig(value: unknown): value is AvatarConfig {
     typeof v.shirt === "number" &&
     typeof v.acc === "number" &&
     typeof v.accColor === "number" &&
+    (v.pants === undefined || typeof v.pants === "number") &&
     (v.pseudo === undefined || typeof v.pseudo === "string")
   );
 }
 
-function normalizeAvatarConfig(cfg: AvatarConfig): AvatarConfig {
-  return normalizeCfg(cfg);
+function normalizeAvatarConfig(cfg: Record<string, unknown>): AvatarConfig {
+  return normalizeCfg(cfg as Parameters<typeof normalizeCfg>[0]);
 }
 
 function readFromLocalStorage(): AvatarConfig | null {

@@ -37,3 +37,11 @@ export const SHOE = {
   soleH: 0.04,
   soleD: 0.32,
 };
+
+/** Rotations de repos des pivots membres (radians) — source unique pour build + animations. */
+export const REST_POSE = {
+  shoulderZ: 0.16,
+  elbowX: 0.07,
+  hipX: 0,
+  kneeX: 0,
+} as const;

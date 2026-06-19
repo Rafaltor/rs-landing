@@ -4,6 +4,11 @@ import {
 } from "./palettes";
 import { normalizeAvatarConfig } from "./avatarConfig";
 import {
+  COLOR_PROFILES,
+  randomHueColor,
+  randomSkinColor,
+} from "./avatarColors";
+import {
   deleteUserMii,
   fetchAllUserMiis,
   fetchUserMiiByUserId,
@@ -63,16 +68,17 @@ function setCache(placements: AvatarPlacement[]): AvatarPlacement[] {
 function randomConfig(): AvatarConfig {
   const r = (n: number) => Math.floor(Math.random() * n);
   return normalizeAvatarConfig({
-    skin: r(6),
+    skin: randomSkinColor(),
     hair: r(12),
-    hairColor: r(8),
+    hairColor: randomHueColor(COLOR_PROFILES.hair),
     eyes: r(10),
     nose: r(7),
     glasses: Math.random() > 0.45,
-    suit: r(14),
-    shirt: r(5),
+    suit: randomHueColor(COLOR_PROFILES.suit),
+    pants: randomHueColor(COLOR_PROFILES.pants),
+    shirt: randomHueColor(COLOR_PROFILES.shirt),
     acc: r(4),
-    accColor: r(6),
+    accColor: randomHueColor(COLOR_PROFILES.accent),
     pseudo: "",
   });
 }

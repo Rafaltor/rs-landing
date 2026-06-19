@@ -1,7 +1,7 @@
 import type { Group } from "three";
 import type { AvatarMaterials } from "./avatarMaterials";
 import type { AvatarConfig } from "./palettes";
-import { paletteIndex, ACCC } from "./palettes";
+import { accentFromConfig } from "./avatarColors";
 import { chestTiltAt, chestZ, torsoRadiusAt } from "./torsoProfile";
 import type { ThreeNamespace } from "./types";
 
@@ -92,7 +92,7 @@ function buildSuitDetails(
     [pocketTilt, 0, 0.06],
   );
 
-  const accent = ACCC[paletteIndex(ACCC, cfg.accColor)];
+  const accent = accentFromConfig(cfg.accColor);
   const pocketSquare = new THREE.MeshPhysicalMaterial({
     color: accent,
     roughness: 0.62,

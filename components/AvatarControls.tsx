@@ -1,27 +1,32 @@
 "use client";
 
 import {
-  ACCC,
+  COLOR_PROFILES,
+  hexToCss,
+  hexToHue,
+  hueColorFromSlider,
+  hueRampGradient,
+  randomHueColor,
+  randomSkinColor,
+  skinHexFromSlider,
+  skinRampGradient,
+  skinSliderFromHex,
+} from "@/lib/avatar/avatarColors";
+import { PSEUDO_MAX_LENGTH } from "@/lib/avatar/avatarConfig";
+import {
   ACCS,
   EYESL,
-  HAIRC,
   HAIRS,
   NOSES,
-  SHIRT,
-  SKIN,
-  SUIT,
   paletteIndex,
   type AvatarConfig,
 } from "@/lib/avatar/palettes";
-import { PSEUDO_MAX_LENGTH } from "@/lib/avatar/avatarConfig";
 
 type AvatarControlsProps = {
   cfg: AvatarConfig;
   onChange: (next: AvatarConfig) => void;
-  /** Intégré dans le panneau landing (pas le studio plein écran). */
   embedded?: boolean;
   showHeader?: boolean;
-  /** Thème clair pour le modal RS. */
   variant?: "dark" | "light";
 };
 
@@ -32,28 +37,23 @@ function formatLabel(value: string): string {
     .join(" ");
 }
 
-function randomInt(max: number): number {
-  return Math.floor(Math.random() * max);
-}
-
 function randomConfig(): AvatarConfig {
+  const suit = randomHueColor(COLOR_PROFILES.suit);
+  const r = (n: number) => Math.floor(Math.random() * n);
   return {
-    skin: randomInt(SKIN.length),
-    hair: randomInt(HAIRS.length),
-    hairColor: randomInt(HAIRC.length),
-    eyes: randomInt(EYESL.length),
-    nose: randomInt(NOSES.length),
+    skin: randomSkinColor(),
+    hair: r(HAIRS.length),
+    hairColor: randomHueColor(COLOR_PROFILES.hair),
+    eyes: r(EYESL.length),
+    nose: r(NOSES.length),
     glasses: Math.random() > 0.5,
-    suit: randomInt(SUIT.length),
-    shirt: randomInt(SHIRT.length),
-    acc: randomInt(ACCS.length),
-    accColor: randomInt(ACCC.length),
+    suit,
+    pants: randomHueColor(COLOR_PROFILES.pants),
+    shirt: randomHueColor(COLOR_PROFILES.shirt),
+    acc: r(ACCS.length),
+    accColor: randomHueColor(COLOR_PROFILES.accent),
     pseudo: "",
   };
-}
-
-function hexColor(value: number): string {
-  return `#${value.toString(16).padStart(6, "0")}`;
 }
 
 type CyclerProps = {
@@ -90,45 +90,86 @@ function Cycler({ label, valueLabel, onPrev, onNext }: CyclerProps) {
   );
 }
 
-type SwatchRowProps = {
+type SkinSliderProps = {
+  id: string;
   label: string;
-  colors: readonly number[];
-  selected: number;
-  onSelect: (index: number) => void;
-  name: string;
+  value: number;
+  onChange: (hex: number) => void;
 };
 
-function SwatchRow({
-  label,
-  colors,
-  selected,
-  onSelect,
-  name,
-}: SwatchRowProps) {
-  const active = paletteIndex(colors, selected);
-
+function SkinSlider({ id, label, value, onChange }: SkinSliderProps) {
+  const sliderVal = skinSliderFromHex(value);
   return (
-    <div className="rs-avatar-controls__row rs-avatar-controls__row--swatches">
-      <span className="rs-avatar-controls__label">{label}</span>
-      <div
-        className="rs-avatar-controls__swatches"
-        role="radiogroup"
-        aria-label={label}
-      >
-        {colors.map((color, index) => (
-          <button
-            key={`${name}-${color}-${index}`}
-            type="button"
-            role="radio"
-            aria-checked={index === active}
-            aria-label={`${label} ${hexColor(color)}`}
-            className={`rs-avatar-controls__swatch${
-              index === active ? " rs-avatar-controls__swatch--active" : ""
-            }`}
-            style={{ backgroundColor: hexColor(color) }}
-            onClick={() => onSelect(index)}
-          />
-        ))}
+    <div className="rs-avatar-controls__row rs-avatar-controls__row--color">
+      <span className="rs-avatar-controls__label" id={`${id}-label`}>
+        {label}
+      </span>
+      <div className="rs-avatar-controls__color-field">
+        <span
+          className="rs-avatar-controls__color-preview"
+          style={{ backgroundColor: hexToCss(value) }}
+          aria-hidden
+        />
+        <input
+          id={id}
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={sliderVal}
+          aria-labelledby={`${id}-label`}
+          aria-valuenow={sliderVal}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={hexToCss(value)}
+          className="rs-avatar-controls__color-slider"
+          style={{ background: skinRampGradient() }}
+          onChange={(e) => onChange(skinHexFromSlider(Number(e.target.value)))}
+        />
+      </div>
+    </div>
+  );
+}
+
+type HueSliderProps = {
+  id: string;
+  label: string;
+  value: number;
+  profile: (typeof COLOR_PROFILES)[keyof typeof COLOR_PROFILES];
+  onChange: (hex: number) => void;
+};
+
+function HueSlider({ id, label, value, profile, onChange }: HueSliderProps) {
+  const sliderVal = hexToHue(value);
+  return (
+    <div className="rs-avatar-controls__row rs-avatar-controls__row--color">
+      <span className="rs-avatar-controls__label" id={`${id}-label`}>
+        {label}
+      </span>
+      <div className="rs-avatar-controls__color-field">
+        <span
+          className="rs-avatar-controls__color-preview"
+          style={{ backgroundColor: hexToCss(value) }}
+          aria-hidden
+        />
+        <input
+          id={id}
+          type="range"
+          min={0}
+          max={360}
+          step={1}
+          value={sliderVal}
+          aria-labelledby={`${id}-label`}
+          aria-valuenow={sliderVal}
+          aria-valuemin={0}
+          aria-valuemax={360}
+          aria-valuetext={hexToCss(value)}
+          className="rs-avatar-controls__color-slider"
+          style={{ background: hueRampGradient() }}
+          onChange={(e) =>
+            onChange(hueColorFromSlider(Number(e.target.value), profile))
+          }
+        />
       </div>
     </div>
   );
@@ -225,40 +266,46 @@ export default function AvatarControls({
 
       <section className="rs-avatar-controls__section">
         <h3 className="rs-avatar-controls__section-title">Couleurs</h3>
-        <SwatchRow
+        <SkinSlider
+          id="rs-avatar-skin"
           label="Peau"
-          name="skin"
-          colors={SKIN}
-          selected={cfg.skin}
-          onSelect={(index) => patch({ skin: index })}
+          value={cfg.skin}
+          onChange={(skin) => patch({ skin })}
         />
-        <SwatchRow
+        <HueSlider
+          id="rs-avatar-hair"
           label="Cheveux"
-          name="hair"
-          colors={HAIRC}
-          selected={cfg.hairColor}
-          onSelect={(index) => patch({ hairColor: index })}
+          value={cfg.hairColor}
+          profile={COLOR_PROFILES.hair}
+          onChange={(hairColor) => patch({ hairColor })}
         />
-        <SwatchRow
-          label="Costume"
-          name="suit"
-          colors={SUIT}
-          selected={cfg.suit}
-          onSelect={(index) => patch({ suit: index })}
+        <HueSlider
+          id="rs-avatar-suit"
+          label="Haut (veste)"
+          value={cfg.suit}
+          profile={COLOR_PROFILES.suit}
+          onChange={(suit) => patch({ suit })}
         />
-        <SwatchRow
+        <HueSlider
+          id="rs-avatar-pants"
+          label="Bas (pantalon)"
+          value={cfg.pants}
+          profile={COLOR_PROFILES.pants}
+          onChange={(pants) => patch({ pants })}
+        />
+        <HueSlider
+          id="rs-avatar-shirt"
           label="Chemise"
-          name="shirt"
-          colors={SHIRT}
-          selected={cfg.shirt}
-          onSelect={(index) => patch({ shirt: index })}
+          value={cfg.shirt}
+          profile={COLOR_PROFILES.shirt}
+          onChange={(shirt) => patch({ shirt })}
         />
-        <SwatchRow
+        <HueSlider
+          id="rs-avatar-accent"
           label="Accent"
-          name="accent"
-          colors={ACCC}
-          selected={cfg.accColor}
-          onSelect={(index) => patch({ accColor: index })}
+          value={cfg.accColor}
+          profile={COLOR_PROFILES.accent}
+          onChange={(accColor) => patch({ accColor })}
         />
       </section>
 

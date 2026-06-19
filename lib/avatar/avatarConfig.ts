@@ -1,4 +1,5 @@
 import type { AvatarConfig } from "./palettes";
+import { clampHex, migrateColorFields } from "./avatarColors";
 
 export const PSEUDO_MAX_LENGTH = 24;
 
@@ -11,23 +12,40 @@ export function normalizePseudo(value: string | undefined | null): string {
 /** Champs legacy ignorés à la lecture (ex. `body` des anciens MII). */
 type LegacyAvatarFields = {
   body?: number;
+  pants?: number;
 };
 
-/** Normalise les indices de palette (entiers positifs). */
-export function normalizeAvatarConfig(
-  cfg: AvatarConfig & LegacyAvatarFields,
-): AvatarConfig {
+type RawAvatarConfig = Partial<AvatarConfig> &
+  LegacyAvatarFields & {
+    skin?: number;
+    hair?: number;
+    hairColor?: number;
+    eyes?: number;
+    nose?: number;
+    glasses?: boolean;
+    suit?: number;
+    shirt?: number;
+    acc?: number;
+    accColor?: number;
+    pseudo?: string;
+  };
+
+/** Normalise indices de style + couleurs hex (migration index → hex à la lecture). */
+export function normalizeAvatarConfig(cfg: RawAvatarConfig): AvatarConfig {
+  const colors = migrateColorFields(cfg);
+
   return {
-    skin: Math.max(0, Math.floor(cfg.skin)),
-    hair: Math.max(0, Math.floor(cfg.hair)),
-    hairColor: Math.max(0, Math.floor(cfg.hairColor)),
-    eyes: Math.max(0, Math.floor(cfg.eyes)),
-    nose: Math.max(0, Math.floor(cfg.nose)),
-    glasses: cfg.glasses,
-    suit: Math.max(0, Math.floor(cfg.suit)),
-    shirt: Math.max(0, Math.floor(cfg.shirt)),
-    acc: Math.max(0, Math.floor(cfg.acc)),
-    accColor: Math.max(0, Math.floor(cfg.accColor)),
+    skin: clampHex(colors.skin),
+    hair: Math.max(0, Math.floor(cfg.hair ?? 0)),
+    hairColor: clampHex(colors.hairColor),
+    eyes: Math.max(0, Math.floor(cfg.eyes ?? 0)),
+    nose: Math.max(0, Math.floor(cfg.nose ?? 0)),
+    glasses: cfg.glasses ?? false,
+    suit: clampHex(colors.suit),
+    pants: clampHex(colors.pants),
+    shirt: clampHex(colors.shirt),
+    acc: Math.max(0, Math.floor(cfg.acc ?? 0)),
+    accColor: clampHex(colors.accColor),
     pseudo: normalizePseudo(cfg.pseudo),
   };
 }

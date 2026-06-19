@@ -182,12 +182,13 @@ export function syncAvatarMaterials(
   cfg: AvatarConfig,
   mat: AvatarMaterials,
 ): void {
-  const skin = SKIN[paletteIndex(SKIN, cfg.skin)];
-  const hair = HAIRC[paletteIndex(HAIRC, cfg.hairColor)];
-  const suit = SUIT[paletteIndex(SUIT, cfg.suit)];
-  const shirt = SHIRT[paletteIndex(SHIRT, cfg.shirt)];
-  const acc = ACCC[paletteIndex(ACCC, cfg.accColor)];
-  const iris = IRIS_TONES[paletteIndex(IRIS_TONES, cfg.eyes + cfg.hairColor)];
+  const skin = cfg.skin;
+  const hair = cfg.hairColor;
+  const suit = cfg.suit;
+  const pants = cfg.pants;
+  const shirt = cfg.shirt;
+  const acc = cfg.accColor;
+  const iris = IRIS_TONES[paletteIndex(IRIS_TONES, cfg.eyes)];
 
   mat.skin.color.setHex(skin);
   mat.blush.color.setHex(skin);
@@ -199,7 +200,7 @@ export function syncAvatarMaterials(
   mat.suit.color.setHex(suit);
   mat.suit.sheenColor = new THREE.Color(suit).lerp(new THREE.Color(0xffffff), 0.22);
 
-  mat.pants.color.copy(new THREE.Color(suit).multiplyScalar(0.72));
+  mat.pants.color.setHex(pants);
 
   mat.shirt.color.setHex(shirt);
   mat.acc.color.setHex(acc);

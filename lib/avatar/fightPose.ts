@@ -1,5 +1,6 @@
 import type { AvatarBuildResult } from "./buildAvatar";
-import { HEAD_BASE_Y } from "./proportions";
+import { HEAD_BASE_Y, REST_POSE } from "./proportions";
+import { applyRestPose } from "./restPose";
 
 export const TURN_DUR = 0.3;
 export const WAIT1_DUR = 0.3;
@@ -33,40 +34,13 @@ function easeInOut(t: number): number {
   return c * c * (3 - 2 * c);
 }
 
-function resetLimbRotations(avatar: AvatarBuildResult): void {
-  for (const arm of avatar.parts.arms) {
-    if (arm.shoulder) {
-      arm.shoulder.rotation.x = 0;
-      arm.shoulder.rotation.y = 0;
-      arm.shoulder.rotation.z = 0;
-    }
-    if (arm.elbow) {
-      arm.elbow.rotation.x = 0;
-      arm.elbow.rotation.y = 0;
-      arm.elbow.rotation.z = 0;
-    }
-  }
-  for (const leg of avatar.parts.legs) {
-    if (leg.hip) {
-      leg.hip.rotation.x = 0;
-      leg.hip.rotation.y = 0;
-      leg.hip.rotation.z = 0;
-    }
-    if (leg.knee) {
-      leg.knee.rotation.x = 0;
-      leg.knee.rotation.y = 0;
-      leg.knee.rotation.z = 0;
-    }
-  }
-}
-
 function applyFlapArms(avatar: AvatarBuildResult, env: number, flap: number): void {
   for (const arm of avatar.parts.arms) {
     const side = arm.side > 0 ? 1 : -1;
     if (arm.shoulder) {
       arm.shoulder.rotation.x = -env * (0.9 + 0.5 * flap * side);
-      arm.shoulder.rotation.z = side * env * 0.12;
       arm.shoulder.rotation.y = 0;
+      arm.shoulder.rotation.z = side * REST_POSE.shoulderZ;
     }
     if (arm.elbow) {
       arm.elbow.rotation.x = -env * (0.2 + Math.abs(flap) * 0.4);
@@ -78,12 +52,13 @@ function applyFlapArms(avatar: AvatarBuildResult, env: number, flap: number): vo
   for (const leg of avatar.parts.legs) {
     const brace = leg.side > 0 ? 0.1 : 0.18;
     if (leg.hip) {
-      leg.hip.rotation.x = brace * env;
+      leg.hip.rotation.x = REST_POSE.hipX + brace * env;
       leg.hip.rotation.y = 0;
       leg.hip.rotation.z = 0;
     }
     if (leg.knee) {
-      leg.knee.rotation.x = Math.max(0, brace * 0.35 * env);
+      leg.knee.rotation.x =
+        REST_POSE.kneeX + Math.max(0, brace * 0.35 * env);
       leg.knee.rotation.y = 0;
       leg.knee.rotation.z = 0;
     }
@@ -109,10 +84,10 @@ export function applyBumpPose(
   if (tSec < TURN_END) {
     const t01 = tSec / TURN_DUR;
     bodyRotY = lerpAngle(facingY, 0, easeInOut(t01));
-    resetLimbRotations(avatar);
+    applyRestPose(avatar);
   } else if (tSec < WAIT1_END) {
     bodyRotY = 0;
-    resetLimbRotations(avatar);
+    applyRestPose(avatar);
   } else if (tSec < FLAP_END) {
     const f = (tSec - WAIT1_END) / FLAP_DUR;
     const env = Math.sin(f * Math.PI);
@@ -124,12 +99,12 @@ export function applyBumpPose(
     applyFlapArms(avatar, env, flap);
   } else if (tSec < WAIT2_END) {
     bodyRotY = 0;
-    resetLimbRotations(avatar);
+    applyRestPose(avatar);
   } else {
     const l = (tSec - WAIT2_END) / LEAVE_DUR;
     bodyRotY = lerpAngle(0, leaveFacingY, easeInOut(l));
     headRotY = leaveFacingY * clamp01(l) * 0.06;
-    resetLimbRotations(avatar);
+    applyRestPose(avatar);
   }
 
   avatar.group.position.y = bodyY;

@@ -14,6 +14,7 @@ import {
   LIMBS,
   NECK,
   PELVIS,
+  REST_POSE,
   SHOE,
 } from "./proportions";
 import {
@@ -98,9 +99,8 @@ function lapelMaterial(
   THREE: ThreeNamespace,
   cfg: AvatarConfig,
 ): MeshPhysicalMaterial {
-  const suit = SUIT[paletteIndex(SUIT, cfg.suit)];
   return new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(suit).multiplyScalar(0.88),
+    color: new THREE.Color(cfg.suit).multiplyScalar(0.88),
     roughness: 0.74,
     metalness: 0,
     clearcoat: 0.22,
@@ -630,8 +630,8 @@ function buildArm(
     0.02, 0.032, 0.018,
   ]);
 
-  shoulder.rotation.z = side * 0.16;
-  elbow.rotation.x = 0.07;
+  shoulder.rotation.z = side * REST_POSE.shoulderZ;
+  elbow.rotation.x = REST_POSE.elbowX;
 
   return { limb: { shoulder, elbow, side }, shoulder };
 }

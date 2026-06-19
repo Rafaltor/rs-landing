@@ -38,6 +38,7 @@ function parseConfig(value: unknown): AvatarConfig | null {
     nose: v.nose as number,
     glasses: v.glasses as boolean,
     suit: v.suit as number,
+    pants: typeof v.pants === "number" ? (v.pants as number) : undefined,
     shirt: v.shirt as number,
     acc: v.acc as number,
     accColor: v.accColor as number,
