@@ -366,7 +366,12 @@ export class AvatarScene {
         const placementId = this.options.placementId;
         const motion = placementId ? getAvatarWalkMotion(placementId) : null;
         if (motion && motion.bumpPhase > 0.02) {
-          applyBumpPose(avatar, motion.bumpPhase, motion.bumpFacingY);
+          applyBumpPose(
+            avatar,
+            motion.bumpPhase,
+            motion.bumpFacingY,
+            motion.bumpLeaveFacingY,
+          );
         } else {
           applyWalkPose(avatar, elapsed, {
             speed: motion?.speed ?? 3.6,

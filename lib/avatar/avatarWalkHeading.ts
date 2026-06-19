@@ -1,5 +1,5 @@
-/** Durée de la réaction collision (secondes) — réglage global. */
-export const BUMP_DURATION = 0.5;
+/** Durée totale de la séquence collision (secondes) — réglage global. */
+export const BUMP_DURATION = 1.3;
 
 export type AvatarWalkMotion = {
   headingY: number;
@@ -7,8 +7,10 @@ export type AvatarWalkMotion = {
   speed: number;
   /** Temps restant de la réaction collision (1 → 0). */
   bumpPhase: number;
-  /** Profil face à l'autre Mii pendant la réaction. */
+  /** Profil face à l'autre Mii au début de la séquence. */
   bumpFacingY: number;
+  /** Orientation de départ après la chamaillerie (sens opposé à l'arrivée). */
+  bumpLeaveFacingY: number;
 };
 
 const motions = new Map<string, AvatarWalkMotion>();
@@ -19,6 +21,7 @@ const DEFAULT_MOTION: AvatarWalkMotion = {
   speed: 3.6,
   bumpPhase: 0,
   bumpFacingY: 0,
+  bumpLeaveFacingY: 0,
 };
 
 function lerpAngle(from: number, to: number, t: number): number {
@@ -82,6 +85,7 @@ export function updateAvatarWalkMotionForHotspot(
 export function triggerAvatarBump(
   placementId: string,
   facingY: number,
+  leaveFacingY: number,
 ): void {
   const prev = motions.get(placementId) ?? DEFAULT_MOTION;
   if (prev.bumpPhase > 0.08) return;
@@ -90,6 +94,7 @@ export function triggerAvatarBump(
     ...prev,
     bumpPhase: 1,
     bumpFacingY: facingY,
+    bumpLeaveFacingY: leaveFacingY,
     headingY: facingY,
     turnLean: 0,
     speed: 2.2,
@@ -99,16 +104,20 @@ export function triggerAvatarBump(
 export function triggerAvatarBumpForHotspot(
   hotspotId: string,
   facingY: number,
+  leaveFacingY: number,
 ): void {
   const placementId = placementIdFromHotspotId(hotspotId);
   if (!placementId) return;
-  triggerAvatarBump(placementId, facingY);
+  triggerAvatarBump(placementId, facingY, leaveFacingY);
 }
 
 export function decayAvatarBumpState(placementId: string, delta: number): void {
   const motion = motions.get(placementId);
   if (!motion || motion.bumpPhase <= 0) return;
   motion.bumpPhase = Math.max(0, motion.bumpPhase - delta / BUMP_DURATION);
+  if (motion.bumpPhase === 0) {
+    motion.headingY = motion.bumpLeaveFacingY;
+  }
 }
 
 export function decayAvatarBumpForHotspot(

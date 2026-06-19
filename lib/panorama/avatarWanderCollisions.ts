@@ -83,8 +83,16 @@ export function resolveAvatarCollisions(
       a.collisionCooldown = COOLDOWN_SEC;
       b.collisionCooldown = COOLDOWN_SEC;
 
-      triggerAvatarBumpForHotspot(a.hotspotId, facingToward(dy, dp));
-      triggerAvatarBumpForHotspot(b.hotspotId, facingToward(-dy, -dp));
+      triggerAvatarBumpForHotspot(
+        a.hotspotId,
+        facingToward(dy, dp),
+        facingToward(-dy, -dp),
+      );
+      triggerAvatarBumpForHotspot(
+        b.hotspotId,
+        facingToward(-dy, -dp),
+        facingToward(dy, dp),
+      );
     }
   }
 }
