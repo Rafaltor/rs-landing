@@ -29,9 +29,32 @@ export type WanderWalker = {
   pitchAmp: number;
   prevYaw: number;
   prevPitch: number;
-  /** Secondes restantes avant nouvelle collision. */
-  collisionCooldown: number;
 };
+
+const pairCooldowns = new Map<string, number>();
+
+function pairKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+export function wrapWanderYaw(yaw: number): number {
+  let y = yaw % 360;
+  if (y > 180) y -= 360;
+  if (y < -180) y += 360;
+  return y;
+}
+
+export function decayCollisionPairCooldowns(dt: number): void {
+  for (const [key, remaining] of pairCooldowns) {
+    const next = remaining - dt;
+    if (next <= 0) pairCooldowns.delete(key);
+    else pairCooldowns.set(key, next);
+  }
+}
+
+export function clearCollisionPairCooldowns(): void {
+  pairCooldowns.clear();
+}
 
 function facingToward(dy: number, dp: number): number {
   return Math.atan2(dy, dp * 0.42 + 0.06);
@@ -50,8 +73,9 @@ export function resolveAvatarCollisions(
     for (let j = i + 1; j < walkers.length; j++) {
       const a = walkers[i];
       const b = walkers[j];
+      const key = pairKey(a.hotspotId, b.hotspotId);
 
-      if (a.collisionCooldown > 0 || b.collisionCooldown > 0) {
+      if ((pairCooldowns.get(key) ?? 0) > 0) {
         continue;
       }
 
@@ -67,16 +91,15 @@ export function resolveAvatarCollisions(
       const push =
         SEPARATION_PUSH_DEG * (1 - dist / COLLISION_DIST_DEG) + 0.8;
 
-      a.yaw -= nx * push;
+      a.yaw = wrapWanderYaw(a.yaw - nx * push);
       a.pitch -= ny * push;
-      b.yaw += nx * push;
+      b.yaw = wrapWanderYaw(b.yaw + nx * push);
       b.pitch += ny * push;
 
       a.dir *= -1;
       b.dir *= -1;
 
-      a.collisionCooldown = BUMP_DURATION + COLLISION_INVINCIBILITY_SEC;
-      b.collisionCooldown = BUMP_DURATION + COLLISION_INVINCIBILITY_SEC;
+      pairCooldowns.set(key, BUMP_DURATION + COLLISION_INVINCIBILITY_SEC);
 
       triggerAvatarBumpForHotspot(
         a.hotspotId,

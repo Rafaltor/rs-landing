@@ -90,7 +90,7 @@ export function triggerAvatarBump(
   leaveFacingY: number,
 ): void {
   const prev = motions.get(placementId) ?? DEFAULT_MOTION;
-  if (prev.bumpPhase > 0.08) return;
+  if (prev.bumpPhase > 0.02) return;
 
   motions.set(placementId, {
     ...prev,
@@ -117,6 +117,11 @@ export function decayAvatarBumpState(placementId: string, delta: number): void {
   const motion = motions.get(placementId);
   if (!motion || motion.bumpPhase <= 0) return;
   motion.bumpPhase = Math.max(0, motion.bumpPhase - delta / BUMP_DURATION);
+  if (motion.bumpPhase < 0.001) {
+    motion.bumpPhase = 0;
+    motion.headingY = motion.bumpLeaveFacingY;
+    return;
+  }
   if (motion.bumpPhase === 0) {
     motion.headingY = motion.bumpLeaveFacingY;
   }

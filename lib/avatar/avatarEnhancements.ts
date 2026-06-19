@@ -64,7 +64,7 @@ function buildSuitDetails(
     ) => import("three").BufferGeometry;
   },
 ): void {
-  const buttonY = [1.18, 1.02, 0.86];
+  const buttonY = [1.4, 1.3, 1.2];
   for (const y of buttonY) {
     const z = chestZ(bodyIdx, y, 0.012);
     const tilt = chestTiltAt(bodyIdx, y);
@@ -81,7 +81,7 @@ function buildSuitDetails(
     );
   }
 
-  const pocketY = 1.12;
+  const pocketY = 1.28;
   const pocketX = -torsoRadiusAt(bodyIdx, pocketY) * 0.52;
   const pocketZ = chestZ(bodyIdx, pocketY, 0.012);
   const pocketTilt = chestTiltAt(bodyIdx, pocketY);

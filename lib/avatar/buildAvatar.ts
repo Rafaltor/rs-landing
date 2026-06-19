@@ -633,7 +633,7 @@ function buildArm(
     0.02, 0.032, 0.018,
   ]);
 
-  shoulder.rotation.z = side * 0.1;
+  shoulder.rotation.z = side * 0.16;
   elbow.rotation.x = 0.07;
 
   return { limb: { shoulder, elbow, side }, shoulder };
@@ -667,7 +667,7 @@ export function buildAvatar(
   const front = new THREE.Group();
   body.add(front);
 
-  const shirtY = 1.28;
+  const shirtY = 1.32;
   const shirtTilt = chestTiltAt(bodyIdx, shirtY);
   const shirtShape = new THREE.Shape();
   shirtShape.moveTo(0, 0.16);
@@ -699,7 +699,7 @@ export function buildAvatar(
     -colX, colY, colZ,
   ], [colTilt, 0, 0.48]);
 
-  const lapelY = 1.29;
+  const lapelY = 1.33;
   const lapelZ = chestZ(bodyIdx, lapelY, 0.028);
   const lapelTilt = chestTiltAt(bodyIdx, lapelY);
   const lapelX = torsoRadiusAt(bodyIdx, lapelY) * 0.36;
@@ -742,7 +742,7 @@ export function buildAvatar(
     ]);
     add(THREE, front, sphere(THREE), materials.acc, [0, bowY + 0.01, bowZ], undefined, 0.028);
   } else if (acc === 2) {
-    const badgeY = 1.12;
+    const badgeY = 1.26;
     const badgeZ = chestZ(bodyIdx, badgeY, 0.02);
     const badgeTilt = chestTiltAt(bodyIdx, badgeY);
     add(THREE, front, rbox(THREE, 0.014, 0.28, 0.014, 0.005), materials.acc, [
@@ -762,7 +762,7 @@ export function buildAvatar(
     ], [badgeTilt, 0, 0]);
   }
 
-  const beltY = 1.02;
+  const beltY = 1.5;
   const beltR = torsoRadiusAt(bodyIdx, beltY) * 0.96;
   add(
     THREE,

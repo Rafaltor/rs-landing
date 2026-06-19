@@ -13,7 +13,7 @@ import {
   updateAvatarHotspotAngles,
 } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
-import { resolveAvatarCollisions, type WanderWalker } from "@/lib/panorama/avatarWanderCollisions";
+import { resolveAvatarCollisions, type WanderWalker, clearCollisionPairCooldowns, decayCollisionPairCooldowns, wrapWanderYaw } from "@/lib/panorama/avatarWanderCollisions";
 import {
   getAvatarRuntimeHotspots,
   getActiveSceneHotspots,
@@ -50,11 +50,7 @@ function integrateWalker(w: WanderWalker, dt: number): void {
   w.pitch = w.basePitch + Math.sin(w.phase) * w.pitchAmp;
 
   if (!isAvatarBumping(w.hotspotId)) {
-    w.yaw += w.dir * dt;
-  }
-
-  if (w.collisionCooldown > 0) {
-    w.collisionCooldown = Math.max(0, w.collisionCooldown - dt);
+    w.yaw = wrapWanderYaw(w.yaw + w.dir * dt);
   }
 
   decayAvatarBumpForHotspot(w.hotspotId, dt);
@@ -62,6 +58,7 @@ function integrateWalker(w: WanderWalker, dt: number): void {
 
 function rebuildWalkers(): void {
   walkers.length = 0;
+  clearCollisionPairCooldowns();
   for (const p of getAvatarPlacements()) {
     const seed = Math.abs(p.id.charCodeAt(0) + p.yaw);
     const dirSign = seed % 2 === 0 ? 1 : -1;
@@ -70,7 +67,7 @@ function rebuildWalkers(): void {
 
     const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
-      yaw: p.yaw,
+      yaw: wrapWanderYaw(p.yaw),
       pitch: p.pitch,
       basePitch: p.pitch,
       dir: dirSign * dirMag,
@@ -83,9 +80,8 @@ function rebuildWalkers(): void {
         WANDER_PITCH_AMP_MIN +
         (seed % 6) *
           ((WANDER_PITCH_AMP_MAX - WANDER_PITCH_AMP_MIN) / 5),
-      prevYaw: p.yaw,
+      prevYaw: wrapWanderYaw(p.yaw),
       prevPitch: p.pitch,
-      collisionCooldown: 0,
     };
     walkers.push(walker);
   }
@@ -133,6 +129,7 @@ export function startAvatarWanderLoop(viewer: PannellumViewer): void {
       integrateWalker(w, dt);
     }
 
+    decayCollisionPairCooldowns(dt);
     resolveAvatarCollisions(walkers, normalizeYawDelta);
 
     for (const w of walkers) {
@@ -170,4 +167,5 @@ export function stopAvatarWanderLoop(): void {
   repaintTick = 0;
   lastTickMs = 0;
   walkers.length = 0;
+  clearCollisionPairCooldowns();
 }
