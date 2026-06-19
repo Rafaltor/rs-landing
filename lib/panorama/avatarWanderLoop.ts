@@ -53,7 +53,7 @@ function integrateWalker(w: WanderWalker, dt: number): void {
     w.yaw += w.dir * dt;
   }
 
-  if (w.collisionCooldown > 0) {
+  if (w.collisionCooldown > 0 && !isAvatarBumping(w.hotspotId)) {
     w.collisionCooldown = Math.max(0, w.collisionCooldown - dt);
   }
 

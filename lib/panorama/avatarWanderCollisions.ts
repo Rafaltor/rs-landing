@@ -3,14 +3,14 @@ import {
   triggerAvatarBumpForHotspot,
 } from "@/lib/avatar/avatarWalkHeading";
 
-/** Distance angulaire (degrés) pour déclencher une collision. */
-export const COLLISION_DIST_DEG = 11;
+/** Distance angulaire (degrés) pour déclencher une collision — plus proche qu'avant. */
+export const COLLISION_DIST_DEG = 6.5;
 
 /** Écartement immédiat le long de la normale (degrés). */
 export const SEPARATION_PUSH_DEG = 2.6;
 
-/** Délai avant une nouvelle collision entre les mêmes Mii (secondes). */
-export const COOLDOWN_SEC = 0.8;
+/** Invincibilité collision après un choc (secondes), après la fin du bump. */
+export const COLLISION_INVINCIBILITY_SEC = 2 / 3;
 
 export type WanderWalker = {
   hotspotId: string;
@@ -80,8 +80,8 @@ export function resolveAvatarCollisions(
       a.dir *= -1;
       b.dir *= -1;
 
-      a.collisionCooldown = COOLDOWN_SEC;
-      b.collisionCooldown = COOLDOWN_SEC;
+      a.collisionCooldown = COLLISION_INVINCIBILITY_SEC;
+      b.collisionCooldown = COLLISION_INVINCIBILITY_SEC;
 
       triggerAvatarBumpForHotspot(
         a.hotspotId,
