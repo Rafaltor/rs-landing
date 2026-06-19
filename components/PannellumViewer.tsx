@@ -463,7 +463,10 @@ export default function PannellumViewer() {
 
     async function init() {
       try {
-        await loadPannellumScript();
+        const [,] = await Promise.all([
+          loadPannellumScript(),
+          ensureAvatarPlacementsHydrated(),
+        ]);
         if (cancelled || !containerRef.current || !window.pannellum) {
           return;
         }
@@ -478,8 +481,6 @@ export default function PannellumViewer() {
           buildViewerConfig() as PannellumTourConfig,
         );
         const viewer = viewerRef.current;
-
-        await ensureAvatarPlacementsHydrated();
 
         bootAvatars = () => {
           if (cancelled || !viewerRef.current) return;

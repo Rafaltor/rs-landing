@@ -2,15 +2,15 @@ import type { AvatarBuildResult } from "./buildAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 
 export const TURN_DUR = 0.3;
-export const WAIT1_DUR = 0.7;
-export const FLAP_DUR = 0.4;
-export const WAIT2_DUR = 0.7;
+export const WAIT1_DUR = 0.3;
+export const FLAP_DUR = 1.2;
+export const WAIT2_DUR = 0.3;
 export const LEAVE_DUR = 0.3;
 export const BUMP_TOTAL =
   TURN_DUR + WAIT1_DUR + FLAP_DUR + WAIT2_DUR + LEAVE_DUR;
 
 /** Nombre de battements bras pendant la phase FLAP. */
-export const FLAP_CYCLES = 8;
+export const FLAP_CYCLES = 16;
 
 const TURN_END = TURN_DUR;
 const WAIT1_END = TURN_END + WAIT1_DUR;

@@ -1,15 +1,15 @@
 import {
-  isAvatarBumping,
+  BUMP_DURATION,
   triggerAvatarBumpForHotspot,
 } from "@/lib/avatar/avatarWalkHeading";
 
-/** Distance angulaire (degrés) pour déclencher une collision — plus proche qu'avant. */
-export const COLLISION_DIST_DEG = 6.5;
+/** Distance angulaire (degrés) pour déclencher une collision. */
+export const COLLISION_DIST_DEG = 8.5;
 
 /** Écartement immédiat le long de la normale (degrés). */
 export const SEPARATION_PUSH_DEG = 2.6;
 
-/** Invincibilité collision après un choc (secondes), après la fin du bump. */
+/** Invincibilité après la séquence de bump (secondes). */
 export const COLLISION_INVINCIBILITY_SEC = 2 / 3;
 
 export type WanderWalker = {
@@ -51,12 +51,7 @@ export function resolveAvatarCollisions(
       const a = walkers[i];
       const b = walkers[j];
 
-      if (
-        a.collisionCooldown > 0 ||
-        b.collisionCooldown > 0 ||
-        isAvatarBumping(a.hotspotId) ||
-        isAvatarBumping(b.hotspotId)
-      ) {
+      if (a.collisionCooldown > 0 || b.collisionCooldown > 0) {
         continue;
       }
 
@@ -80,8 +75,8 @@ export function resolveAvatarCollisions(
       a.dir *= -1;
       b.dir *= -1;
 
-      a.collisionCooldown = COLLISION_INVINCIBILITY_SEC;
-      b.collisionCooldown = COLLISION_INVINCIBILITY_SEC;
+      a.collisionCooldown = BUMP_DURATION + COLLISION_INVINCIBILITY_SEC;
+      b.collisionCooldown = BUMP_DURATION + COLLISION_INVINCIBILITY_SEC;
 
       triggerAvatarBumpForHotspot(
         a.hotspotId,
