@@ -29,17 +29,9 @@ function isAvatarConfig(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.skin === "number" &&
     typeof v.hair === "number" &&
-    typeof v.hairColor === "number" &&
     typeof v.eyes === "number" &&
     typeof v.nose === "number" &&
-    typeof v.glasses === "boolean" &&
-    typeof v.suit === "number" &&
-    typeof v.shirt === "number" &&
-    typeof v.acc === "number" &&
-    typeof v.accColor === "number" &&
-    (v.pants === undefined || typeof v.pants === "number") &&
     (v.pseudo === undefined || typeof v.pseudo === "string")
   );
 }

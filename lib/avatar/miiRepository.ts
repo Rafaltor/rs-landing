@@ -17,34 +17,13 @@ function parseConfig(value: unknown): AvatarConfig | null {
   if (!value || typeof value !== "object") return null;
   const v = value as Record<string, unknown>;
   if (
-    typeof v.skin !== "number" ||
     typeof v.hair !== "number" ||
-    typeof v.hairColor !== "number" ||
     typeof v.eyes !== "number" ||
-    typeof v.nose !== "number" ||
-    typeof v.glasses !== "boolean" ||
-    typeof v.suit !== "number" ||
-    typeof v.shirt !== "number" ||
-    typeof v.acc !== "number" ||
-    typeof v.accColor !== "number"
+    typeof v.nose !== "number"
   ) {
     return null;
   }
-  return normalizeAvatarConfig({
-    skin: v.skin as number,
-    hair: v.hair as number,
-    hairColor: v.hairColor as number,
-    eyes: v.eyes as number,
-    nose: v.nose as number,
-    glasses: v.glasses as boolean,
-    suit: v.suit as number,
-    pants: typeof v.pants === "number" ? (v.pants as number) : undefined,
-    shirt: v.shirt as number,
-    acc: v.acc as number,
-    accColor: v.accColor as number,
-    pseudo: typeof v.pseudo === "string" ? v.pseudo : "",
-    body: typeof v.body === "number" ? v.body : undefined,
-  });
+  return normalizeAvatarConfig(v as Parameters<typeof normalizeAvatarConfig>[0]);
 }
 
 function rowToMii(row: Record<string, unknown>): UserMiiRow | null {

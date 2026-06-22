@@ -261,8 +261,8 @@ function getMouseZoom(): boolean {
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 138;
-  if (window.innerWidth <= 768) return 132;
+  if (window.innerWidth <= 390) return 142;
+  if (window.innerWidth <= 768) return 136;
   return 100;
 }
 
@@ -400,6 +400,10 @@ export default function PannellumViewer() {
       layoutRegisteredAvatarHotspots(viewer);
     };
 
+    const onViewerAnimate = () => {
+      onViewerViewChange();
+    };
+
     let unsubPlacements: (() => void) | null = null;
     let bootAvatars: (() => void) | null = null;
 
@@ -440,6 +444,8 @@ export default function PannellumViewer() {
         viewer.on?.("mouseup", onViewerViewChange);
         viewer.on?.("touchend", onViewerViewChange);
         viewer.on?.("zoomchange", onViewerViewChange);
+        viewer.on?.("animate", onViewerAnimate);
+        viewer.on?.("viewchange", onViewerViewChange);
         setViewerReady(true);
 
         unsubPlacements = subscribeAvatarPlacements(() => {
@@ -470,6 +476,8 @@ export default function PannellumViewer() {
       viewerRef.current?.off?.("mouseup", onViewerViewChange);
       viewerRef.current?.off?.("touchend", onViewerViewChange);
       viewerRef.current?.off?.("zoomchange", onViewerViewChange);
+      viewerRef.current?.off?.("animate", onViewerAnimate);
+      viewerRef.current?.off?.("viewchange", onViewerViewChange);
       window.removeEventListener("resize", onResize);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();

@@ -10,7 +10,7 @@ import { disposeAvatarGeometries } from "./disposeAvatar";
 import { HEAD_BASE_Y } from "./proportions";
 import type { AvatarConfig } from "./palettes";
 import { applyBumpPose } from "./fightPose";
-import { getAvatarWalkMotion } from "./avatarWalkHeading";
+import { getAvatarWalkMotion, WALK_ANIM_SPEED } from "./avatarWalkHeading";
 import { applyWalkPose } from "./walkPose";
 
 export type AvatarSceneOptions = {
@@ -26,6 +26,8 @@ export type AvatarSceneOptions = {
   ghost?: boolean;
   /** ID placement (pour orientation pendant le wander). */
   placementId?: string;
+  /** Rotation manuelle à la souris / au doigt (studio). */
+  orbit?: boolean;
 };
 
 type ResolvedOptions = {
@@ -35,6 +37,7 @@ type ResolvedOptions = {
   walk: boolean;
   ghost: boolean;
   placementId?: string;
+  orbit: boolean;
 };
 
 function collectSharedMaterials(materials: AvatarMaterials): Set<THREE.Material> {
@@ -72,6 +75,13 @@ export class AvatarScene {
   private motionMq: MediaQueryList | null = null;
   private onMotionChange: (() => void) | null = null;
 
+  private orbitYaw = 0.4;
+  private orbitDragging = false;
+  private orbitLastX = 0;
+  private boundOrbitDown: ((e: PointerEvent) => void) | null = null;
+  private boundOrbitMove: ((e: PointerEvent) => void) | null = null;
+  private boundOrbitUp: ((e: PointerEvent) => void) | null = null;
+
   constructor(
     container: HTMLElement,
     cfg: AvatarConfig,
@@ -91,6 +101,7 @@ export class AvatarScene {
       walk: options?.walk ?? false,
       ghost: options?.ghost ?? false,
       placementId: options?.placementId,
+      orbit: options?.orbit ?? false,
     };
   }
 
@@ -242,6 +253,10 @@ export class AvatarScene {
     this.onMotionChange();
     this.motionMq.addEventListener("change", this.onMotionChange);
 
+    if (this.options.orbit) {
+      this.bindOrbitControls();
+    }
+
     this.rebuildAvatar(this.cfg);
     this.startLoop();
   }
@@ -263,6 +278,8 @@ export class AvatarScene {
     if (this.motionMq && this.onMotionChange) {
       this.motionMq.removeEventListener("change", this.onMotionChange);
     }
+
+    this.unbindOrbitControls();
 
     if (this.avatar && this.scene && this.sharedMaterials) {
       this.scene.remove(this.avatar.group);
@@ -374,11 +391,20 @@ export class AvatarScene {
           );
         } else {
           applyWalkPose(avatar, elapsed, {
-            speed: motion?.speed ?? 3.6,
+            speed: motion?.speed ?? WALK_ANIM_SPEED,
             headingY: motion?.headingY ?? 0,
             turnLean: motion?.turnLean ?? 0,
           });
         }
+      } else if (this.options.orbit) {
+        avatar.group.rotation.y = this.orbitYaw;
+        avatar.group.rotation.z = 0;
+        avatar.group.position.y = 0;
+        const breath = Math.sin(elapsed * 1.55) * 0.01;
+        avatar.parts.body.scale.y = 1 + breath;
+        avatar.parts.head.position.y =
+          HEAD_BASE_Y + Math.sin(elapsed * 1.6 + 0.4) * 0.01;
+        avatar.parts.head.rotation.y = Math.sin(elapsed * 0.5) * 0.05;
       } else {
         avatar.group.rotation.y = elapsed * 0.32;
         avatar.group.rotation.z = Math.sin(elapsed * 0.85) * 0.01;
@@ -419,5 +445,57 @@ export class AvatarScene {
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  private bindOrbitControls(): void {
+    this.container.style.touchAction = "none";
+    this.container.style.cursor = "grab";
+
+    this.boundOrbitDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      this.orbitDragging = true;
+      this.orbitLastX = e.clientX;
+      this.container.style.cursor = "grabbing";
+      this.container.setPointerCapture(e.pointerId);
+    };
+
+    this.boundOrbitMove = (e: PointerEvent) => {
+      if (!this.orbitDragging) return;
+      const delta = e.clientX - this.orbitLastX;
+      this.orbitLastX = e.clientX;
+      this.orbitYaw += delta * 0.012;
+    };
+
+    this.boundOrbitUp = (e: PointerEvent) => {
+      if (!this.orbitDragging) return;
+      this.orbitDragging = false;
+      this.container.style.cursor = "grab";
+      if (this.container.hasPointerCapture(e.pointerId)) {
+        this.container.releasePointerCapture(e.pointerId);
+      }
+    };
+
+    this.container.addEventListener("pointerdown", this.boundOrbitDown);
+    this.container.addEventListener("pointermove", this.boundOrbitMove);
+    this.container.addEventListener("pointerup", this.boundOrbitUp);
+    this.container.addEventListener("pointercancel", this.boundOrbitUp);
+  }
+
+  private unbindOrbitControls(): void {
+    if (this.boundOrbitDown) {
+      this.container.removeEventListener("pointerdown", this.boundOrbitDown);
+    }
+    if (this.boundOrbitMove) {
+      this.container.removeEventListener("pointermove", this.boundOrbitMove);
+    }
+    if (this.boundOrbitUp) {
+      this.container.removeEventListener("pointerup", this.boundOrbitUp);
+      this.container.removeEventListener("pointercancel", this.boundOrbitUp);
+    }
+    this.boundOrbitDown = null;
+    this.boundOrbitMove = null;
+    this.boundOrbitUp = null;
+    this.container.style.cursor = "";
+    this.container.style.touchAction = "";
   }
 }

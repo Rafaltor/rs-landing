@@ -7,6 +7,7 @@ import {
   DEFAULT_AVATAR_CONFIG,
   type AvatarConfig,
 } from "@/lib/avatar/palettes";
+import { normalizePseudo } from "@/lib/avatar/avatarConfig";
 import { getAvatar, setAvatar } from "@/lib/avatar/storage";
 import {
   ensureMyAvatarPlacement,
@@ -81,11 +82,15 @@ export default function LandingAvatarPanel({
   useEffect(() => {
     if (!open) return;
     if (myMii) {
-      setDraftConfig(myMii.config);
+      const local = getAvatar();
+      setDraftConfig({
+        ...myMii.config,
+        pseudo: normalizePseudo(myMii.config.pseudo || local.pseudo),
+      });
     } else {
       setDraftConfig(getAvatar());
     }
-  }, [open, myMii?.id, myMii?.config]);
+  }, [open, myMii?.id, myMii?.config.pseudo]);
 
   useEffect(() => {
     if (!open) {
@@ -101,6 +106,7 @@ export default function LandingAvatarPanel({
       pixelRatio: 1.6,
       lite: false,
       pauseWhenHidden: false,
+      orbit: true,
     });
     scene.mount();
     sceneRef.current = scene;
@@ -278,10 +284,12 @@ export default function LandingAvatarPanel({
           <div className="rs-mii-studio-modal__preview-wrap">
             <div
               ref={viewportRef}
-              className="rs-mii-studio-modal__preview"
+              className="rs-mii-studio-modal__preview rs-mii-studio-modal__preview--orbit"
               aria-hidden="true"
             />
-            <p className="rs-mii-studio-modal__preview-hint">Aperçu 3D</p>
+            <p className="rs-mii-studio-modal__preview-hint">
+              Glisser pour tourner
+            </p>
           </div>
 
           <div className="rs-mii-studio-modal__panel">
