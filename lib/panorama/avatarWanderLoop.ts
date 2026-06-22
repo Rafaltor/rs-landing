@@ -22,15 +22,13 @@ import {
 /** Pas de simulation par défaut (~60 fps). */
 export const WANDER_DT_DEFAULT = 1 / 60;
 
-/** Vitesse de marche (degrés / seconde). */
-export const WANDER_DIR_MIN = 7;
-export const WANDER_DIR_MAX = 16;
+/** Vitesse de marche lente et uniforme (degrés / seconde). */
+export const WANDER_DIR = 3.2;
 
 /** Oscillation verticale bornée. */
-export const WANDER_PITCH_AMP_MIN = 3.5;
-export const WANDER_PITCH_AMP_MAX = 8.5;
-export const WANDER_PHASE_RATE_MIN = 0.75;
-export const WANDER_PHASE_RATE_MAX = 1.15;
+export const WANDER_PITCH_AMP_MIN = 3;
+export const WANDER_PITCH_AMP_MAX = 5.5;
+export const WANDER_PHASE_RATE = 0.45;
 
 let rafId = 0;
 let activeViewer: PannellumViewer | null = null;
@@ -62,20 +60,15 @@ function rebuildWalkers(): void {
   for (const p of getAvatarPlacements()) {
     const seed = Math.abs(p.id.charCodeAt(0) + p.yaw);
     const dirSign = seed % 2 === 0 ? 1 : -1;
-    const dirMag =
-      WANDER_DIR_MIN + (seed % 5) * ((WANDER_DIR_MAX - WANDER_DIR_MIN) / 4);
 
     const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
       yaw: wrapWanderYaw(p.yaw),
       pitch: p.pitch,
       basePitch: p.pitch,
-      dir: dirSign * dirMag,
+      dir: dirSign * WANDER_DIR,
       phase: seed * 0.11,
-      phaseRate:
-        WANDER_PHASE_RATE_MIN +
-        (seed % 4) *
-          ((WANDER_PHASE_RATE_MAX - WANDER_PHASE_RATE_MIN) / 3),
+      phaseRate: WANDER_PHASE_RATE,
       pitchAmp:
         WANDER_PITCH_AMP_MIN +
         (seed % 6) *

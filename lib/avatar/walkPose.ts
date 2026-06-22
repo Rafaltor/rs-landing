@@ -1,5 +1,6 @@
 import type { AvatarBuildResult } from "./buildAvatar";
 import { HEAD_BASE_Y, REST_POSE } from "./proportions";
+import { WALK_ANIM_SPEED } from "./avatarWalkHeading";
 
 /** Amplitude balancement cuisse (radians). */
 export const LEG_SWING = 0.4;
@@ -29,7 +30,7 @@ export function applyWalkPose(
 ): void {
   const resolved: WalkPoseOptions =
     typeof options === "number" ? { speed: options } : (options ?? {});
-  const speed = resolved.speed ?? 3.6;
+  const speed = resolved.speed ?? WALK_ANIM_SPEED;
   const headingY = resolved.headingY ?? 0;
   const turnLean = resolved.turnLean ?? 0;
   const t = elapsed * speed;

@@ -3,6 +3,9 @@ import { BUMP_TOTAL } from "./fightPose";
 /** Durée totale de la séquence collision (secondes) — alignée sur fightPose.BUMP_TOTAL. */
 export const BUMP_DURATION = BUMP_TOTAL;
 
+/** Vitesse d’animation de marche (cycles / s) — fixe pour tous les Miis. */
+export const WALK_ANIM_SPEED = 1.15;
+
 export type AvatarWalkMotion = {
   headingY: number;
   turnLean: number;
@@ -20,7 +23,7 @@ const motions = new Map<string, AvatarWalkMotion>();
 const DEFAULT_MOTION: AvatarWalkMotion = {
   headingY: 0,
   turnLean: 0,
-  speed: 3.6,
+  speed: WALK_ANIM_SPEED,
   bumpPhase: 0,
   bumpFacingY: 0,
   bumpLeaveFacingY: 0,
@@ -64,13 +67,12 @@ export function updateAvatarWalkMotion(
   const headingY = lerpAngle(prev.headingY, targetHeading, 0.2);
   const targetLean = Math.max(-0.38, Math.min(0.38, deltaYaw * 0.052));
   const turnLean = lerpAngle(prev.turnLean, targetLean, 0.28);
-  const speed = 3.6 * Math.min(2.1, Math.max(0.45, move / 0.09));
 
   motions.set(placementId, {
     ...prev,
     headingY,
     turnLean,
-    speed,
+    speed: WALK_ANIM_SPEED,
   });
 }
 
@@ -99,7 +101,7 @@ export function triggerAvatarBump(
     bumpLeaveFacingY: leaveFacingY,
     headingY: facingY,
     turnLean: 0,
-    speed: 2.2,
+    speed: WALK_ANIM_SPEED * 0.85,
   });
 }
 

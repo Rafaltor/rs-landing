@@ -29,20 +29,6 @@ const PANORAMA_URL = "/360bg.jpeg";
 
 const TEE_IMAGE_URL = "/tee.png";
 
-/** Décalages pitch/yaw autour du hotspot produit pour les fantômes. */
-const GHOST_OFFSETS = [
-  { dp: -8, dy: -35, delay: 0 },
-  { dp: -10, dy: -22, delay: 1 },
-  { dp: -9, dy: -10, delay: 2 },
-  { dp: -11, dy: 4, delay: 3 },
-  { dp: -8, dy: 16, delay: 4 },
-  { dp: -12, dy: 28, delay: 5 },
-  { dp: -10, dy: -28, delay: 6 },
-  { dp: -9, dy: 22, delay: 7 },
-  { dp: -11, dy: -14, delay: 8 },
-  { dp: -7, dy: 10, delay: 9 },
-] as const;
-
 /** Repositionner les hotspots : modifier pitch / yaw ici. */
 const PRODUCT_HOTSPOT = {
   pitch: -6,
@@ -64,16 +50,10 @@ const HOTSPOT_CONFIG = {
     href: "https://recrutestagiaire.eu/pages/grillz",
   },
   miiStudio: {
-    /** Mur vide à droite — loin produit (-104), fantômes, portail (-11) et grillz (153). */
+    /** Mur vide à droite — loin produit (-104), portail (-11) et grillz (153). */
     pitch: -3,
     yaw: 58,
   },
-  ghosts: GHOST_OFFSETS.map((o) => ({
-    pitch: PRODUCT_HOTSPOT.pitch + o.dp,
-    yaw: PRODUCT_HOTSPOT.yaw + o.dy,
-    image: "/images/tshirt.png",
-    delay: o.delay,
-  })),
 };
 
 /** true = clic dans le 360 → pitch/yaw dans la console. */
@@ -91,11 +71,6 @@ type NavHotspotArgs = {
   label: string;
   href?: string;
   sceneId?: string;
-};
-
-type GhostHotspotArgs = {
-  image: string;
-  delay: number;
 };
 
 type MiiStudioHotspotArgs = Record<string, never>;
@@ -218,30 +193,6 @@ const createNavHotspot = (
   }
 };
 
-const createGhostHotspot = (
-  hotSpotDiv: HTMLElement,
-  args: GhostHotspotArgs,
-) => {
-  hotSpotDiv.classList.add("rs-ghost-hotspot");
-  hotSpotDiv.style.cssText = `
-    width: 110px;
-    height: 1px;
-    background: transparent;
-    border: none;
-    overflow: visible;
-    pointer-events: none;
-  `;
-
-  const img = document.createElement("img");
-  img.src = args.image;
-  img.alt = "";
-  img.className = "rs-ghost-img";
-  img.style.animationDelay = `${args.delay}s`;
-  img.draggable = false;
-
-  hotSpotDiv.appendChild(img);
-};
-
 const createProductHotspot = (
   hotSpotDiv: HTMLElement,
   args: ProductHotspotArgs,
@@ -310,8 +261,8 @@ function getMouseZoom(): boolean {
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 126;
-  if (window.innerWidth <= 768) return 120;
+  if (window.innerWidth <= 390) return 138;
+  if (window.innerWidth <= 768) return 132;
   return 100;
 }
 
@@ -349,7 +300,7 @@ function buildViewerConfig() {
             createTooltipArgs: {
               title:
                 process.env.NEXT_PUBLIC_PRODUCT_TITLE || "Stagiaire",
-              price: process.env.NEXT_PUBLIC_PRODUCT_PRICE || "50,00 €",
+              price: process.env.NEXT_PUBLIC_PRODUCT_PRICE || "40,00 €",
               image:
                 process.env.NEXT_PUBLIC_PRODUCT_IMAGE || TEE_IMAGE_URL,
               href: productHref,
@@ -388,15 +339,6 @@ function buildViewerConfig() {
             createTooltipArgs: {},
             clickHandlerFunc: () => openMiiStudio(),
           },
-          ...HOTSPOT_CONFIG.ghosts.map((g) => ({
-            pitch: g.pitch,
-            yaw: g.yaw,
-            type: "info",
-            scale: false,
-            cssClass: "rs-ghost-hotspot",
-            createTooltipFunc: createGhostHotspot,
-            createTooltipArgs: { image: g.image, delay: g.delay },
-          })),
         ],
       },
     },
