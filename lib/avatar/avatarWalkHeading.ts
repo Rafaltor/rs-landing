@@ -4,7 +4,7 @@ import { BUMP_TOTAL } from "./fightPose";
 export const BUMP_DURATION = BUMP_TOTAL;
 
 /** Vitesse d’animation de marche (cycles / s) — fixe pour tous les Miis. */
-export const WALK_ANIM_SPEED = 1.15;
+export const WALK_ANIM_SPEED = 2.35;
 
 export type AvatarWalkMotion = {
   headingY: number;

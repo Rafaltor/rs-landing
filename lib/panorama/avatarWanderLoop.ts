@@ -7,11 +7,6 @@ import {
   isAvatarBumping,
   updateAvatarWalkMotionForHotspot,
 } from "@/lib/avatar/avatarWalkHeading";
-import {
-  forcePannellumHotspotRepaint,
-  layoutRegisteredAvatarHotspots,
-  updateAvatarHotspotAngles,
-} from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import { resolveAvatarCollisions, type WanderWalker, clearCollisionPairCooldowns, decayCollisionPairCooldowns, wrapWanderYaw } from "@/lib/panorama/avatarWanderCollisions";
 import {
@@ -136,15 +131,11 @@ export function startAvatarWanderLoop(viewer: PannellumViewer): void {
       const deltaPitch = w.pitch - w.prevPitch;
 
       updateAvatarWalkMotionForHotspot(w.hotspotId, deltaYaw, deltaPitch);
-      updateAvatarHotspotAngles(w.hotspotId, w.pitch, w.yaw);
       syncHotspotConfig(viewerRef, w.hotspotId, w.pitch, w.yaw);
 
       w.prevYaw = w.yaw;
       w.prevPitch = w.pitch;
     }
-
-    layoutRegisteredAvatarHotspots(viewerRef);
-    forcePannellumHotspotRepaint(viewerRef);
   };
 
   requestAnimationFrame(tick);

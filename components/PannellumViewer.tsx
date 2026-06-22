@@ -14,7 +14,6 @@ import {
   clearAvatarHotspotRegistry,
   syncAvatarHotspots,
 } from "@/lib/panorama/syncAvatarHotspots";
-import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 import {
   refreshAvatarWanderLoop,
   startAvatarWanderLoop,
@@ -261,8 +260,8 @@ function getMouseZoom(): boolean {
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 142;
-  if (window.innerWidth <= 768) return 136;
+  if (window.innerWidth <= 390) return 162;
+  if (window.innerWidth <= 768) return 156;
   return 100;
 }
 
@@ -391,21 +390,11 @@ export default function PannellumViewer() {
       const viewer = viewerRef.current;
       if (!viewer) return;
       viewer.setHfov?.(getSceneHfov(), false);
-      layoutRegisteredAvatarHotspots(viewer);
-    };
-
-    const onViewerViewChange = () => {
-      const viewer = viewerRef.current;
-      if (!viewer) return;
-      layoutRegisteredAvatarHotspots(viewer);
-    };
-
-    const onViewerAnimate = () => {
-      onViewerViewChange();
     };
 
     let unsubPlacements: (() => void) | null = null;
     let bootAvatars: (() => void) | null = null;
+    let avatarsBooted = false;
 
     async function init() {
       try {
@@ -429,10 +418,10 @@ export default function PannellumViewer() {
         const viewer = viewerRef.current;
 
         bootAvatars = () => {
-          if (cancelled || !viewerRef.current) return;
+          if (cancelled || !viewerRef.current || avatarsBooted) return;
+          avatarsBooted = true;
           syncAvatarHotspots(viewerRef.current);
           startAvatarWanderLoop(viewerRef.current);
-          layoutRegisteredAvatarHotspots(viewerRef.current);
         };
 
         if (viewer.isLoaded?.()) {
@@ -441,11 +430,6 @@ export default function PannellumViewer() {
           viewer.on?.("load", bootAvatars);
         }
 
-        viewer.on?.("mouseup", onViewerViewChange);
-        viewer.on?.("touchend", onViewerViewChange);
-        viewer.on?.("zoomchange", onViewerViewChange);
-        viewer.on?.("animate", onViewerAnimate);
-        viewer.on?.("viewchange", onViewerViewChange);
         setViewerReady(true);
 
         unsubPlacements = subscribeAvatarPlacements(() => {
@@ -453,7 +437,6 @@ export default function PannellumViewer() {
             disposeAllAvatarScreens();
             syncAvatarHotspots(viewerRef.current);
             refreshAvatarWanderLoop();
-            layoutRegisteredAvatarHotspots(viewerRef.current);
           }
         });
 
@@ -473,11 +456,6 @@ export default function PannellumViewer() {
       if (bootAvatars) {
         viewerRef.current?.off?.("load", bootAvatars);
       }
-      viewerRef.current?.off?.("mouseup", onViewerViewChange);
-      viewerRef.current?.off?.("touchend", onViewerViewChange);
-      viewerRef.current?.off?.("zoomchange", onViewerViewChange);
-      viewerRef.current?.off?.("animate", onViewerAnimate);
-      viewerRef.current?.off?.("viewchange", onViewerViewChange);
       window.removeEventListener("resize", onResize);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();

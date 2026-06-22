@@ -3,11 +3,9 @@ import { normalizePseudo } from "./avatarConfig";
 import { clearAvatarWalkMotions } from "./avatarWalkHeading";
 import {
   getAvatarPlacement,
-  hotspotIdForPlacement,
   subscribeAvatarPlacements,
   type AvatarPlacement,
 } from "./avatarPlacements";
-import { registerAvatarHotspotElement } from "@/lib/panorama/avatarHotspotElements";
 
 export type AvatarScreenHotspotArgs = {
   id: string;
@@ -34,8 +32,12 @@ export function createAvatarScreen(
   hotSpotDiv: HTMLElement,
   args: AvatarScreenHotspotArgs,
 ): void {
+  if (hotSpotDiv.dataset.rsAvatarMounted === "1") return;
+
   const placement = resolvePlacement(args.id);
   if (!placement) return;
+
+  hotSpotDiv.dataset.rsAvatarMounted = "1";
 
   const ghost = args.wander !== false;
 
@@ -74,22 +76,22 @@ export function createAvatarScreen(
   };
   syncPseudo(placement.config.pseudo);
 
-  registerAvatarHotspotElement(
-    hotspotIdForPlacement(placement.id),
-    hotSpotDiv,
-    placement.pitch,
-    placement.yaw,
-  );
+  const mobileGhost =
+    ghost && typeof window !== "undefined" && window.innerWidth <= 768;
 
   const scene = new AvatarScene(viewport, placement.config, {
     pixelRatio:
       ghost && typeof window !== "undefined"
-        ? Math.min(window.devicePixelRatio, window.innerWidth <= 768 ? 1 : 1.2)
+        ? Math.min(
+            window.devicePixelRatio,
+            window.innerWidth <= 768 ? 0.85 : 1.2,
+          )
         : 1.5,
     lite: true,
     pauseWhenHidden: false,
     walk: ghost,
     ghost,
+    ghostMobile: mobileGhost,
     placementId: placement.id,
   });
   scene.mount();

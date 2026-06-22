@@ -24,6 +24,8 @@ export type AvatarSceneOptions = {
   walk?: boolean;
   /** Fond transparent, sans sol ni ombre (flottant dans le panorama). */
   ghost?: boolean;
+  /** Variante mobile du fantôme (plus petit, caméra reculée). */
+  ghostMobile?: boolean;
   /** ID placement (pour orientation pendant le wander). */
   placementId?: string;
   /** Rotation manuelle à la souris / au doigt (studio). */
@@ -36,6 +38,7 @@ type ResolvedOptions = {
   pauseWhenHidden: boolean;
   walk: boolean;
   ghost: boolean;
+  ghostMobile: boolean;
   placementId?: string;
   orbit: boolean;
 };
@@ -100,6 +103,7 @@ export class AvatarScene {
       pauseWhenHidden: options?.pauseWhenHidden ?? true,
       walk: options?.walk ?? false,
       ghost: options?.ghost ?? false,
+      ghostMobile: options?.ghostMobile ?? false,
       placementId: options?.placementId,
       orbit: options?.orbit ?? false,
     };
@@ -109,15 +113,21 @@ export class AvatarScene {
     if (this.mounted || this.disposed) return;
 
     const scene = new THREE.Scene();
+    const ghostMobile = this.options.ghost && this.options.ghostMobile;
     const camera = new THREE.PerspectiveCamera(
-      this.options.ghost ? 42 : 32,
+      this.options.ghost ? (ghostMobile ? 30 : 42) : 32,
       1,
       0.1,
       100,
     );
     if (this.options.ghost) {
-      camera.position.set(0, 1.34, 5.45);
-      camera.lookAt(0, 1.06, 0);
+      if (ghostMobile) {
+        camera.position.set(0, 1.28, 8.6);
+        camera.lookAt(0, 1.02, 0);
+      } else {
+        camera.position.set(0, 1.34, 5.45);
+        camera.lookAt(0, 1.06, 0);
+      }
     } else {
       camera.position.set(0.2, 1.55, 5.4);
       camera.lookAt(0, 1.18, 0);

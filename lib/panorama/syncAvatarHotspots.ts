@@ -9,7 +9,6 @@ import {
 } from "@/lib/avatar/avatarPlacements";
 import { clearAvatarHotspotElements } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
-import { layoutPannellumHotspot } from "@/lib/panorama/layoutPannellumHotspot";
 
 const SCENE_ID = "salon";
 
@@ -52,15 +51,6 @@ export function getActiveSceneHotspots(
   viewer: PannellumViewer,
 ): (PannellumHotSpot & { id?: string })[] {
   return viewer.getConfig?.()?.hotSpots ?? [];
-}
-
-export function layoutAllAvatarHotspots(viewer: PannellumViewer): void {
-  for (const hs of runtimeHotspots.values()) {
-    const div = hs.div;
-    if (div) {
-      layoutPannellumHotspot(hs, viewer, 0, div);
-    }
-  }
 }
 
 /** Synchronise les hotspots avatar avec le stockage (ajout / suppression). */
