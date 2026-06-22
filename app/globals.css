@@ -796,25 +796,25 @@ img {
   }
 
   .pnlm-hotspot-base.rs-avatar-screen--ghost {
-    width: 30px !important;
-    height: 48px !important;
-    max-width: 30px !important;
-    max-height: 48px !important;
+    width: 90px !important;
+    height: 145px !important;
+    max-width: 90px !important;
+    max-height: 145px !important;
   }
 
   .rs-avatar-screen__viewport--ghost {
-    width: 30px !important;
-    height: 48px !important;
-    transform: scale(0.4) !important;
+    width: 90px !important;
+    height: 145px !important;
+    transform: scale(0.95) !important;
     transform-origin: bottom center;
   }
 
   .rs-avatar-screen__pseudo {
-    bottom: calc(100% - 6px);
-    max-width: 72px;
-    padding: 1px 5px;
-    font-size: 6px;
-    letter-spacing: 0.04em;
+    bottom: calc(100% - 10px);
+    max-width: 110px;
+    padding: 3px 7px;
+    font-size: 8px;
+    letter-spacing: 0.05em;
   }
 
   .rs-landing-avatar-panel {

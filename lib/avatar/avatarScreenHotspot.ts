@@ -3,9 +3,11 @@ import { normalizePseudo } from "./avatarConfig";
 import { clearAvatarWalkMotions } from "./avatarWalkHeading";
 import {
   getAvatarPlacement,
+  hotspotIdForPlacement,
   subscribeAvatarPlacements,
   type AvatarPlacement,
 } from "./avatarPlacements";
+import { registerAvatarHotspotElement } from "@/lib/panorama/avatarHotspotElements";
 
 export type AvatarScreenHotspotArgs = {
   id: string;
@@ -76,6 +78,13 @@ export function createAvatarScreen(
   };
   syncPseudo(placement.config.pseudo);
 
+  registerAvatarHotspotElement(
+    hotspotIdForPlacement(placement.id),
+    hotSpotDiv,
+    placement.pitch,
+    placement.yaw,
+  );
+
   const mobileGhost =
     ghost && typeof window !== "undefined" && window.innerWidth <= 768;
 
@@ -115,6 +124,7 @@ export function createAvatarScreen(
   const cleanup = () => {
     unsubscribe();
     disconnectObserver.disconnect();
+    delete hotSpotDiv.dataset.rsAvatarMounted;
     scene.dispose();
     activeScreens.delete(scene);
     activeCleanups.delete(cleanup);

@@ -19,7 +19,7 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
-import { requestPanoramaRefresh } from "@/lib/landing/panoramaRefresh";
+import { requestPanoramaHardRefresh } from "@/lib/landing/panoramaRefresh";
 
 const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
 
@@ -94,35 +94,29 @@ export default function LandingAvatarPanel({
   }, [open, myMii?.id, myMii?.config.pseudo]);
 
   useEffect(() => {
+    if (!open) {
+      sceneRef.current?.dispose();
+      sceneRef.current = null;
+      requestPanoramaHardRefresh();
+      return;
+    }
+
     const viewport = viewportRef.current;
-    if (!viewport || sceneRef.current) return;
+    if (!viewport) return;
 
     const scene = new AvatarScene(viewport, draftConfig, {
-      pixelRatio: 1.6,
+      pixelRatio: 1.4,
       lite: false,
       pauseWhenHidden: false,
       orbit: true,
     });
     scene.mount();
-    if (!open) scene.pause();
     sceneRef.current = scene;
 
     return () => {
       scene.dispose();
       sceneRef.current = null;
     };
-  }, []);
-
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-
-    if (open) {
-      scene.resume();
-    } else {
-      scene.pause();
-      requestPanoramaRefresh();
-    }
   }, [open]);
 
   useEffect(() => {

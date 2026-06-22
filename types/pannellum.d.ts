@@ -57,6 +57,8 @@ interface PannellumTourConfig {
 interface PannellumViewer {
   destroy: () => void;
   setHfov?: (hfov: number, animated?: boolean) => void;
+  setPitch?: (pitch: number, animated?: boolean) => void;
+  setYaw?: (yaw: number, animated?: boolean) => void;
   resize?: () => void;
   getPitch?: () => number;
   getYaw?: () => number;

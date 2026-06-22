@@ -115,15 +115,15 @@ export class AvatarScene {
     const scene = new THREE.Scene();
     const ghostMobile = this.options.ghost && this.options.ghostMobile;
     const camera = new THREE.PerspectiveCamera(
-      this.options.ghost ? (ghostMobile ? 30 : 42) : 32,
+      this.options.ghost ? (ghostMobile ? 36 : 42) : 32,
       1,
       0.1,
       100,
     );
     if (this.options.ghost) {
       if (ghostMobile) {
-        camera.position.set(0, 1.28, 8.6);
-        camera.lookAt(0, 1.02, 0);
+        camera.position.set(0, 1.32, 6.25);
+        camera.lookAt(0, 1.04, 0);
       } else {
         camera.position.set(0, 1.34, 5.45);
         camera.lookAt(0, 1.06, 0);

@@ -20,7 +20,8 @@ import {
   stopAvatarWanderLoop,
 } from "@/lib/panorama/avatarWanderLoop";
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
-import { PANORAMA_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
+import { PANORAMA_HARD_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
+import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
@@ -261,8 +262,8 @@ function getMouseZoom(): boolean {
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 162;
-  if (window.innerWidth <= 768) return 156;
+  if (window.innerWidth <= 390) return 118;
+  if (window.innerWidth <= 768) return 112;
   return 100;
 }
 
@@ -391,20 +392,86 @@ export default function PannellumViewer() {
       const viewer = viewerRef.current;
       if (!viewer) return;
       viewer.setHfov?.(getSceneHfov(), false);
+      layoutRegisteredAvatarHotspots(viewer);
     };
 
-    const refreshPanorama = () => {
+    const onAnimate = () => {
       const viewer = viewerRef.current;
-      const container = containerRef.current;
-      if (!viewer || !container) return;
-      viewer.resize?.();
-      viewer.setHfov?.(getSceneHfov(), false);
-      viewer.setUpdate?.(true);
+      if (!viewer) return;
+      layoutRegisteredAvatarHotspots(viewer);
     };
 
     let unsubPlacements: (() => void) | null = null;
     let bootAvatars: (() => void) | null = null;
     let avatarsBooted = false;
+
+    const bootAvatarHotspots = () => {
+      if (cancelled || !viewerRef.current || avatarsBooted) return;
+      avatarsBooted = true;
+      syncAvatarHotspots(viewerRef.current);
+      startAvatarWanderLoop(viewerRef.current);
+      layoutRegisteredAvatarHotspots(viewerRef.current);
+    };
+
+    const hardRebuildPanorama = () => {
+      const container = containerRef.current;
+      const viewer = viewerRef.current;
+      if (cancelled || !container || !viewer || !window.pannellum) return;
+
+      const view = {
+        pitch: viewer.getPitch?.(),
+        yaw: viewer.getYaw?.(),
+        hfov: viewer.getHfov?.() ?? getSceneHfov(),
+      };
+
+      stopAvatarWanderLoop();
+      disposeAllAvatarScreens();
+      clearAvatarHotspotRegistry();
+      avatarsBooted = false;
+
+      if (bootAvatars) {
+        viewer.off?.("load", bootAvatars);
+      }
+      viewer.off?.("animate", onAnimate);
+      viewer.destroy();
+
+      viewerRef.current = window.pannellum.viewer(
+        container,
+        buildViewerConfig() as PannellumTourConfig,
+      );
+      const next = viewerRef.current;
+      next.setUpdate?.(true);
+
+      bootAvatars = () => {
+        if (cancelled || !viewerRef.current || avatarsBooted) return;
+        avatarsBooted = true;
+        syncAvatarHotspots(viewerRef.current);
+        startAvatarWanderLoop(viewerRef.current);
+
+        if (view.pitch !== undefined) {
+          next.setPitch?.(view.pitch, false);
+        }
+        if (view.yaw !== undefined) {
+          next.setYaw?.(view.yaw, false);
+        }
+        next.setHfov?.(view.hfov, false);
+        layoutRegisteredAvatarHotspots(viewerRef.current);
+
+        const canvas = next.getCanvas?.();
+        if (canvas) {
+          canvas.style.opacity = "1";
+          canvas.style.visibility = "visible";
+        }
+      };
+
+      next.on?.("animate", onAnimate);
+
+      if (next.isLoaded?.()) {
+        bootAvatars();
+      } else {
+        next.on?.("load", bootAvatars);
+      }
+    };
 
     async function init() {
       try {
@@ -426,19 +493,17 @@ export default function PannellumViewer() {
           buildViewerConfig() as PannellumTourConfig,
         );
         const viewer = viewerRef.current;
+        viewer.setUpdate?.(true);
 
-        bootAvatars = () => {
-          if (cancelled || !viewerRef.current || avatarsBooted) return;
-          avatarsBooted = true;
-          syncAvatarHotspots(viewerRef.current);
-          startAvatarWanderLoop(viewerRef.current);
-        };
+        bootAvatars = bootAvatarHotspots;
 
         if (viewer.isLoaded?.()) {
           bootAvatars();
         } else {
           viewer.on?.("load", bootAvatars);
         }
+
+        viewer.on?.("animate", onAnimate);
 
         setViewerReady(true);
 
@@ -447,11 +512,12 @@ export default function PannellumViewer() {
             disposeAllAvatarScreens();
             syncAvatarHotspots(viewerRef.current);
             refreshAvatarWanderLoop();
+            layoutRegisteredAvatarHotspots(viewerRef.current);
           }
         });
 
         window.addEventListener("resize", onResize);
-        window.addEventListener(PANORAMA_REFRESH_EVENT, refreshPanorama);
+        window.addEventListener(PANORAMA_HARD_REFRESH_EVENT, hardRebuildPanorama);
       } catch {
         // Viewer stays empty if CDN is unavailable
       }
@@ -467,8 +533,9 @@ export default function PannellumViewer() {
       if (bootAvatars) {
         viewerRef.current?.off?.("load", bootAvatars);
       }
+      viewerRef.current?.off?.("animate", onAnimate);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener(PANORAMA_REFRESH_EVENT, refreshPanorama);
+      window.removeEventListener(PANORAMA_HARD_REFRESH_EVENT, hardRebuildPanorama);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();
       viewerRef.current?.destroy();
