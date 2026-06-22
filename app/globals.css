@@ -300,6 +300,13 @@ img {
   padding: 16px;
 }
 
+.rs-mii-studio-overlay--closed {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  z-index: -1;
+}
+
 .rs-mii-studio-overlay__backdrop {
   position: absolute;
   inset: 0;

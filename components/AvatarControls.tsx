@@ -333,7 +333,7 @@ export default function AvatarControls({
           type="button"
           className="rs-avatar-controls__random"
           aria-label="Générer un avatar aléatoire"
-          onClick={() => onChange(randomConfig())}
+          onClick={() => onChange({ ...randomConfig(), pseudo: cfg.pseudo })}
         >
           Aléatoire
         </button>

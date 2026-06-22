@@ -19,6 +19,7 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
+import { requestPanoramaRefresh } from "@/lib/landing/panoramaRefresh";
 
 const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
 
@@ -93,14 +94,8 @@ export default function LandingAvatarPanel({
   }, [open, myMii?.id, myMii?.config.pseudo]);
 
   useEffect(() => {
-    if (!open) {
-      sceneRef.current?.dispose();
-      sceneRef.current = null;
-      return;
-    }
-
     const viewport = viewportRef.current;
-    if (!viewport) return;
+    if (!viewport || sceneRef.current) return;
 
     const scene = new AvatarScene(viewport, draftConfig, {
       pixelRatio: 1.6,
@@ -109,17 +104,31 @@ export default function LandingAvatarPanel({
       orbit: true,
     });
     scene.mount();
+    if (!open) scene.pause();
     sceneRef.current = scene;
 
     return () => {
       scene.dispose();
       sceneRef.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    if (open) {
+      scene.resume();
+    } else {
+      scene.pause();
+      requestPanoramaRefresh();
+    }
   }, [open]);
 
   useEffect(() => {
-    sceneRef.current?.setConfig(draftConfig);
-  }, [draftConfig]);
+    if (!open || !sceneRef.current) return;
+    sceneRef.current.setConfig(draftConfig);
+  }, [draftConfig, open]);
 
   const persistToSalon = useCallback(
     (config: AvatarConfig) => {
@@ -208,8 +217,6 @@ export default function LandingAvatarPanel({
     }
   }, [myMii, user]);
 
-  if (!open) return null;
-
   const depositDisabled = busy || !configured;
   const depositLabel = busy
     ? "Dépôt…"
@@ -219,9 +226,10 @@ export default function LandingAvatarPanel({
 
   return (
     <div
-      className="rs-mii-studio-overlay"
+      className={`rs-mii-studio-overlay${open ? "" : " rs-mii-studio-overlay--closed"}`}
       role="dialog"
       aria-modal="true"
+      aria-hidden={!open}
       aria-labelledby="rs-mii-studio-title"
     >
       <button

@@ -277,6 +277,21 @@ export class AvatarScene {
     this.rebuildAvatar(cfg);
   }
 
+  /** Suspend la boucle sans libérer le contexte WebGL (fermeture studio). */
+  pause(): void {
+    if (this.disposed || !this.mounted) return;
+    this.visible = false;
+    this.stopLoop();
+  }
+
+  /** Reprend le rendu après une pause. */
+  resume(): void {
+    if (this.disposed || !this.mounted) return;
+    this.visible = true;
+    this.resize();
+    this.startLoop();
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;

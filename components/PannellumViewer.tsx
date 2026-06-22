@@ -20,6 +20,7 @@ import {
   stopAvatarWanderLoop,
 } from "@/lib/panorama/avatarWanderLoop";
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
+import { PANORAMA_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
@@ -392,6 +393,15 @@ export default function PannellumViewer() {
       viewer.setHfov?.(getSceneHfov(), false);
     };
 
+    const refreshPanorama = () => {
+      const viewer = viewerRef.current;
+      const container = containerRef.current;
+      if (!viewer || !container) return;
+      viewer.resize?.();
+      viewer.setHfov?.(getSceneHfov(), false);
+      viewer.setUpdate?.(true);
+    };
+
     let unsubPlacements: (() => void) | null = null;
     let bootAvatars: (() => void) | null = null;
     let avatarsBooted = false;
@@ -441,6 +451,7 @@ export default function PannellumViewer() {
         });
 
         window.addEventListener("resize", onResize);
+        window.addEventListener(PANORAMA_REFRESH_EVENT, refreshPanorama);
       } catch {
         // Viewer stays empty if CDN is unavailable
       }
@@ -457,6 +468,7 @@ export default function PannellumViewer() {
         viewerRef.current?.off?.("load", bootAvatars);
       }
       window.removeEventListener("resize", onResize);
+      window.removeEventListener(PANORAMA_REFRESH_EVENT, refreshPanorama);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();
       viewerRef.current?.destroy();
