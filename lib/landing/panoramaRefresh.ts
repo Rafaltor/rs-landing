@@ -1,9 +1,9 @@
-export const PANORAMA_HARD_REFRESH_EVENT = "rs-panorama-hard-refresh";
+export const PANORAMA_SOFT_REFRESH_EVENT = "rs-panorama-soft-refresh";
 
-/** Reconstruit le viewer Pannellum (après fermeture du studio WebGL). */
-export function requestPanoramaHardRefresh(): void {
+/** Relance le rendu Pannellum sans recréer le viewer (évite d'épuiser WebGL). */
+export function requestPanoramaSoftRefresh(): void {
   if (typeof window === "undefined") return;
-  window.setTimeout(() => {
-    window.dispatchEvent(new CustomEvent(PANORAMA_HARD_REFRESH_EVENT));
-  }, 64);
+  window.requestAnimationFrame(() => {
+    window.dispatchEvent(new CustomEvent(PANORAMA_SOFT_REFRESH_EVENT));
+  });
 }

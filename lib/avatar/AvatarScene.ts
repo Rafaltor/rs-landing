@@ -135,8 +135,9 @@ export class AvatarScene {
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: !this.options.lite,
       premultipliedAlpha: false,
+      powerPreference: "default",
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -334,13 +335,12 @@ export class AvatarScene {
       this.materials = null;
     }
 
-    this.renderer?.dispose();
-    if (
-      this.renderer?.domElement &&
-      this.renderer.domElement.parentElement === this.container
-    ) {
-      this.container.removeChild(this.renderer.domElement);
+    const canvas = this.renderer?.domElement;
+    if (canvas && canvas.parentElement === this.container) {
+      this.container.removeChild(canvas);
     }
+
+    this.renderer?.dispose();
 
     this.scene = null;
     this.camera = null;

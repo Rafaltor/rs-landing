@@ -20,7 +20,7 @@ import {
   stopAvatarWanderLoop,
 } from "@/lib/panorama/avatarWanderLoop";
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
-import { PANORAMA_HARD_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
+import { PANORAMA_SOFT_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 
 const PANNELLUM_JS =
@@ -413,63 +413,16 @@ export default function PannellumViewer() {
       layoutRegisteredAvatarHotspots(viewerRef.current);
     };
 
-    const hardRebuildPanorama = () => {
-      const container = containerRef.current;
+    const softRefreshPanorama = () => {
       const viewer = viewerRef.current;
-      if (cancelled || !container || !viewer || !window.pannellum) return;
-
-      const view = {
-        pitch: viewer.getPitch?.(),
-        yaw: viewer.getYaw?.(),
-        hfov: viewer.getHfov?.() ?? getSceneHfov(),
-      };
-
-      stopAvatarWanderLoop();
-      disposeAllAvatarScreens();
-      clearAvatarHotspotRegistry();
-      avatarsBooted = false;
-
-      if (bootAvatars) {
-        viewer.off?.("load", bootAvatars);
-      }
-      viewer.off?.("animate", onAnimate);
-      viewer.destroy();
-
-      viewerRef.current = window.pannellum.viewer(
-        container,
-        buildViewerConfig() as PannellumTourConfig,
-      );
-      const next = viewerRef.current;
-      next.setUpdate?.(true);
-
-      bootAvatars = () => {
-        if (cancelled || !viewerRef.current || avatarsBooted) return;
-        avatarsBooted = true;
-        syncAvatarHotspots(viewerRef.current);
-        startAvatarWanderLoop(viewerRef.current);
-
-        if (view.pitch !== undefined) {
-          next.setPitch?.(view.pitch, false);
-        }
-        if (view.yaw !== undefined) {
-          next.setYaw?.(view.yaw, false);
-        }
-        next.setHfov?.(view.hfov, false);
-        layoutRegisteredAvatarHotspots(viewerRef.current);
-
-        const canvas = next.getCanvas?.();
-        if (canvas) {
-          canvas.style.opacity = "1";
-          canvas.style.visibility = "visible";
-        }
-      };
-
-      next.on?.("animate", onAnimate);
-
-      if (next.isLoaded?.()) {
-        bootAvatars();
-      } else {
-        next.on?.("load", bootAvatars);
+      if (!viewer) return;
+      viewer.resize?.();
+      viewer.setUpdate?.(true);
+      layoutRegisteredAvatarHotspots(viewer);
+      const canvas = viewer.getCanvas?.();
+      if (canvas) {
+        canvas.style.opacity = "1";
+        canvas.style.visibility = "visible";
       }
     };
 
@@ -517,7 +470,7 @@ export default function PannellumViewer() {
         });
 
         window.addEventListener("resize", onResize);
-        window.addEventListener(PANORAMA_HARD_REFRESH_EVENT, hardRebuildPanorama);
+        window.addEventListener(PANORAMA_SOFT_REFRESH_EVENT, softRefreshPanorama);
       } catch {
         // Viewer stays empty if CDN is unavailable
       }
@@ -535,7 +488,7 @@ export default function PannellumViewer() {
       }
       viewerRef.current?.off?.("animate", onAnimate);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener(PANORAMA_HARD_REFRESH_EVENT, hardRebuildPanorama);
+      window.removeEventListener(PANORAMA_SOFT_REFRESH_EVENT, softRefreshPanorama);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();
       viewerRef.current?.destroy();

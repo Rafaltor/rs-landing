@@ -19,7 +19,7 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
-import { requestPanoramaHardRefresh } from "@/lib/landing/panoramaRefresh";
+import { requestPanoramaSoftRefresh } from "@/lib/landing/panoramaRefresh";
 
 const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
 
@@ -47,6 +47,7 @@ export default function LandingAvatarPanel({
   const pendingDepositRef = useRef(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<AvatarScene | null>(null);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -94,29 +95,41 @@ export default function LandingAvatarPanel({
   }, [open, myMii?.id, myMii?.config.pseudo]);
 
   useEffect(() => {
-    if (!open) {
-      sceneRef.current?.dispose();
-      sceneRef.current = null;
-      requestPanoramaHardRefresh();
-      return;
-    }
-
     const viewport = viewportRef.current;
     if (!viewport) return;
 
-    const scene = new AvatarScene(viewport, draftConfig, {
-      pixelRatio: 1.4,
-      lite: false,
-      pauseWhenHidden: false,
-      orbit: true,
-    });
-    scene.mount();
-    sceneRef.current = scene;
+    if (!sceneRef.current) {
+      const scene = new AvatarScene(viewport, draftConfig, {
+        pixelRatio: 1.25,
+        lite: true,
+        pauseWhenHidden: false,
+        orbit: true,
+      });
+      scene.mount();
+      sceneRef.current = scene;
+    }
 
     return () => {
-      scene.dispose();
+      sceneRef.current?.dispose();
       sceneRef.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    if (open) {
+      wasOpenRef.current = true;
+      scene.resume();
+      return;
+    }
+
+    scene.pause();
+    if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      requestPanoramaSoftRefresh();
+    }
   }, [open]);
 
   useEffect(() => {
