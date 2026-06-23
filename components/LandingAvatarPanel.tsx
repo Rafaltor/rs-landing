@@ -92,7 +92,14 @@ export default function LandingAvatarPanel({
     }
   }, [open, myMii?.id, myMii?.config.pseudo]);
 
+  // Le contexte WebGL du studio n'est créé qu'à la PREMIÈRE ouverture : au
+  // chargement de la page, seuls Pannellum + le stage des Miis existent, ce qui
+  // garantit que Pannellum obtient son contexte en priorité.
   useEffect(() => {
+    if (!open) {
+      sceneRef.current?.pause();
+      return;
+    }
     const viewport = viewportRef.current;
     if (!viewport) return;
 
@@ -105,25 +112,23 @@ export default function LandingAvatarPanel({
       });
       scene.mount();
       sceneRef.current = scene;
+    } else {
+      sceneRef.current.resume();
     }
-
-    return () => {
-      sceneRef.current?.dispose();
-      sceneRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-    if (open) scene.resume();
-    else scene.pause();
+    sceneRef.current.setConfig(draftConfig);
   }, [open]);
 
   useEffect(() => {
     if (!open || !sceneRef.current) return;
     sceneRef.current.setConfig(draftConfig);
   }, [draftConfig, open]);
+
+  useEffect(() => {
+    return () => {
+      sceneRef.current?.dispose();
+      sceneRef.current = null;
+    };
+  }, []);
 
   const persistToSalon = useCallback(
     (config: AvatarConfig) => {

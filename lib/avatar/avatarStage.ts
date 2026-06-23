@@ -15,7 +15,9 @@ type GhostView = {
 
 function devicePixelRatioCapped(): number {
   if (typeof window === "undefined") return 1;
-  return Math.min(window.devicePixelRatio || 1, 2);
+  // Canvas plein écran : on plafonne le DPR pour limiter la mémoire GPU
+  // (la panorama Pannellum consomme déjà une grosse texture).
+  return Math.min(window.devicePixelRatio || 1, 1.5);
 }
 
 /**

@@ -171,6 +171,9 @@ export class AvatarScene {
     if (canvas && canvas.parentElement === this.container) {
       this.container.removeChild(canvas);
     }
+    // forceContextLoss libère réellement le contexte WebGL (dispose seul ne le
+    // fait pas sur iOS/Safari → accumulation et épuisement du pool).
+    this.renderer?.forceContextLoss();
     this.renderer?.dispose();
 
     this.core = null;
