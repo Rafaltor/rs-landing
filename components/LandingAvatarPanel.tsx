@@ -105,7 +105,7 @@ export default function LandingAvatarPanel({
 
     if (!sceneRef.current) {
       const scene = new AvatarScene(viewport, draftConfig, {
-        pixelRatio: 1.25,
+        pixelRatio: 2,
         lite: true,
         pauseWhenHidden: false,
         orbit: true,

@@ -507,7 +507,7 @@ img {
 
 .rs-mii-studio-modal__create {
   flex-shrink: 0;
-  margin: 0 16px 16px;
+  margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--rs-color-brand-hover);
   border-radius: 6px;
@@ -750,6 +750,7 @@ img {
   }
 
   .rs-mii-studio-modal__panel .rs-avatar-controls {
+    flex: none;
     overflow: visible;
     padding: 10px 14px 12px;
     gap: 10px;
@@ -780,12 +781,6 @@ img {
     font-size: 11px;
     line-height: 1.45;
     margin-bottom: 8px;
-  }
-
-  .rs-mii-studio-modal__create,
-  .rs-mii-studio-modal__danger {
-    margin-left: 14px;
-    margin-right: 14px;
   }
 
   .rs-mii-studio-panel {
@@ -1220,6 +1215,10 @@ img {
 }
 
 @media (max-width: 768px) {
+  .rs-panorama-hint {
+    max-width: calc(100vw - 24px);
+  }
+
   .rs-panorama-hint__pill {
     padding: 10px 16px 10px 12px;
     gap: 10px;
@@ -1227,6 +1226,7 @@ img {
     -webkit-backdrop-filter: none;
     background: rgba(10, 10, 10, 0.88);
     transform: translateZ(0);
+    border-radius: 18px;
   }
 
   .rs-panorama-hint__title {
@@ -1235,6 +1235,7 @@ img {
 
   .rs-panorama-hint__sub {
     font-size: 9px;
+    white-space: normal;
   }
 }
 

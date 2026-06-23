@@ -258,8 +258,8 @@ function getMouseZoom(): boolean {
 
 function getSceneHfov(): number {
   if (typeof window === "undefined") return 100;
-  if (window.innerWidth <= 390) return 118;
-  if (window.innerWidth <= 768) return 112;
+  if (window.innerWidth <= 390) return 106;
+  if (window.innerWidth <= 768) return 102;
   return 100;
 }
 
