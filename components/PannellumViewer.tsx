@@ -44,7 +44,7 @@ const HOTSPOT_CONFIG = {
     pitch: -3,
     yaw: 153,
     label: "GRILLZ",
-    href: "https://recrutestagiaire.eu/pages/grillz",
+    href: "https://shop.recrutestagiaire.eu/pages/grillz",
   },
   miiStudio: {
     /** Mur vide à droite — loin produit (-104), portail (-11) et grillz (153). */
@@ -266,7 +266,7 @@ function getSceneHfov(): number {
 function buildViewerConfig() {
   const productHref =
     process.env.NEXT_PUBLIC_PRODUCT_URL ||
-    "https://recrutestagiaire.eu/products/stagiaire";
+    "https://shop.recrutestagiaire.eu/products/stagiaire";
 
   return {
     default: {

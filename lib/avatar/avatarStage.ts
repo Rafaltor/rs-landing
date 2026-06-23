@@ -166,6 +166,13 @@ class AvatarStage {
     renderer.setScissorTest(true);
 
     for (const view of this.views) {
+      // Hotspot masqué (derrière la caméra, ou pas encore positionné au
+      // chargement) → ne pas dessiner le Mii (évite les Miis "fantômes" en
+      // haut à gauche). visibility hérite du div hotspot positionné par Pannellum.
+      if (window.getComputedStyle(view.anchor).visibility === "hidden") {
+        continue;
+      }
+
       const r = view.anchor.getBoundingClientRect();
       if (
         r.width <= 0 ||

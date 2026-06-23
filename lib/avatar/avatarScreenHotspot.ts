@@ -35,8 +35,10 @@ export function createAvatarScreen(
 
   hotSpotDiv.dataset.rsAvatarMounted = "1";
   hotSpotDiv.classList.add("rs-avatar-screen", "rs-avatar-screen--ghost");
+  // Masqué tant que Pannellum ne l'a pas positionné (évite un flash du Mii en
+  // haut à gauche au chargement). layoutPannellumHotspot remettra "visible".
   hotSpotDiv.style.cssText =
-    "background:transparent;border:none;overflow:visible;pointer-events:none;";
+    "background:transparent;border:none;overflow:visible;pointer-events:none;visibility:hidden;";
 
   const viewport = document.createElement("div");
   viewport.className = "rs-avatar-screen__viewport rs-avatar-screen__viewport--ghost";
