@@ -1,11 +1,10 @@
-import { AvatarScene } from "./AvatarScene";
 import { normalizePseudo } from "./avatarConfig";
 import { clearAvatarWalkMotions } from "./avatarWalkHeading";
+import { avatarStage, type GhostHandle } from "./avatarStage";
 import {
   getAvatarPlacement,
   hotspotIdForPlacement,
   subscribeAvatarPlacements,
-  type AvatarPlacement,
 } from "./avatarPlacements";
 import { registerAvatarHotspotElement } from "@/lib/panorama/avatarHotspotElements";
 
@@ -14,7 +13,6 @@ export type AvatarScreenHotspotArgs = {
   wander?: boolean;
 };
 
-const activeScreens = new Set<AvatarScene>();
 const activeCleanups = new Set<() => void>();
 
 export function disposeAllAvatarScreens(): void {
@@ -22,42 +20,26 @@ export function disposeAllAvatarScreens(): void {
     cleanup();
   }
   activeCleanups.clear();
-  activeScreens.clear();
   clearAvatarWalkMotions();
 }
 
-function resolvePlacement(id: string): AvatarPlacement | null {
-  return getAvatarPlacement(id) ?? null;
-}
-
+/** Crée le Mii d'un hotspot Pannellum (rendu via le renderer partagé). */
 export function createAvatarScreen(
   hotSpotDiv: HTMLElement,
   args: AvatarScreenHotspotArgs,
 ): void {
   if (hotSpotDiv.dataset.rsAvatarMounted === "1") return;
 
-  const placement = resolvePlacement(args.id);
+  const placement = getAvatarPlacement(args.id);
   if (!placement) return;
 
   hotSpotDiv.dataset.rsAvatarMounted = "1";
-
-  const ghost = args.wander !== false;
-
-  hotSpotDiv.classList.add(
-    "rs-avatar-screen",
-    ghost ? "rs-avatar-screen--ghost" : "rs-avatar-screen--hero",
-  );
-  hotSpotDiv.style.cssText = `
-    background: transparent;
-    border: none;
-    overflow: visible;
-    pointer-events: none;
-  `;
+  hotSpotDiv.classList.add("rs-avatar-screen", "rs-avatar-screen--ghost");
+  hotSpotDiv.style.cssText =
+    "background:transparent;border:none;overflow:visible;pointer-events:none;";
 
   const viewport = document.createElement("div");
-  viewport.className = ghost
-    ? "rs-avatar-screen__viewport rs-avatar-screen__viewport--ghost"
-    : "rs-avatar-screen__viewport rs-avatar-screen__viewport--hero";
+  viewport.className = "rs-avatar-screen__viewport rs-avatar-screen__viewport--ghost";
   viewport.setAttribute("aria-hidden", "true");
   hotSpotDiv.appendChild(viewport);
 
@@ -68,13 +50,8 @@ export function createAvatarScreen(
 
   const syncPseudo = (pseudo: string) => {
     const text = normalizePseudo(pseudo);
-    if (text) {
-      pseudoEl.textContent = text;
-      pseudoEl.hidden = false;
-    } else {
-      pseudoEl.textContent = "";
-      pseudoEl.hidden = true;
-    }
+    pseudoEl.textContent = text;
+    pseudoEl.hidden = text.length === 0;
   };
   syncPseudo(placement.config.pseudo);
 
@@ -85,39 +62,24 @@ export function createAvatarScreen(
     placement.yaw,
   );
 
-  const mobileGhost =
-    ghost && typeof window !== "undefined" && window.innerWidth <= 768;
+  const ghostMobile =
+    typeof window !== "undefined" && window.innerWidth <= 768;
 
-  const scene = new AvatarScene(viewport, placement.config, {
-    pixelRatio:
-      ghost && typeof window !== "undefined"
-        ? Math.min(
-            window.devicePixelRatio,
-            window.innerWidth <= 768 ? 0.85 : 1.2,
-          )
-        : 1.5,
-    lite: true,
-    pauseWhenHidden: false,
-    walk: ghost,
-    ghost,
-    ghostMobile: mobileGhost,
+  const handle: GhostHandle = avatarStage.addGhost(viewport, placement.config, {
+    ghostMobile,
     placementId: placement.id,
   });
-  scene.mount();
-  activeScreens.add(scene);
 
   const unsubscribe = subscribeAvatarPlacements((placements) => {
     const next = placements.find((p) => p.id === args.id);
     if (next) {
-      scene.setConfig(next.config);
+      handle.setConfig(next.config);
       syncPseudo(next.config.pseudo);
     }
   });
 
   const disconnectObserver = new MutationObserver(() => {
-    if (!hotSpotDiv.isConnected) {
-      cleanup();
-    }
+    if (!hotSpotDiv.isConnected) cleanup();
   });
   disconnectObserver.observe(document.body, { childList: true, subtree: true });
 
@@ -125,8 +87,7 @@ export function createAvatarScreen(
     unsubscribe();
     disconnectObserver.disconnect();
     delete hotSpotDiv.dataset.rsAvatarMounted;
-    scene.dispose();
-    activeScreens.delete(scene);
+    handle.dispose();
     activeCleanups.delete(cleanup);
   };
 

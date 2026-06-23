@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GyroscopeButton from "./GyroscopeButton";
-import {
-  createAvatarScreen,
-  disposeAllAvatarScreens,
-} from "@/lib/avatar/avatarScreenHotspot";
+import { disposeAllAvatarScreens } from "@/lib/avatar/avatarScreenHotspot";
 import {
   ensureAvatarPlacementsHydrated,
   subscribeAvatarPlacements,
@@ -20,7 +17,6 @@ import {
   stopAvatarWanderLoop,
 } from "@/lib/panorama/avatarWanderLoop";
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
-import { PANORAMA_SOFT_REFRESH_EVENT } from "@/lib/landing/panoramaRefresh";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 
 const PANNELLUM_JS =
@@ -413,19 +409,6 @@ export default function PannellumViewer() {
       layoutRegisteredAvatarHotspots(viewerRef.current);
     };
 
-    const softRefreshPanorama = () => {
-      const viewer = viewerRef.current;
-      if (!viewer) return;
-      viewer.resize?.();
-      viewer.setUpdate?.(true);
-      layoutRegisteredAvatarHotspots(viewer);
-      const canvas = viewer.getCanvas?.();
-      if (canvas) {
-        canvas.style.opacity = "1";
-        canvas.style.visibility = "visible";
-      }
-    };
-
     async function init() {
       try {
         const [,] = await Promise.all([
@@ -470,7 +453,6 @@ export default function PannellumViewer() {
         });
 
         window.addEventListener("resize", onResize);
-        window.addEventListener(PANORAMA_SOFT_REFRESH_EVENT, softRefreshPanorama);
       } catch {
         // Viewer stays empty if CDN is unavailable
       }
@@ -488,7 +470,6 @@ export default function PannellumViewer() {
       }
       viewerRef.current?.off?.("animate", onAnimate);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener(PANORAMA_SOFT_REFRESH_EVENT, softRefreshPanorama);
       disposeAllAvatarScreens();
       clearAvatarHotspotRegistry();
       viewerRef.current?.destroy();

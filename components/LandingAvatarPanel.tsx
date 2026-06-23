@@ -19,7 +19,6 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
-import { requestPanoramaSoftRefresh } from "@/lib/landing/panoramaRefresh";
 
 const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
 
@@ -47,7 +46,6 @@ export default function LandingAvatarPanel({
   const pendingDepositRef = useRef(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<AvatarScene | null>(null);
-  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
@@ -118,18 +116,8 @@ export default function LandingAvatarPanel({
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
-
-    if (open) {
-      wasOpenRef.current = true;
-      scene.resume();
-      return;
-    }
-
-    scene.pause();
-    if (wasOpenRef.current) {
-      wasOpenRef.current = false;
-      requestPanoramaSoftRefresh();
-    }
+    if (open) scene.resume();
+    else scene.pause();
   }, [open]);
 
   useEffect(() => {

@@ -1484,17 +1484,6 @@ img {
   overflow: hidden;
 }
 
-.rs-avatar-screen__viewport canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.rs-avatar-screen__viewport--ghost canvas {
-  overflow: visible;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
-}
-
 /* Panneau avatars — landing */
 .rs-landing-avatar-fab {
   position: fixed;

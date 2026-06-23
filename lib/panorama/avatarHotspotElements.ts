@@ -30,12 +30,6 @@ export function updateAvatarHotspotAngles(
   entry.yaw = yaw;
 }
 
-export function getAvatarHotspotElement(
-  hotspotId: string,
-): HTMLElement | undefined {
-  return entries.get(hotspotId)?.element;
-}
-
 export function layoutRegisteredAvatarHotspots(viewer: PannellumViewer): void {
   for (const entry of entries.values()) {
     layoutPannellumHotspot(
@@ -48,17 +42,6 @@ export function layoutRegisteredAvatarHotspots(viewer: PannellumViewer): void {
       0,
       entry.element,
     );
-  }
-}
-
-export function forcePannellumHotspotRepaint(viewer: PannellumViewer): void {
-  const container = viewer.getContainer?.();
-  if (!container) return;
-  const layer = container.querySelector<HTMLElement>(".pnlm-render-container");
-  if (!layer) return;
-  layer.getBoundingClientRect();
-  for (const entry of entries.values()) {
-    entry.element.getBoundingClientRect();
   }
 }
 
