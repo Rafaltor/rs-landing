@@ -527,11 +527,15 @@ img {
 }
 
 .rs-mii-studio-modal__actions {
+  position: relative;
+  z-index: 3;
   flex-shrink: 0;
-  padding: 0 16px 16px;
+  padding: 12px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: #fff;
+  border-top: 1px solid var(--rs-color-border);
 }
 
 .rs-mii-studio-modal__saved {
@@ -744,14 +748,15 @@ img {
   .rs-mii-studio-modal__panel {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overflow: hidden;
   }
 
   .rs-mii-studio-modal__panel .rs-avatar-controls {
-    flex: none;
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 10px 14px 12px;
     gap: 10px;
   }
