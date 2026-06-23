@@ -33,6 +33,7 @@ interface PannellumHotSpot {
 interface PannellumSceneConfig {
   type: string;
   panorama: string;
+  crossOrigin?: "anonymous" | "use-credentials";
   autoLoad?: boolean;
   autoRotate?: number | boolean;
   compass?: boolean;

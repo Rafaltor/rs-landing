@@ -277,6 +277,7 @@ function buildViewerConfig() {
       salon: {
         type: "equirectangular",
         panorama: PANORAMA_URL,
+        crossOrigin: "anonymous",
         pitch: HOTSPOT_CONFIG.product.pitch,
         yaw: HOTSPOT_CONFIG.product.yaw,
         autoLoad: true,
@@ -340,6 +341,24 @@ function buildViewerConfig() {
       },
     },
   };
+}
+
+/**
+ * Précharge et décode la texture en CORS "anonymous" AVANT l'init de Pannellum.
+ * Garantit que l'image est dans le cache (même entrée CORS que Pannellum) et
+ * complètement décodée → évite la race WebGL texImage2D "no image".
+ */
+async function preloadPanorama(): Promise<void> {
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = PANORAMA_URL;
+    if (typeof img.decode === "function") {
+      await img.decode();
+    }
+  } catch {
+    // Non bloquant : Pannellum retentera le chargement de son côté.
+  }
 }
 
 function loadPannellumScript(): Promise<void> {
@@ -414,6 +433,7 @@ export default function PannellumViewer() {
         const [,] = await Promise.all([
           loadPannellumScript(),
           ensureAvatarPlacementsHydrated(),
+          preloadPanorama(),
         ]);
         if (cancelled || !containerRef.current || !window.pannellum) {
           return;
