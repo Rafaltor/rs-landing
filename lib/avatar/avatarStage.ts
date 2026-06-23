@@ -33,7 +33,7 @@ class AvatarStage {
 
   private readonly views = new Set<GhostView>();
   private rafId = 0;
-  private clock: THREE.Clock | null = null;
+  private timer: THREE.Timer | null = null;
   private reducedMotion = false;
   private sizeW = 0;
   private sizeH = 0;
@@ -112,7 +112,7 @@ class AvatarStage {
     this.canvas = canvas;
     this.pmrem = pmrem;
     this.environment = target.texture;
-    this.clock = new THREE.Clock();
+    this.timer = new THREE.Timer();
 
     this.motionMq = window.matchMedia("(prefers-reduced-motion: reduce)");
     this.onMotion = () => {
@@ -144,8 +144,8 @@ class AvatarStage {
 
   private renderFrame(): void {
     const renderer = this.renderer;
-    const clock = this.clock;
-    if (!renderer || !clock) return;
+    const timer = this.timer;
+    if (!renderer || !timer) return;
 
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -156,8 +156,9 @@ class AvatarStage {
       this.sizeH = h;
     }
 
-    const dt = Math.min(0.05, clock.getDelta());
-    const elapsed = clock.getElapsedTime();
+    timer.update();
+    const dt = Math.min(0.05, timer.getDelta());
+    const elapsed = timer.getElapsed();
 
     renderer.setScissorTest(false);
     renderer.setClearColor(0x000000, 0);

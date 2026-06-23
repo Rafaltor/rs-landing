@@ -346,15 +346,21 @@ function buildViewerConfig() {
 /**
  * Précharge et décode la texture en CORS "anonymous" AVANT l'init de Pannellum.
  * Garantit que l'image est dans le cache (même entrée CORS que Pannellum) et
- * complètement décodée → évite la race WebGL texImage2D "no image".
+ * complètement décodée → évite la race WebGL texImage2D "no image" (Safari).
  */
 async function preloadPanorama(): Promise<void> {
   try {
     const img = new Image();
     img.crossOrigin = "anonymous";
+    img.decoding = "sync";
     img.src = PANORAMA_URL;
     if (typeof img.decode === "function") {
       await img.decode();
+    } else {
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
     }
   } catch {
     // Non bloquant : Pannellum retentera le chargement de son côté.
@@ -423,6 +429,10 @@ export default function PannellumViewer() {
     const bootAvatarHotspots = () => {
       if (cancelled || !viewerRef.current || avatarsBooted) return;
       avatarsBooted = true;
+      // setUpdate(true) UNIQUEMENT après "load" : la texture est alors prête.
+      // Le faire avant déclenche texImage2D sur une image pas encore chargée
+      // (erreur WebGL 1281 "no image").
+      viewerRef.current.setUpdate?.(true);
       syncAvatarHotspots(viewerRef.current);
       startAvatarWanderLoop(viewerRef.current);
       layoutRegisteredAvatarHotspots(viewerRef.current);
@@ -449,7 +459,6 @@ export default function PannellumViewer() {
           buildViewerConfig() as PannellumTourConfig,
         );
         const viewer = viewerRef.current;
-        viewer.setUpdate?.(true);
 
         bootAvatars = bootAvatarHotspots;
 

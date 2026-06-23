@@ -37,7 +37,7 @@ export class AvatarScene {
   private reducedMotion = false;
 
   private rafId: number | null = null;
-  private clock: THREE.Clock | null = null;
+  private timer: THREE.Timer | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
   private motionMq: MediaQueryList | null = null;
@@ -180,7 +180,7 @@ export class AvatarScene {
     this.renderer = null;
     this.pmrem = null;
     this.envTarget = null;
-    this.clock = null;
+    this.timer = null;
     this.mounted = false;
   }
 
@@ -195,7 +195,7 @@ export class AvatarScene {
 
   private startLoop(): void {
     if (this.rafId !== null || this.disposed) return;
-    this.clock = this.clock ?? new THREE.Clock();
+    this.timer = this.timer ?? new THREE.Timer();
     const tick = () => {
       this.rafId = requestAnimationFrame(tick);
       if (this.disposed || !this.visible) return;
@@ -212,9 +212,10 @@ export class AvatarScene {
   }
 
   private step(): void {
-    if (!this.renderer || !this.core || !this.clock) return;
-    const dt = Math.min(0.05, this.clock.getDelta());
-    const elapsed = this.clock.getElapsedTime();
+    if (!this.renderer || !this.core || !this.timer) return;
+    this.timer.update();
+    const dt = Math.min(0.05, this.timer.getDelta());
+    const elapsed = this.timer.getElapsed();
     this.core.update(dt, elapsed, this.reducedMotion);
     this.renderer.render(this.core.scene, this.core.camera);
   }
