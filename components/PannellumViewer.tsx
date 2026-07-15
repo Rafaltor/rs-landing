@@ -24,16 +24,13 @@ const PANNELLUM_JS =
 
 const PANORAMA_URL = "/360bg.jpeg";
 
-const TEE_IMAGE_URL = "/tee.png";
-
-/** Repositionner les hotspots : modifier pitch / yaw ici. */
-const PRODUCT_HOTSPOT = {
+/** Vue initiale du panorama au chargement. */
+const DEFAULT_SCENE_VIEW = {
   pitch: -6,
   yaw: -104,
 } as const;
 
 const HOTSPOT_CONFIG = {
-  product: PRODUCT_HOTSPOT,
   portail: {
     pitch: 0.5,
     yaw: -11,
@@ -47,7 +44,6 @@ const HOTSPOT_CONFIG = {
     href: "https://shop.recrutestagiaire.eu/pages/grillz",
   },
   miiStudio: {
-    /** Mur vide à droite — loin produit (-104), portail (-11) et grillz (153). */
     pitch: -3,
     yaw: 58,
   },
@@ -55,13 +51,6 @@ const HOTSPOT_CONFIG = {
 
 /** true = clic dans le 360 → pitch/yaw dans la console. */
 const HOTSPOT_DEBUG = false;
-
-type ProductHotspotArgs = {
-  title: string;
-  price: string;
-  image: string;
-  href: string;
-};
 
 type NavHotspotArgs = {
   direction: "left" | "right" | "down";
@@ -190,67 +179,6 @@ const createNavHotspot = (
   }
 };
 
-const createProductHotspot = (
-  hotSpotDiv: HTMLElement,
-  args: ProductHotspotArgs,
-) => {
-  hotSpotDiv.classList.add("rs-product-hotspot");
-  hotSpotDiv.style.width = "12px";
-  hotSpotDiv.style.height = "12px";
-  hotSpotDiv.style.borderRadius = "50%";
-  hotSpotDiv.style.background = "#F472B6";
-  hotSpotDiv.style.border = "2px solid #fff";
-  hotSpotDiv.style.cursor = "pointer";
-
-  const imageSrc = args.image || TEE_IMAGE_URL;
-
-  const tooltip = document.createElement("div");
-  tooltip.classList.add("rs-product-tooltip");
-  tooltip.innerHTML = `
-    <article class="rs-product-card">
-      <div class="rs-product-card__tags">
-        <span class="rs-product-card__tag rs-product-card__tag--green">Candidatures ouvertes</span>
-        <span class="rs-product-card__tag rs-product-card__tag--blue">Boutique</span>
-      </div>
-      <h3 class="rs-product-card__title">${args.title}</h3>
-      <div class="rs-product-card__img-block">
-        <div class="rs-product-card__img-inner">
-          <img
-            class="rs-product-card__hero-img"
-            src="${imageSrc}"
-            alt="${args.title}"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-      </div>
-      <div class="rs-product-card__price-block">
-        <div class="rs-product-card__price-label">Rémunération du poste</div>
-        <div class="rs-product-card__price">${args.price}</div>
-      </div>
-      <a href="${args.href}" target="_blank" rel="noopener noreferrer" class="rs-product-card__cta">Voir la fiche →</a>
-    </article>
-  `;
-  hotSpotDiv.appendChild(tooltip);
-
-  tooltip.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  const cta = tooltip.querySelector<HTMLAnchorElement>(".rs-product-card__cta");
-  cta?.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  setTimeout(() => {
-    const tw = tooltip.scrollWidth;
-    const th = tooltip.scrollHeight;
-    const dw = hotSpotDiv.offsetWidth;
-    tooltip.style.marginLeft = `${-((tw - dw) / 2)}px`;
-    tooltip.style.marginTop = `${-(th / 2)}px`;
-  }, 100);
-};
-
 function getMouseZoom(): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth > 768;
@@ -264,10 +192,6 @@ function getSceneHfov(): number {
 }
 
 function buildViewerConfig() {
-  const productHref =
-    process.env.NEXT_PUBLIC_PRODUCT_URL ||
-    "https://shop.recrutestagiaire.eu/products/stagiaire";
-
   return {
     default: {
       firstScene: "salon",
@@ -278,8 +202,8 @@ function buildViewerConfig() {
         type: "equirectangular",
         panorama: PANORAMA_URL,
         crossOrigin: "anonymous",
-        pitch: HOTSPOT_CONFIG.product.pitch,
-        yaw: HOTSPOT_CONFIG.product.yaw,
+        pitch: DEFAULT_SCENE_VIEW.pitch,
+        yaw: DEFAULT_SCENE_VIEW.yaw,
         autoLoad: true,
         autoRotate: false,
         compass: false,
@@ -289,21 +213,6 @@ function buildViewerConfig() {
         hfov: getSceneHfov(),
         hotSpotDebug: HOTSPOT_DEBUG,
         hotSpots: [
-          {
-            pitch: HOTSPOT_CONFIG.product.pitch,
-            yaw: HOTSPOT_CONFIG.product.yaw,
-            scale: false,
-            cssClass: "rs-product-hotspot-wrap",
-            createTooltipFunc: createProductHotspot,
-            createTooltipArgs: {
-              title:
-                process.env.NEXT_PUBLIC_PRODUCT_TITLE || "Stagiaire",
-              price: process.env.NEXT_PUBLIC_PRODUCT_PRICE || "40,00 €",
-              image:
-                process.env.NEXT_PUBLIC_PRODUCT_IMAGE || TEE_IMAGE_URL,
-              href: productHref,
-            },
-          },
           {
             pitch: HOTSPOT_CONFIG.portail.pitch,
             yaw: HOTSPOT_CONFIG.portail.yaw,
