@@ -44,8 +44,8 @@ const HOTSPOT_CONFIG = {
     href: "https://shop.recrutestagiaire.eu/pages/grillz",
   },
   miiStudio: {
-    pitch: -3,
-    yaw: 58,
+    pitch: DEFAULT_SCENE_VIEW.pitch,
+    yaw: DEFAULT_SCENE_VIEW.yaw,
   },
 };
 

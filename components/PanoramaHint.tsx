@@ -72,8 +72,8 @@ export default function PanoramaHint() {
           <span className="rs-panorama-hint__title">Glissez pour explorer</span>
           <span className="rs-panorama-hint__sub">
             {isMobile
-              ? "Pincez pour zoomer · studio sur le mur de droite"
-              : "Molette pour zoomer · panneau Mon stagiaire sur le mur de droite"}
+              ? "Pincez pour zoomer · panneau Mon stagiaire devant vous"
+              : "Molette pour zoomer · panneau Mon stagiaire devant vous"}
           </span>
           <span className="rs-panorama-hint__tag">Vue 360°</span>
         </span>
