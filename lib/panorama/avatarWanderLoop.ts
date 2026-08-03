@@ -13,10 +13,7 @@ import {
 } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
 import { clampAvatarPitch, maxPitchAmpForBase } from "@/lib/panorama/avatarPitchBounds";
-import {
-  clampDepth,
-  maxDepthAmpForBase,
-} from "@/lib/panorama/avatarDepth";
+import { depthFromSeed } from "@/lib/panorama/avatarDepth";
 import { resolveAvatarCollisions, type WanderWalker, clearCollisionPairCooldowns, decayCollisionPairCooldowns, wrapWanderYaw } from "@/lib/panorama/avatarWanderCollisions";
 import {
   getAvatarRuntimeHotspots,
@@ -39,12 +36,6 @@ export const WANDER_PITCH_AMP_MAX = 26;
 export const WANDER_PHASE_RATE_MIN = 0.35;
 export const WANDER_PHASE_RATE_MAX = 0.75;
 
-/** Oscillation de profondeur (0–1) : s’éloigner / se rapprocher. */
-export const WANDER_DEPTH_AMP_MIN = 0.18;
-export const WANDER_DEPTH_AMP_MAX = 0.38;
-export const WANDER_DEPTH_PHASE_RATE_MIN = 0.22;
-export const WANDER_DEPTH_PHASE_RATE_MAX = 0.55;
-
 /** Décalage de basePitch (degrés) pour étaler les Miis déjà en BDD au milieu. */
 const BASE_PITCH_SPREAD = 28;
 
@@ -63,9 +54,6 @@ function normalizeYawDelta(delta: number): number {
 function integrateWalker(w: WanderWalker, dt: number): void {
   w.phase += w.phaseRate * dt;
   w.pitch = clampAvatarPitch(w.basePitch + Math.sin(w.phase) * w.pitchAmp);
-
-  w.depthPhase += w.depthPhaseRate * dt;
-  w.depth = clampDepth(w.depthBase + Math.sin(w.depthPhase) * w.depthAmp);
 
   if (!isAvatarBumping(w.hotspotId)) {
     w.yaw = wrapWanderYaw(w.yaw + w.dir * dt);
@@ -91,12 +79,6 @@ function rebuildWalkers(): void {
       (seed % 6) *
         ((WANDER_PITCH_AMP_MAX - WANDER_PITCH_AMP_MIN) / 5);
 
-    const depthBase = clampDepth(0.18 + ((seed % 9) / 8) * 0.64);
-    const desiredDepthAmp =
-      WANDER_DEPTH_AMP_MIN +
-      (seed % 5) *
-        ((WANDER_DEPTH_AMP_MAX - WANDER_DEPTH_AMP_MIN) / 4);
-
     const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
       yaw: wrapWanderYaw(p.yaw),
@@ -109,14 +91,7 @@ function rebuildWalkers(): void {
         (seed % 4) *
           ((WANDER_PHASE_RATE_MAX - WANDER_PHASE_RATE_MIN) / 3),
       pitchAmp: maxPitchAmpForBase(basePitch, desiredAmp),
-      depth: depthBase,
-      depthBase,
-      depthPhase: seed * 0.17,
-      depthPhaseRate:
-        WANDER_DEPTH_PHASE_RATE_MIN +
-        (seed % 4) *
-          ((WANDER_DEPTH_PHASE_RATE_MAX - WANDER_DEPTH_PHASE_RATE_MIN) / 3),
-      depthAmp: maxDepthAmpForBase(depthBase, desiredDepthAmp),
+      depth: depthFromSeed(seed),
       prevYaw: wrapWanderYaw(p.yaw),
       prevPitch: basePitch,
     };
