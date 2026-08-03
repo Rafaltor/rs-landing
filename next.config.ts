@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { getApexHostname, getCanonicalSiteUrl } from "./lib/siteConfig";
 
 const nextConfig: NextConfig = {
   images: {
@@ -11,14 +12,17 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
+    const site = getCanonicalSiteUrl();
+    const apex = getApexHostname();
+    if (!site || !apex || site.hostname === `www.${apex}`) {
+      return [];
+    }
+
     return [
-      // Domaine canonique = apex (recrutestagiaire.eu). On force www → apex pour
-      // garder une seule origine : évite les textures WebGL "CORS-tainted" et le
-      // mélange de cookies/domaines (cause de texImage2D "no image").
       {
         source: "/:path*",
-        has: [{ type: "host", value: "www.recrutestagiaire.eu" }],
-        destination: "https://recrutestagiaire.eu/:path*",
+        has: [{ type: "host", value: `www.${apex}` }],
+        destination: `${site.origin}/:path*`,
         permanent: true,
       },
     ];

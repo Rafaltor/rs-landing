@@ -11,10 +11,10 @@ const PROJECT_REF = "jdzjquxslokedstzigwn";
 const REQUIRED = [
   "http://localhost:3000/**",
   "http://127.0.0.1:3000/**",
-  "https://shop.recrutestagiaire.eu/**",
+  "https://lowtaper67.fr/**",
+  "https://www.lowtaper67.fr/**",
   "https://rs-landing.vercel.app/**",
   "https://*-.vercel.app/**",
-  "https://landing.recrutestagiaire.eu/**",
 ];
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;

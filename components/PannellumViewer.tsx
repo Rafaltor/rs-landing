@@ -18,11 +18,12 @@ import {
 } from "@/lib/panorama/avatarWanderLoop";
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
+import { getPanoramaPath } from "@/lib/siteConfig";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
 
-const PANORAMA_URL = "/360bg.jpeg";
+const PANORAMA_URL = getPanoramaPath();
 
 /** Vue initiale du panorama au chargement. */
 const DEFAULT_SCENE_VIEW = {
@@ -30,34 +31,8 @@ const DEFAULT_SCENE_VIEW = {
   yaw: -104,
 } as const;
 
-const HOTSPOT_CONFIG = {
-  portail: {
-    pitch: 0.5,
-    yaw: -11,
-    label: "BUREAU",
-    href: "https://portail.recrutestagiaire.eu",
-  },
-  grillz: {
-    pitch: -3,
-    yaw: 153,
-    label: "GRILLZ",
-    href: "https://shop.recrutestagiaire.eu/pages/grillz",
-  },
-  miiStudio: {
-    pitch: DEFAULT_SCENE_VIEW.pitch,
-    yaw: DEFAULT_SCENE_VIEW.yaw,
-  },
-};
-
 /** true = clic dans le 360 → pitch/yaw dans la console. */
 const HOTSPOT_DEBUG = false;
-
-type NavHotspotArgs = {
-  direction: "left" | "right" | "down";
-  label: string;
-  href?: string;
-  sceneId?: string;
-};
 
 type MiiStudioHotspotArgs = Record<string, never>;
 
@@ -137,48 +112,6 @@ const createMiiStudioHotspot = (
   setTimeout(() => centerHotspotPanel(hotSpotDiv, panel), 120);
 };
 
-const NAV_ARROW_SVG = {
-  right: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
-  left: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`,
-  down: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/></svg>`,
-} as const;
-
-const createNavHotspot = (
-  hotSpotDiv: HTMLElement,
-  args: NavHotspotArgs,
-) => {
-  hotSpotDiv.classList.add("rs-nav-hotspot", "pnlm-pointer");
-
-  const stack = document.createElement("div");
-  stack.className = "rs-nav-hotspot__stack";
-
-  const label = document.createElement("div");
-  label.className = "rs-nav-hotspot__label";
-  label.textContent = args.label;
-
-  const inner = document.createElement("div");
-  inner.className = "rs-nav-hotspot__inner";
-  inner.innerHTML = NAV_ARROW_SVG[args.direction];
-
-  stack.appendChild(label);
-  stack.appendChild(inner);
-
-  if (args.href) {
-    const link = document.createElement("a");
-    link.href = args.href;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.className = "rs-nav-hotspot__link";
-    link.appendChild(stack);
-    link.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-    hotSpotDiv.appendChild(link);
-  } else {
-    hotSpotDiv.appendChild(stack);
-  }
-};
-
 function getMouseZoom(): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth > 768;
@@ -214,32 +147,8 @@ function buildViewerConfig() {
         hotSpotDebug: HOTSPOT_DEBUG,
         hotSpots: [
           {
-            pitch: HOTSPOT_CONFIG.portail.pitch,
-            yaw: HOTSPOT_CONFIG.portail.yaw,
-            scale: false,
-            cssClass: "rs-nav-hotspot",
-            createTooltipFunc: createNavHotspot,
-            createTooltipArgs: {
-              direction: "down",
-              label: HOTSPOT_CONFIG.portail.label,
-              href: HOTSPOT_CONFIG.portail.href,
-            },
-          },
-          {
-            pitch: HOTSPOT_CONFIG.grillz.pitch,
-            yaw: HOTSPOT_CONFIG.grillz.yaw,
-            scale: false,
-            cssClass: "rs-nav-hotspot",
-            createTooltipFunc: createNavHotspot,
-            createTooltipArgs: {
-              direction: "down",
-              label: HOTSPOT_CONFIG.grillz.label,
-              href: HOTSPOT_CONFIG.grillz.href,
-            },
-          },
-          {
-            pitch: HOTSPOT_CONFIG.miiStudio.pitch,
-            yaw: HOTSPOT_CONFIG.miiStudio.yaw,
+            pitch: DEFAULT_SCENE_VIEW.pitch,
+            yaw: DEFAULT_SCENE_VIEW.yaw,
             scale: false,
             cssClass: "rs-mii-studio-hotspot",
             createTooltipFunc: createMiiStudioHotspot,
@@ -338,9 +247,6 @@ export default function PannellumViewer() {
     const bootAvatarHotspots = () => {
       if (cancelled || !viewerRef.current || avatarsBooted) return;
       avatarsBooted = true;
-      // setUpdate(true) UNIQUEMENT après "load" : la texture est alors prête.
-      // Le faire avant déclenche texImage2D sur une image pas encore chargée
-      // (erreur WebGL 1281 "no image").
       viewerRef.current.setUpdate?.(true);
       syncAvatarHotspots(viewerRef.current);
       startAvatarWanderLoop(viewerRef.current);

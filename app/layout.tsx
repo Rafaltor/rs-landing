@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Manrope, Syne } from "next/font/google";
 import Script from "next/script";
 import { FaviconLinks } from "@/components/FaviconLinks";
+import { getCanonicalSiteUrl, getSiteName } from "@/lib/siteConfig";
 import "./globals.css";
+
+const siteName = getSiteName();
+const siteUrl = getCanonicalSiteUrl();
 
 const syne = Syne({
   subsets: ["latin"],
@@ -17,8 +21,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Recrute Stagiaire",
-  description: "Landing immersive 360° Recrute Stagiaire",
+  metadataBase: siteUrl ?? undefined,
+  title: siteName,
+  description: `Landing immersive 360° — ${siteName}`,
   icons: {
     icon: "/favicon.ico",
     apple: [
