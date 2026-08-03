@@ -17,6 +17,7 @@ import {
   type UserMiiRow,
 } from "./miiRepository";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { randomAvatarPitch } from "@/lib/panorama/avatarPitchBounds";
 
 export const AVATAR_PLACEMENTS_CHANGED = "rs-avatar-placements-changed";
 export const MAX_AVATAR_PLACEMENTS_PER_USER = 1;
@@ -85,8 +86,8 @@ function randomConfig(): AvatarConfig {
 
 export function randomScenePosition(): { pitch: number; yaw: number } {
   return {
-    pitch: -5 + Math.random() * 8,
-    yaw: Math.random() * 300 - 150,
+    pitch: randomAvatarPitch(),
+    yaw: Math.random() * 360 - 180,
   };
 }
 
