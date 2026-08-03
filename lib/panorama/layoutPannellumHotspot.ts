@@ -4,6 +4,7 @@ export function layoutPannellumHotspot(
   viewer: PannellumViewer,
   rollDeg = 0,
   divOverride?: HTMLElement,
+  sizeScale = 1,
 ): void {
   const div = divOverride ?? hotspot.div;
   if (!div) return;
@@ -54,6 +55,9 @@ export function layoutPannellumHotspot(
   let transform = `translate3d(${tx}px, ${ty}px, 9999px) rotate(${rollDeg}deg)`;
   if (hotspot.scale) {
     transform += ` scale(${hfov / h})`;
+  }
+  if (sizeScale !== 1) {
+    transform += ` scale(${sizeScale})`;
   }
 
   div.style.visibility = "visible";
