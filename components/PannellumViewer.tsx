@@ -163,15 +163,13 @@ function buildViewerConfig() {
 }
 
 /**
- * Précharge et décode la texture en CORS "anonymous" AVANT l'init de Pannellum.
- * Garantit que l'image est dans le cache (même entrée CORS que Pannellum) et
- * complètement décodée → évite la race WebGL texImage2D "no image" (Safari).
+ * Précharge légère (async) — ne bloque pas le main thread.
+ * Même origine → pas de souci CORS ; Pannellum peut démarrer en parallèle.
  */
 async function preloadPanorama(): Promise<void> {
   try {
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.decoding = "sync";
+    img.decoding = "async";
     img.src = PANORAMA_URL;
     if (typeof img.decode === "function") {
       await img.decode();
@@ -244,9 +242,12 @@ export default function PannellumViewer() {
     let unsubPlacements: (() => void) | null = null;
     let bootAvatars: (() => void) | null = null;
     let avatarsBooted = false;
+    let panoramaLoaded = false;
+    let placementsReady = false;
 
-    const bootAvatarHotspots = () => {
+    const tryBootAvatars = () => {
       if (cancelled || !viewerRef.current || avatarsBooted) return;
+      if (!panoramaLoaded || !placementsReady) return;
       avatarsBooted = true;
       viewerRef.current.setUpdate?.(true);
       syncAvatarHotspots(viewerRef.current);
@@ -256,11 +257,16 @@ export default function PannellumViewer() {
 
     async function init() {
       try {
-        const [,] = await Promise.all([
-          loadPannellumScript(),
-          ensureAvatarPlacementsHydrated(),
-          preloadPanorama(),
-        ]);
+        // Démarrer le viewer dès que le script Pannellum est prêt — ne pas
+        // attendre Supabase ni le decode complet (c’était trop long).
+        const scriptReady = loadPannellumScript();
+        void preloadPanorama();
+        const placementsPromise = ensureAvatarPlacementsHydrated().then(() => {
+          placementsReady = true;
+          tryBootAvatars();
+        });
+
+        await scriptReady;
         if (cancelled || !containerRef.current || !window.pannellum) {
           return;
         }
@@ -276,7 +282,10 @@ export default function PannellumViewer() {
         );
         const viewer = viewerRef.current;
 
-        bootAvatars = bootAvatarHotspots;
+        bootAvatars = () => {
+          panoramaLoaded = true;
+          tryBootAvatars();
+        };
 
         if (viewer.isLoaded?.()) {
           bootAvatars();
@@ -298,6 +307,7 @@ export default function PannellumViewer() {
         });
 
         window.addEventListener("resize", onResize);
+        await placementsPromise.catch(() => {});
       } catch {
         // Viewer stays empty if CDN is unavailable
       }

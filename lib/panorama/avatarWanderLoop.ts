@@ -12,7 +12,7 @@ import {
   updateAvatarHotspotAngles,
 } from "@/lib/panorama/avatarHotspotElements";
 import { layoutPitchForAvatarHotspot } from "@/lib/panorama/avatarHotspotLayout";
-import { clampAvatarPitch } from "@/lib/panorama/avatarPitchBounds";
+import { clampAvatarPitch, maxPitchAmpForBase } from "@/lib/panorama/avatarPitchBounds";
 import { resolveAvatarCollisions, type WanderWalker, clearCollisionPairCooldowns, decayCollisionPairCooldowns, wrapWanderYaw } from "@/lib/panorama/avatarWanderCollisions";
 import {
   getAvatarRuntimeHotspots,
@@ -27,16 +27,16 @@ export const WANDER_DIR_MIN = 7;
 export const WANDER_DIR_MAX = 16;
 
 /**
- * Oscillation verticale (degrés) — amplitude large pour occuper haut + bas
- * de l’écran, pas seulement la bande médiane.
+ * Oscillation verticale (degrés). L’amplitude réelle est plafonnée selon
+ * la place restante jusqu’aux bornes pour éviter le bug de collage.
  */
-export const WANDER_PITCH_AMP_MIN = 10;
-export const WANDER_PITCH_AMP_MAX = 18;
-export const WANDER_PHASE_RATE_MIN = 0.45;
-export const WANDER_PHASE_RATE_MAX = 0.95;
+export const WANDER_PITCH_AMP_MIN = 14;
+export const WANDER_PITCH_AMP_MAX = 26;
+export const WANDER_PHASE_RATE_MIN = 0.35;
+export const WANDER_PHASE_RATE_MAX = 0.75;
 
 /** Décalage de basePitch (degrés) pour étaler les Miis déjà en BDD au milieu. */
-const BASE_PITCH_SPREAD = 18;
+const BASE_PITCH_SPREAD = 28;
 
 let rafId = 0;
 let activeViewer: PannellumViewer | null = null;
@@ -70,11 +70,13 @@ function rebuildWalkers(): void {
     const dirMag =
       WANDER_DIR_MIN + (seed % 5) * ((WANDER_DIR_MAX - WANDER_DIR_MIN) / 4);
 
-    // Écarte les basePitch pour que les Miis déjà spawnés au milieu ne restent
-    // pas tous sur la même ligne d’horizon.
     const spread =
       (((seed % 11) - 5) / 5) * BASE_PITCH_SPREAD;
     const basePitch = clampAvatarPitch(p.pitch + spread);
+    const desiredAmp =
+      WANDER_PITCH_AMP_MIN +
+      (seed % 6) *
+        ((WANDER_PITCH_AMP_MAX - WANDER_PITCH_AMP_MIN) / 5);
 
     const walker: WanderWalker = {
       hotspotId: hotspotIdForPlacement(p.id),
@@ -87,10 +89,7 @@ function rebuildWalkers(): void {
         WANDER_PHASE_RATE_MIN +
         (seed % 4) *
           ((WANDER_PHASE_RATE_MAX - WANDER_PHASE_RATE_MIN) / 3),
-      pitchAmp:
-        WANDER_PITCH_AMP_MIN +
-        (seed % 6) *
-          ((WANDER_PITCH_AMP_MAX - WANDER_PITCH_AMP_MIN) / 5),
+      pitchAmp: maxPitchAmpForBase(basePitch, desiredAmp),
       prevYaw: wrapWanderYaw(p.yaw),
       prevPitch: basePitch,
     };

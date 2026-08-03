@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BRAND_COPY } from "@/lib/branding/copy";
 
-const DISMISS_MS = 5000;
+const DISMISS_MS = 2800;
 const FADE_MS = 600;
 
 export default function PanoramaHint() {

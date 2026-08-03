@@ -2,7 +2,7 @@ import {
   BUMP_DURATION,
   triggerAvatarBumpForHotspot,
 } from "@/lib/avatar/avatarWalkHeading";
-import { clampAvatarPitch } from "@/lib/panorama/avatarPitchBounds";
+import { clampAvatarPitch, maxPitchAmpForBase } from "@/lib/panorama/avatarPitchBounds";
 
 /** Distance angulaire (degrés) pour déclencher une collision. */
 export const COLLISION_DIST_DEG = 8.5;
@@ -95,9 +95,11 @@ export function resolveAvatarCollisions(
       a.yaw = wrapWanderYaw(a.yaw - nx * push);
       a.pitch = clampAvatarPitch(a.pitch - ny * push);
       a.basePitch = a.pitch;
+      a.pitchAmp = maxPitchAmpForBase(a.basePitch, a.pitchAmp);
       b.yaw = wrapWanderYaw(b.yaw + nx * push);
       b.pitch = clampAvatarPitch(b.pitch + ny * push);
       b.basePitch = b.pitch;
+      b.pitchAmp = maxPitchAmpForBase(b.basePitch, b.pitchAmp);
 
       a.dir *= -1;
       b.dir *= -1;

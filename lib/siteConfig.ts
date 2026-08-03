@@ -15,7 +15,7 @@ export function getSiteName(): string {
 
 export function getPanoramaPath(): string {
   const path = process.env.NEXT_PUBLIC_PANORAMA_URL?.trim();
-  if (!path) return "/background360.png";
+  if (!path) return "/background360.jpg";
   return path.startsWith("/") ? path : `/${path}`;
 }
 
