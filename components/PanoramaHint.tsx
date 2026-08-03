@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BRAND_COPY } from "@/lib/branding/copy";
 
 const DISMISS_MS = 5000;
 const FADE_MS = 600;
@@ -69,13 +70,13 @@ export default function PanoramaHint() {
           </svg>
         </span>
         <span className="rs-panorama-hint__copy">
-          <span className="rs-panorama-hint__title">Glissez pour explorer</span>
+          <span className="rs-panorama-hint__title">{BRAND_COPY.panoramaHintTitle}</span>
           <span className="rs-panorama-hint__sub">
             {isMobile
-              ? "Pincez pour zoomer · panneau Mon stagiaire devant vous"
-              : "Molette pour zoomer · panneau Mon stagiaire devant vous"}
+              ? BRAND_COPY.panoramaHintSubMobile
+              : BRAND_COPY.panoramaHintSubDesktop}
           </span>
-          <span className="rs-panorama-hint__tag">Vue 360°</span>
+          <span className="rs-panorama-hint__tag">{BRAND_COPY.panoramaHintTag}</span>
         </span>
       </div>
     </div>

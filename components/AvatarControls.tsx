@@ -21,6 +21,7 @@ import {
   paletteIndex,
   type AvatarConfig,
 } from "@/lib/avatar/palettes";
+import { BRAND_COPY } from "@/lib/branding/copy";
 
 type AvatarControlsProps = {
   cfg: AvatarConfig;
@@ -212,16 +213,16 @@ export default function AvatarControls({
     <aside className={controlClass} aria-label="Personnalisation avatar">
       {showHeader && (
         <header className="rs-avatar-controls__header">
-          <h2 className="rs-avatar-controls__title">Corporate Stagiaire</h2>
-          <p className="rs-avatar-controls__subtitle">Studio avatar</p>
+          <h2 className="rs-avatar-controls__title">{BRAND_COPY.editorTitle}</h2>
+          <p className="rs-avatar-controls__subtitle">{BRAND_COPY.editorSubtitle}</p>
         </header>
       )}
 
       <section className="rs-avatar-controls__section">
-        <h3 className="rs-avatar-controls__section-title">Profil</h3>
+        <h3 className="rs-avatar-controls__section-title">{BRAND_COPY.sectionIdentity}</h3>
         <div className="rs-avatar-controls__row rs-avatar-controls__row--field">
           <label className="rs-avatar-controls__label" htmlFor="rs-avatar-pseudo">
-            Pseudo
+            {BRAND_COPY.pseudoLabel}
           </label>
           <input
             id="rs-avatar-pseudo"
@@ -229,7 +230,7 @@ export default function AvatarControls({
             className="rs-avatar-controls__input"
             value={cfg.pseudo}
             maxLength={PSEUDO_MAX_LENGTH}
-            placeholder="Ton pseudo"
+            placeholder={BRAND_COPY.pseudoPlaceholder}
             autoComplete="nickname"
             onChange={(e) => patch({ pseudo: e.target.value })}
           />
@@ -237,7 +238,7 @@ export default function AvatarControls({
       </section>
 
       <section className="rs-avatar-controls__section">
-        <h3 className="rs-avatar-controls__section-title">Silhouette</h3>
+        <h3 className="rs-avatar-controls__section-title">{BRAND_COPY.sectionBody}</h3>
         <Cycler
           label="Coiffure"
           valueLabel={formatLabel(HAIRS[hairIdx])}
@@ -265,7 +266,7 @@ export default function AvatarControls({
       </section>
 
       <section className="rs-avatar-controls__section">
-        <h3 className="rs-avatar-controls__section-title">Couleurs</h3>
+        <h3 className="rs-avatar-controls__section-title">{BRAND_COPY.sectionColors}</h3>
         <SkinSlider
           id="rs-avatar-skin"
           label="Peau"
@@ -335,7 +336,7 @@ export default function AvatarControls({
           aria-label="Générer un avatar aléatoire"
           onClick={() => onChange({ ...randomConfig(), pseudo: cfg.pseudo })}
         >
-          Aléatoire
+          {BRAND_COPY.randomAvatar}
         </button>
       </section>
     </aside>

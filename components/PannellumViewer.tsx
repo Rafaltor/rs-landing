@@ -19,6 +19,7 @@ import {
 import { openMiiStudio } from "@/lib/landing/miiStudioBus";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 import { getPanoramaPath } from "@/lib/siteConfig";
+import { BRAND_COPY } from "@/lib/branding/copy";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
@@ -37,9 +38,9 @@ const HOTSPOT_DEBUG = false;
 type MiiStudioHotspotArgs = Record<string, never>;
 
 const MII_PANEL_COPY = {
-  title: "Mon stagiaire",
-  desc: "Créez votre Corporate Stagiaire et posez-le dans le salon.",
-  cta: "Déposer son Stagiaire",
+  title: BRAND_COPY.panelTitle,
+  desc: BRAND_COPY.panelDesc,
+  cta: BRAND_COPY.panelCta,
 } as const;
 
 const bindMiiStudioOpen = (el: HTMLElement) => {
@@ -92,11 +93,11 @@ const createMiiStudioHotspot = (
   const panel = document.createElement("button");
   panel.type = "button";
   panel.className = "rs-mii-studio-panel";
-  panel.setAttribute("aria-label", "Ouvrir le configurateur stagiaire");
+  panel.setAttribute("aria-label", BRAND_COPY.hotspotAria);
   panel.innerHTML = `
     <span class="rs-mii-studio-panel__tags">
-      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--pink">Studio avatar</span>
-      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--blue">Salon 360°</span>
+      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--fluoro">${BRAND_COPY.tagConfigurator}</span>
+      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--muted">${BRAND_COPY.tagPanorama}</span>
     </span>
     <span class="rs-mii-studio-panel__title">${MII_PANEL_COPY.title}</span>
     <span class="rs-mii-studio-panel__desc">${MII_PANEL_COPY.desc}</span>

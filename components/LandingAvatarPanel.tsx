@@ -19,6 +19,7 @@ import {
   type AvatarPlacement,
 } from "@/lib/avatar/avatarPlacements";
 import { useSupabaseAuth } from "@/lib/auth/useSupabaseAuth";
+import { BRAND_COPY } from "@/lib/branding/copy";
 
 const PENDING_DEPOSIT_KEY = "rs-pending-deposit";
 
@@ -219,10 +220,10 @@ export default function LandingAvatarPanel({
 
   const depositDisabled = busy || !configured;
   const depositLabel = busy
-    ? "Dépôt…"
+    ? BRAND_COPY.depositBusy
     : !configured
-      ? "Indisponible"
-      : "Déposer son Stagiaire";
+      ? BRAND_COPY.depositUnavailable
+      : BRAND_COPY.deposit;
 
   return (
     <div
@@ -242,12 +243,12 @@ export default function LandingAvatarPanel({
       <div className="rs-mii-studio-modal">
         <header className="rs-mii-studio-modal__header">
           <div>
-            <p className="rs-mii-studio-modal__eyebrow">Studio avatar</p>
+            <p className="rs-mii-studio-modal__eyebrow">{BRAND_COPY.modalEyebrow}</p>
             <h2 id="rs-mii-studio-title" className="rs-mii-studio-modal__title">
-              Mon stagiaire
+              {BRAND_COPY.modalTitle}
             </h2>
             <p className="rs-mii-studio-modal__subtitle">
-              Créez votre Corporate Stagiaire et posez-le dans le salon
+              {BRAND_COPY.modalSubtitle}
             </p>
           </div>
           <button
@@ -296,7 +297,7 @@ export default function LandingAvatarPanel({
               aria-hidden="true"
             />
             <p className="rs-mii-studio-modal__preview-hint">
-              Glisser pour tourner
+              {BRAND_COPY.previewHint}
             </p>
           </div>
 
@@ -314,8 +315,7 @@ export default function LandingAvatarPanel({
                 {myMii ? (
                   <div className="rs-mii-studio-modal__actions">
                     <p className="rs-mii-studio-modal__saved">
-                      Votre stagiaire est dans le salon — les changements sont
-                      enregistrés automatiquement.
+                      {BRAND_COPY.savedInSalon}
                     </p>
                     <button
                       type="button"
@@ -323,20 +323,18 @@ export default function LandingAvatarPanel({
                       disabled={busy}
                       onClick={handleRemove}
                     >
-                      Retirer du salon
+                      {BRAND_COPY.removeFromSalon}
                     </button>
                   </div>
                 ) : (
                   <div className="rs-mii-studio-modal__actions">
                     {!configured ? (
                       <p className="rs-mii-studio-modal__saved">
-                        Dépôt temporairement indisponible — vous pouvez quand
-                        même personnaliser votre stagiaire.
+                        {BRAND_COPY.unavailableDeposit}
                       </p>
                     ) : !user ? (
                       <p className="rs-mii-studio-modal__saved">
-                        Connectez-vous avec Google pour déposer votre stagiaire
-                        dans le salon.
+                        {BRAND_COPY.loginToDeposit}
                       </p>
                     ) : null}
                     <button
@@ -345,13 +343,13 @@ export default function LandingAvatarPanel({
                       disabled={depositDisabled}
                       title={
                         !configured
-                          ? "Connexion au salon indisponible"
+                          ? BRAND_COPY.salonUnavailable
                           : undefined
                       }
                       aria-label={
                         !configured
-                          ? "Déposer son Stagiaire — indisponible"
-                          : "Déposer son Stagiaire"
+                          ? `${BRAND_COPY.deposit} — indisponible`
+                          : BRAND_COPY.deposit
                       }
                       onClick={handleDeposit}
                     >

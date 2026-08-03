@@ -2,25 +2,28 @@
 
 /* Tokens RS — alignés sur recrutestagiaire/assets/rs-unified-tokens.css */
 :root {
-  --rs-color-brand: #f472b6;
-  --rs-color-brand-hover: #db2777;
-  --rs-color-brand-pale: #f9a8d4;
-  --rs-color-brand-light: #fdf2f8;
-  --rs-color-ink: #0a0a0a;
-  --rs-color-bg: #ffffff;
-  --rs-color-border: #e8e8e4;
-  --rs-color-muted: #6b6b6b;
-  --rs-color-subtle: #f4f4f2;
-  --rs-eu-blue-core: #0033ab;
-  --rs-eu-blue-light: #5b86e5;
-  --rs-eu-blue-dark: #001a57;
-  --rs-logo-blue-pale: #e8eeff;
+  --rs-color-brand: #8a9a6b;
+  --rs-color-brand-hover: #6b7a52;
+  --rs-color-brand-pale: #b8c49a;
+  --rs-color-brand-light: #e8edd8;
+  --rs-color-ink: #1a1814;
+  --rs-color-bg: #e4e0cc;
+  --rs-color-border: #8a8570;
+  --rs-color-muted: #5a5648;
+  --rs-color-subtle: #d8d4bc;
+  --rs-eu-blue-core: #3d4a35;
+  --rs-eu-blue-light: #6b7a52;
+  --rs-eu-blue-dark: #1a1814;
+  --rs-logo-blue-pale: #c9c4a6;
   --rs-font-display: var(--font-syne), "Syne", system-ui, sans-serif;
   --rs-font-body: var(--font-manrope), "Manrope", system-ui, sans-serif;
-  --rs-radius-md: 8px;
-  --rs-radius-lg: 12px;
-  --rs-shadow-card: 0 12px 40px rgba(0, 0, 0, 0.16);
-  --rs-shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.12);
+  --rs-font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  --rs-radius-md: 3px;
+  --rs-radius-lg: 4px;
+  --rs-shadow-card: 0 8px 24px rgba(26, 24, 20, 0.35);
+  --rs-shadow-modal: 0 16px 40px rgba(26, 24, 20, 0.45);
+  --lt-fluoro: #f2eed9;
+  --lt-carpet: #2f2a22;
 }
 
 *,
@@ -180,7 +183,7 @@ img {
   display: none !important;
 }
 
-/* Panneau studio Mii — DA rs-pro-mock (recrutestagiaire) */
+/* Panneau configurateur — LowTaper67 / backrooms */
 .pnlm-hotspot-base.rs-mii-studio-hotspot {
   z-index: 50 !important;
   overflow: visible !important;
@@ -197,10 +200,10 @@ img {
   gap: 0;
   width: min(280px, 58vw);
   margin: 0;
-  padding: 16px 16px 18px;
+  padding: 14px 14px 16px;
   border: 1px solid var(--rs-color-border);
   border-radius: var(--rs-radius-lg);
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(228, 224, 204, 0.96);
   box-shadow: var(--rs-shadow-card);
   font-family: var(--rs-font-body);
   color: var(--rs-eu-blue-dark);
@@ -216,77 +219,78 @@ img {
 }
 
 .rs-mii-studio-panel:hover {
-  border-color: rgba(0, 51, 171, 0.22);
-  box-shadow: 0 16px 44px rgba(0, 26, 87, 0.14);
+  border-color: var(--rs-color-brand-hover);
+  box-shadow: 0 12px 32px rgba(26, 24, 20, 0.4);
 }
 
 .rs-mii-studio-panel__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
 }
 
 .rs-mii-studio-panel__tag {
-  font-size: 11px;
+  font-family: var(--rs-font-mono);
+  font-size: 9px;
   font-weight: 600;
-  padding: 4px 11px;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 51, 171, 0.12);
-  color: var(--rs-eu-blue-dark);
-  background: #fff;
+  padding: 4px 8px;
+  border-radius: var(--rs-radius-md);
+  border: 1px solid var(--rs-color-border);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.rs-mii-studio-panel__tag--blue {
-  background: linear-gradient(180deg, #f5f8ff 0%, #e8f0ff 100%);
+.rs-mii-studio-panel__tag--fluoro {
+  background: var(--lt-fluoro);
   color: var(--rs-eu-blue-dark);
-  border-color: rgba(0, 51, 171, 0.2);
+  border-color: #a8a48e;
 }
 
-.rs-mii-studio-panel__tag--pink {
-  background: linear-gradient(180deg, var(--rs-color-brand-light) 0%, #fce7f3 100%);
-  color: #9d174d;
-  border-color: var(--rs-color-brand-pale);
+.rs-mii-studio-panel__tag--muted {
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro);
+  border-color: #4a4338;
 }
 
 .rs-mii-studio-panel__title {
   display: block;
   margin: 0 0 8px;
   font-family: var(--rs-font-display);
-  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+  font-size: clamp(1.05rem, 2.4vw, 1.28rem);
   font-weight: 800;
   line-height: 1.15;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-panel__desc {
   display: block;
-  margin: 0 0 14px;
-  font-size: 12px;
-  line-height: 1.45;
+  margin: 0 0 12px;
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-panel__cta {
   display: block;
   text-align: center;
-  padding: 12px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--rs-color-brand-hover);
-  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
-  color: #fff !important;
-  font-family: var(--rs-font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.25);
-  transition: filter 0.15s ease, transform 0.15s ease;
+  padding: 11px 12px;
+  border-radius: var(--rs-radius-md);
+  border: 1px solid var(--rs-color-border);
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro) !important;
+  font-family: var(--rs-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .rs-mii-studio-panel:hover .rs-mii-studio-panel__cta {
-  filter: brightness(1.04);
-  transform: translateY(-1px);
+  background: #3d362c;
+  border-color: var(--rs-color-brand);
 }
 
 /* Modal configurateur — DA RS (rs-home-kit-overlay) */
@@ -311,7 +315,7 @@ img {
   position: absolute;
   inset: 0;
   border: none;
-  background: rgba(10, 10, 10, 0.88);
+  background: rgba(26, 24, 20, 0.92);
   cursor: pointer;
 }
 
@@ -336,18 +340,20 @@ img {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 22px 24px 14px;
+  padding: 18px 20px 14px;
   border-bottom: 1px solid var(--rs-color-border);
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro);
 }
 
 .rs-mii-studio-modal__eyebrow {
   margin: 0;
-  font-family: var(--rs-font-display);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-family: var(--rs-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--rs-color-brand-hover);
+  color: var(--rs-color-brand-pale);
 }
 
 .rs-mii-studio-modal__title {
@@ -355,14 +361,14 @@ img {
   font-family: var(--rs-font-display);
   font-size: clamp(1.2rem, 2.5vw, 1.45rem);
   font-weight: 800;
-  color: var(--rs-eu-blue-dark);
+  color: var(--lt-fluoro);
   line-height: 1.15;
 }
 
 .rs-mii-studio-modal__subtitle {
   margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--rs-color-muted);
+  font-size: 12px;
+  color: rgba(242, 238, 217, 0.75);
   line-height: 1.45;
 }
 
@@ -370,18 +376,18 @@ img {
   flex-shrink: 0;
   width: 32px;
   height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: var(--rs-color-subtle);
-  color: var(--rs-color-muted);
+  border: 1px solid rgba(242, 238, 217, 0.25);
+  border-radius: var(--rs-radius-md);
+  background: transparent;
+  color: var(--lt-fluoro);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
 }
 
 .rs-mii-studio-modal__close:hover {
-  background: var(--rs-logo-blue-pale);
-  color: var(--rs-eu-blue-dark);
+  background: rgba(242, 238, 217, 0.12);
+  border-color: var(--rs-color-brand-pale);
 }
 
 .rs-mii-studio-modal__auth {
@@ -389,8 +395,8 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 24px;
-  padding: 10px 14px;
+  margin: 12px 16px 0;
+  padding: 10px 12px;
   border-radius: var(--rs-radius-md);
   background: var(--rs-color-subtle);
   border: 1px solid var(--rs-color-border);
@@ -430,20 +436,21 @@ img {
 .rs-mii-studio-modal__google-btn {
   width: 100%;
   padding: 11px 14px;
-  border-radius: 6px;
+  border-radius: var(--rs-radius-md);
   border: 1px solid var(--rs-color-border);
-  background: #fff;
+  background: var(--lt-fluoro);
   color: var(--rs-eu-blue-dark);
-  font-family: var(--rs-font-display);
-  font-size: 12px;
-  font-weight: 700;
+  font-family: var(--rs-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: var(--rs-shadow-card);
 }
 
 .rs-mii-studio-modal__google-btn:hover:not(:disabled) {
-  border-color: rgba(0, 51, 171, 0.25);
-  background: var(--rs-logo-blue-pale);
+  border-color: var(--rs-color-brand-hover);
+  background: #fff;
 }
 
 .rs-mii-studio-modal__body {
@@ -458,7 +465,7 @@ img {
 .rs-mii-studio-modal__preview-wrap {
   position: relative;
   min-height: 280px;
-  background: linear-gradient(180deg, var(--rs-logo-blue-pale) 0%, #fff 72%);
+  background: linear-gradient(180deg, var(--lt-carpet) 0%, #1a1814 100%);
   border-right: 1px solid var(--rs-color-border);
 }
 
@@ -473,12 +480,12 @@ img {
   left: 14px;
   bottom: 12px;
   margin: 0;
-  font-family: var(--rs-font-display);
-  font-size: 9px;
-  font-weight: 700;
+  font-family: var(--rs-font-mono);
+  font-size: 8px;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--rs-color-muted);
+  color: rgba(242, 238, 217, 0.55);
 }
 
 .rs-mii-studio-modal__panel {
@@ -486,7 +493,7 @@ img {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--rs-color-bg);
 }
 
 .rs-mii-studio-modal__panel .rs-avatar-controls {
@@ -509,16 +516,16 @@ img {
   flex-shrink: 0;
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid var(--rs-color-brand-hover);
-  border-radius: 6px;
-  background: linear-gradient(180deg, var(--rs-color-brand-pale) 0%, var(--rs-color-brand) 100%);
-  color: #fff;
-  font-family: var(--rs-font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro);
+  font-family: var(--rs-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 8px rgba(219, 39, 119, 0.2);
 }
 
 .rs-mii-studio-modal__create:disabled {
@@ -534,7 +541,7 @@ img {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #fff;
+  background: var(--rs-color-subtle);
   border-top: 1px solid var(--rs-color-border);
 }
 
@@ -563,9 +570,24 @@ img {
   color: var(--rs-color-brand-hover);
 }
 
-/* Contrôles avatar — thème clair (modal RS) */
+/* Contrôles avatar — thème clair backrooms (modal) */
 .rs-mii-studio-modal .rs-avatar-controls--light {
-  background: #fff;
+  background: var(--rs-color-bg);
+  gap: 12px;
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__section {
+  padding: 12px;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--lt-fluoro);
+}
+
+.rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__section-title {
+  font-family: var(--rs-font-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--rs-color-muted);
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__header {
@@ -610,7 +632,7 @@ img {
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__swatch--active {
   border-color: var(--rs-color-brand);
-  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.3);
+  box-shadow: 0 0 0 2px rgba(138, 154, 107, 0.35);
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__toggle {
@@ -639,23 +661,28 @@ img {
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__random {
-  border-color: var(--rs-color-brand-hover);
-  color: #fff;
+  border-color: var(--rs-color-border);
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro);
+  font-family: var(--rs-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input {
   border-color: var(--rs-color-border);
-  background: #fff;
+  background: var(--rs-color-bg);
   color: var(--rs-eu-blue-dark);
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input::placeholder {
-  color: rgba(10, 10, 10, 0.35);
+  color: rgba(26, 24, 20, 0.4);
 }
 
 .rs-mii-studio-modal .rs-avatar-controls--light .rs-avatar-controls__input:focus {
   border-color: var(--rs-color-brand-hover);
-  box-shadow: 0 0 0 2px rgba(0, 51, 160, 0.12);
+  box-shadow: 0 0 0 2px rgba(138, 154, 107, 0.25);
 }
 
 @media (max-width: 768px) {
@@ -1125,7 +1152,7 @@ img {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-panorama-hint__arrow--left {
@@ -1165,7 +1192,7 @@ img {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: #c9c4a6;
   margin-top: 2px;
 }
 
@@ -1513,7 +1540,7 @@ img {
 
 .rs-landing-avatar-fab:hover {
   border-color: rgba(249, 168, 212, 0.55);
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-landing-avatar-panel {
@@ -1553,7 +1580,7 @@ img {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-landing-avatar-panel__list {
@@ -1606,7 +1633,7 @@ img {
 
 .rs-landing-avatar-panel__remove:hover {
   background: rgba(244, 114, 182, 0.25);
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-landing-avatar-panel__add {
@@ -1686,7 +1713,7 @@ img {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: #c9c4a6;
   cursor: pointer;
 }
 
@@ -1770,7 +1797,7 @@ img {
 }
 
 .rs-landing-avatar-panel__remove-inline:hover {
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-landing-avatar-panel__salon {
@@ -1850,7 +1877,7 @@ img {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-avatar-controls__section {
@@ -2003,7 +2030,7 @@ img {
 
 .rs-avatar-controls__cycle-btn:hover {
   border-color: #f472b6;
-  color: #f9a8d4;
+  color: #c9c4a6;
 }
 
 .rs-avatar-controls__value {
