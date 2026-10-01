@@ -3,6 +3,9 @@ export const LAG = 0.45;
 export const TOLERANCE_DEG = 50;
 export const PICTO_LEAD = 1.2;
 export const CALIB_RATE = 1;
+/** Une pose toutes les 100 ms suffit au scoring (fenêtre 0,5 s) et tient dans Postgres. */
+export const SAMPLE_DT = 0.1;
+export const SAMPLE_UPSERT_CHUNK = 200;
 
 export const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";

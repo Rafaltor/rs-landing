@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RANKS, SYNTHETIC_DURATION, type MoveDef } from "@/lib/aura/config";
-import { analyseVideo, keepAwake, seekTo, startCamera, unlockMedia } from "@/lib/aura/media";
+import { analyseVideo, keepAwake, seekTo, startCamera, unlockMedia, waitMeta } from "@/lib/aura/media";
 import { loadModel } from "@/lib/aura/landmarker";
 import { drawModel } from "@/lib/aura/draw";
 import { runRound } from "@/lib/aura/run-round";
 import { fetchSamples } from "@/lib/aura/room";
 import { syntheticSamples, moveFileExists } from "@/lib/aura/synthetic";
-import type { Sample } from "@/lib/aura/pose";
+import { samplesCoverDuration, type Sample } from "@/lib/aura/pose";
 
 type PlayResult = { aura: number; prec: number; lives?: number; maxCombo?: number; eliminated?: boolean };
 type Phase = "boot" | "watch" | "armed" | "playing";
@@ -134,9 +134,12 @@ export function Playfield({
           refEl.current.setAttribute("playsinline", "true");
           refEl.current.setAttribute("webkit-playsinline", "true");
           refEl.current.playsInline = true;
+          await waitMeta(refEl.current);
         }
         let samples = await fetchSamples(move.slug).catch(() => null);
-        if (!samples) {
+        const clipDur = exists && refEl.current?.duration && Number.isFinite(refEl.current.duration) ? refEl.current.duration : 0;
+        const cachedOk = !!(samples && samples.length >= 10 && (clipDur < 20 || samplesCoverDuration(samples, clipDur)));
+        if (!cachedOk) {
           if (exists && refEl.current) {
             samples = await analyseVideo(refEl.current, (p, msg) => {
               setStatus(msg);
@@ -147,6 +150,7 @@ export function Playfield({
           }
         }
         if (gone) return;
+        if (!samples?.length) throw new Error("modèle introuvable dans la vidéo");
         samplesRef.current = samples;
         durationRef.current = exists && refEl.current?.duration ? refEl.current.duration : (samples.at(-1)?.t ?? SYNTHETIC_DURATION);
         setProgress(null);

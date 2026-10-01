@@ -1,4 +1,5 @@
-import type { Sample } from "./pose";
+import { SAMPLE_UPSERT_CHUNK } from "./config";
+import { compactSamples, packLandmarks, unpackLandmarks, type Sample } from "./pose";
 import { getSupabase } from "./supabase";
 
 export type RoomStatus = "lobby" | "preview" | "playing" | "reveal" | "finished";
@@ -141,25 +142,34 @@ export async function submitScore(playerId: string, secret: string, round: numbe
 
 export async function upsertSamples(code: string, hostToken: string, slug: string, samples: Sample[]) {
   const sb = getSupabase();
-  const slim = samples.map((s) => ({
+  const slim = compactSamples(samples).map((s) => ({
     t: s.t,
     a: s.a,
-    lm: s.lm?.map((p) => ({ x: +p.x.toFixed(4), y: +p.y.toFixed(4), visibility: +(p.visibility ?? 1).toFixed(2) })),
+    lm: packLandmarks(s.lm),
   }));
-  const { error } = await sb.rpc("aura_upsert_samples", {
-    p_code: code,
-    p_host_token: hostToken,
-    p_slug: slug,
-    p_samples: slim,
-  });
-  if (error) throw new Error(rpcError(error));
+  for (let i = 0; i < slim.length; i += SAMPLE_UPSERT_CHUNK) {
+    const chunk = slim.slice(i, i + SAMPLE_UPSERT_CHUNK);
+    const { error } = await sb.rpc("aura_upsert_samples", {
+      p_code: code,
+      p_host_token: hostToken,
+      p_slug: slug,
+      p_samples: chunk,
+      p_append: i > 0,
+    });
+    if (error) throw new Error(rpcError(error));
+  }
 }
 
 export async function fetchSamples(slug: string): Promise<Sample[] | null> {
   const sb = getSupabase();
   const { data, error } = await sb.from("aura_move_samples").select("samples").eq("slug", slug).maybeSingle();
   if (error) throw new Error(rpcError(error));
-  return (data?.samples as Sample[] | null) ?? null;
+  const raw = data?.samples;
+  if (!Array.isArray(raw) || !raw.length) return null;
+  return raw.map((s) => {
+    const row = s as Sample & { lm?: unknown };
+    return { t: row.t, a: row.a, lm: unpackLandmarks(row.lm) };
+  });
 }
 
 export async function fetchRoom(code: string) {

@@ -1,4 +1,4 @@
-import { CALIB_RATE } from "./config";
+import { CALIB_RATE, SAMPLE_DT } from "./config";
 import { detect } from "./landmarker";
 import { angles, type Sample } from "./pose";
 
@@ -79,19 +79,24 @@ export async function analyseVideo(
 ): Promise<Sample[]> {
   const samples: Sample[] = [];
   video.muted = true;
-  video.playbackRate = CALIB_RATE;
-  await video.play();
   await waitMeta(video);
+  const longClip = (video.duration || 0) > 20;
+  video.playbackRate = longClip ? Math.max(CALIB_RATE, 4) : CALIB_RATE;
+  await video.play();
   const aspect = video.videoWidth / (video.videoHeight || 1);
   await new Promise<void>((resolve) => {
     let lastT = -1;
+    let lastKept = Number.NEGATIVE_INFINITY;
     const step = () => {
       if (video.ended) return resolve();
       if (video.readyState >= 2 && video.currentTime !== lastT) {
         lastT = video.currentTime;
-        const res = detect(video);
-        const lm = res?.landmarks?.[0];
-        if (lm) samples.push({ t: lastT, a: angles(lm, aspect), lm: lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility })) });
+        if (lastT - lastKept >= SAMPLE_DT) {
+          lastKept = lastT;
+          const res = detect(video);
+          const lm = res?.landmarks?.[0];
+          if (lm) samples.push({ t: lastT, a: angles(lm, aspect), lm: lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility })) });
+        }
         onProgress?.(lastT / (video.duration || 1), "Calibration de l'aura du modèle…");
       }
       requestAnimationFrame(step);

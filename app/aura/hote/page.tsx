@@ -19,6 +19,7 @@ import {
   type Score,
 } from "@/lib/aura/room";
 import { moveFileExists, syntheticSamples } from "@/lib/aura/synthetic";
+import { samplesCoverDuration } from "@/lib/aura/pose";
 import { useRoom } from "@/hooks/aura/useRoom";
 
 const HOST_KEY = "aura-host";
@@ -185,7 +186,7 @@ function HostConsole({
       const exists = await moveFileExists(ROYALE.src);
       if (!exists) throw new Error("Dépose royale.mp4 dans public/moves.");
       let samples = samplesCache.current[ROYALE.slug] ?? (await fetchSamples(ROYALE.slug).catch(() => null));
-      if (!samples || samples.length < 10) {
+      if (!samplesCoverDuration(samples, ROYALE_DURATION_FALLBACK)) {
         const v = document.createElement("video");
         v.playsInline = true;
         v.muted = true;
@@ -193,6 +194,7 @@ function HostConsole({
         samples = await analyseVideo(v, (_p, msg) => setBusy(msg));
       }
       samplesCache.current[ROYALE.slug] = samples;
+      setBusy("Envoi des poses au salon…");
       await upsertSamples(code, token, ROYALE.slug, samples);
       setBusy("");
       await advanceRoom(code, token, "playing", 0);
