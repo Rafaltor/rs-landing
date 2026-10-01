@@ -73,6 +73,11 @@ export const MOVES: MoveDef[] = [
   { slug: "move8", src: "/moves/move8.mp4", title: "Move 8" },
   { slug: "move9", src: "/moves/move9.mp4", title: "Move 9" },
   { slug: "move10", src: "/moves/move10.mp4", title: "Move 10" },
+  { slug: "move11", src: "/moves/move11.mp4", title: "Move 11" },
+  { slug: "move12", src: "/moves/move12.mp4", title: "Move 12" },
+  { slug: "move13", src: "/moves/move13.mp4", title: "Move 13" },
+  { slug: "move14", src: "/moves/move14.mp4", title: "Move 14" },
+  { slug: "move15", src: "/moves/move15.mp4", title: "Move 15" },
 ];
 
 export const SYNTHETIC_DURATION = 6;
