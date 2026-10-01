@@ -18,6 +18,11 @@ export async function keepAwake() {
   } catch {
     /* ignore */
   }
+  try {
+    await screen.orientation?.lock?.("portrait");
+  } catch {
+    /* ignore */
+  }
 }
 
 export function waitMeta(v: HTMLVideoElement, ms = 8000) {

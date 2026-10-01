@@ -273,8 +273,10 @@ export function Playfield({
         <span className="pane-label">{watching ? "Le move" : "Le modèle"}</span>
       </div>
       <div className={`pane cam ${mirrorDefault ? "mirror" : ""}`}>
-        <video ref={camEl} playsInline muted autoPlay />
-        <canvas ref={skelEl} />
+        <div className="cam-stage">
+          <video ref={camEl} playsInline muted autoPlay />
+          <canvas ref={skelEl} />
+        </div>
         <span className="pane-label">Toi</span>
       </div>
       {showHud && (

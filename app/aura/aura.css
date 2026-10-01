@@ -94,12 +94,38 @@
 .pane video, .pane canvas {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
 }
-.pane.cam video, .pane.cam canvas {
+.pane.cam {
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.cam-stage {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 9 / 16;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+@supports (width: 1cqw) {
+  .cam-stage {
+    width: min(100cqw, calc(100cqh * 9 / 16));
+    height: auto;
+    max-height: 100%;
+  }
+}
+.pane.cam.mirror .cam-stage { transform: scaleX(-1); }
+.cam-stage video,
+.cam-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
 }
 .pane canvas { z-index: 1; }
-.mirror video, .mirror canvas { transform: scaleX(-1); }
 .pane-label {
   position: absolute; left: 14px; bottom: 12px;
   font-weight: 800; font-size: 14px; color: var(--paper);
@@ -231,7 +257,7 @@
   .center { justify-content: flex-start; }
 }
 
-@media (max-width: 900px) and (orientation: portrait) {
+@media (max-width: 900px) {
   .game {
     flex-direction: column;
   }
@@ -273,10 +299,8 @@
   .game .pane canvas {
     object-fit: contain;
   }
-  .game .pane.cam video,
-  .game .pane.cam canvas,
-  .game--play > .pane.cam video,
-  .game--play > .pane.cam canvas {
+  .game .cam-stage video,
+  .game .cam-stage canvas {
     object-fit: cover;
     object-position: center;
   }
