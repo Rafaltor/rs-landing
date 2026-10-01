@@ -191,31 +191,39 @@ export async function analyseVideo(
 ): Promise<Sample[]> {
   const samples: Sample[] = [];
   video.muted = true;
+  video.playsInline = true;
   await waitMeta(video);
-  const longClip = (video.duration || 0) > 20;
-  video.playbackRate = longClip ? Math.max(CALIB_RATE, 4) : CALIB_RATE;
-  await video.play();
+  const duration = Number.isFinite(video.duration) ? video.duration : 0;
+  const longClip = duration > 20;
+  video.playbackRate = longClip ? 2 : CALIB_RATE;
+  try {
+    await video.play();
+  } catch {
+    video.muted = true;
+    await video.play();
+  }
   const aspect = video.videoWidth / (video.videoHeight || 1);
-  await new Promise<void>((resolve) => {
-    let lastT = -1;
-    let lastKept = Number.NEGATIVE_INFINITY;
-    const step = () => {
-      if (video.ended) return resolve();
-      if (video.readyState >= 2 && video.currentTime !== lastT) {
-        lastT = video.currentTime;
-        if (lastT - lastKept >= SAMPLE_DT) {
-          lastKept = lastT;
-          const res = detect(video);
-          const lm = res?.landmarks?.[0];
-          if (lm) samples.push({ t: lastT, a: angles(lm, aspect), lm: lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility })) });
-        }
-        onProgress?.(lastT / (video.duration || 1), "Calibration de l'aura du modèle…");
-      }
-      requestAnimationFrame(step);
-    };
-    video.addEventListener("ended", () => resolve(), { once: true });
-    step();
-  });
+  let lastKept = Number.NEGATIVE_INFINITY;
+  let lastSeen = -1;
+  let stuck = 0;
+  const deadline = performance.now() + Math.max(15000, (duration / (video.playbackRate || 1)) * 1000 + 6000);
+  while (performance.now() < deadline) {
+    if (video.ended || (duration > 1 && video.currentTime >= duration - 0.08)) break;
+    if (Math.abs(video.currentTime - lastSeen) < 0.02) stuck += 1;
+    else {
+      stuck = 0;
+      lastSeen = video.currentTime;
+    }
+    if (stuck > 50 && video.currentTime > 0.5) break;
+    if (video.readyState >= 2 && video.currentTime - lastKept >= SAMPLE_DT) {
+      lastKept = video.currentTime;
+      const res = detect(video);
+      const lm = res?.landmarks?.[0];
+      if (lm) samples.push({ t: video.currentTime, a: angles(lm, aspect), lm: lm.map((p) => ({ x: p.x, y: p.y, visibility: p.visibility })) });
+      onProgress?.(video.currentTime / (duration || 1), "Calibration de l'aura du modèle…");
+    }
+    await sleep(40);
+  }
   video.pause();
   video.playbackRate = 1;
   if (samples.length < 10) throw new Error("modèle introuvable dans la vidéo");

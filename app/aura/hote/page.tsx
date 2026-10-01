@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MOVES, ROYALE, ROYALE_DURATION_FALLBACK, royaleWaves } from "@/lib/aura/config";
-import { drawModel } from "@/lib/aura/draw";
 import { loadModel } from "@/lib/aura/landmarker";
 import { analyseVideo, keepAwake, unlockMedia, waitMeta } from "@/lib/aura/media";
 import {
@@ -101,8 +100,6 @@ function HostConsole({
   const modelRef = useRef<HTMLCanvasElement>(null);
   const [hasVideo, setHasVideo] = useState(false);
   const samplesCache = useRef<Record<string, Awaited<ReturnType<typeof syntheticSamples>>>>({});
-  const t0 = useRef(0);
-  const raf = useRef(0);
   const cutsFired = useRef<Set<number>>(new Set());
   const [clock, setClock] = useState({ t: 0, duration: ROYALE_DURATION_FALLBACK });
 
@@ -113,41 +110,34 @@ function HostConsole({
   useEffect(() => {
     if (room?.status !== "playing" && room?.status !== "preview") return;
     let stop = false;
-    const video = videoRef.current;
     (async () => {
       const exists = await moveFileExists(move.src);
       if (stop) return;
-      setHasVideo(exists);
+      setHasVideo((prev) => (prev === exists ? prev : exists));
       keepAwake();
-      if (exists && videoRef.current) {
-        videoRef.current.src = move.src;
-        videoRef.current.muted = false;
-        videoRef.current.playsInline = true;
-        unlockMedia(videoRef.current);
+      const v = videoRef.current;
+      if (!exists || !v) return;
+      const same = v.getAttribute("src") === move.src;
+      if (!same) {
+        v.src = move.src;
+        v.muted = false;
+        v.playsInline = true;
+        unlockMedia(v);
         try {
-          await waitMeta(videoRef.current);
-          await videoRef.current.play();
+          await waitMeta(v);
+          if (stop) return;
+          await v.play();
         } catch {
+          if (stop || !videoRef.current) return;
           videoRef.current.muted = true;
-          await videoRef.current.play();
+          await videoRef.current.play().catch(() => {});
         }
-      } else {
-        t0.current = performance.now();
-        const samples = samplesCache.current[move.slug] ?? syntheticSamples();
-        samplesCache.current[move.slug] = samples;
-        const tick = () => {
-          if (stop || !modelRef.current) return;
-          const t = (performance.now() - t0.current) / 1000;
-          drawModel(modelRef.current, samples, t);
-          raf.current = requestAnimationFrame(tick);
-        };
-        tick();
+      } else if (v.paused) {
+        v.play().catch(() => {});
       }
     })();
     return () => {
       stop = true;
-      cancelAnimationFrame(raf.current);
-      video?.pause();
     };
   }, [room?.status, room?.round, move.slug, move.src]);
 
@@ -209,14 +199,22 @@ function HostConsole({
 
   async function startClassic() {
     setBusy("");
-    await setRoomMode(code, token, "classic");
-    await advanceRoom(code, token, "preview", 0);
+    try {
+      await setRoomMode(code, token, "classic");
+      await advanceRoom(code, token, "preview", 0);
+    } catch (e) {
+      setBusy(e instanceof Error ? e.message : "Impossible de lancer les 15 manches");
+    }
   }
 
   async function stopGame() {
     setBusy("");
     cutsFired.current = new Set();
-    await advanceRoom(code, token, "lobby", 0);
+    try {
+      await advanceRoom(code, token, "lobby", 0);
+    } catch (e) {
+      setBusy(e instanceof Error ? e.message : "Impossible d'arrêter");
+    }
   }
 
   async function showMove(round: number) {
@@ -255,6 +253,7 @@ function HostConsole({
     const v = videoRef.current;
     if (!v) return;
     const onEnd = () => {
+      if (!Number.isFinite(v.currentTime) || v.currentTime < 1) return;
       advanceRoom(code, token, "finished", 0).catch(() => {});
     };
     v.addEventListener("ended", onEnd);
@@ -268,7 +267,7 @@ function HostConsole({
       const v = videoRef.current;
       const duration = v?.duration && Number.isFinite(v.duration) && v.duration > 1 ? v.duration : ROYALE_DURATION_FALLBACK;
       const t = v && Number.isFinite(v.currentTime) ? v.currentTime : 0;
-      setClock({ t, duration });
+      setClock((prev) => (Math.abs(prev.t - t) < 0.2 && Math.abs(prev.duration - duration) < 0.2 ? prev : { t, duration }));
       for (const w of royaleWaves(players.length)) {
         const at = duration * w.frac;
         if (t >= at - 0.08 && !cutsFired.current.has(w.frac)) {
@@ -326,7 +325,7 @@ function HostConsole({
     const keep = next?.keep ?? 1;
     const remain = Math.max(0, (next ? clock.duration * next.frac : clock.duration) - clock.t);
     return (
-      <section className="screen col gap ink" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
+      <section className="screen col gap ink scroll" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <p className="kicker">Battle Royale · live</p>
           <p className="note" style={{ color: "#bbb" }}>
@@ -388,7 +387,7 @@ function HostConsole({
   if (room.status === "preview" || room.status === "playing") {
     const watching = room.status === "preview";
     return (
-      <section className="screen col gap ink" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
+      <section className="screen col gap ink scroll" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <p className="kicker">{move.title} · {room.round + 1}/{MOVES.length}</p>
           <p className="note" style={{ color: "#bbb" }}>

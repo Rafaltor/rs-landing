@@ -15,6 +15,7 @@ export function useRoom(code: string | null) {
   useEffect(() => {
     if (!code) return;
     let stop = false;
+    let royaleWait = 0;
     const sb = getSupabase();
     let channel: ReturnType<typeof sb.channel> | null = null;
 
@@ -34,16 +35,25 @@ export function useRoom(code: string | null) {
         channel = sb
           .channel("aura-" + r.id)
           .on("postgres_changes", { event: "*", schema: "public", table: "aura_rooms", filter: `id=eq.${r.id}` }, (payload) => {
-            setRoom(payload.new as Room);
+            setRoom((cur) => {
+              const next = payload.new as Partial<Room> | null;
+              if (!next) return cur;
+              const mode = next.mode || cur?.mode || "classic";
+              return { ...(cur ?? {}), ...next, mode } as Room;
+            });
           })
           .on("postgres_changes", { event: "*", schema: "public", table: "aura_players", filter: `room_id=eq.${r.id}` }, async () => {
-            setPlayers(await fetchPlayers(r.id));
+            if (!stop) setPlayers(await fetchPlayers(r.id));
           })
           .on("postgres_changes", { event: "*", schema: "public", table: "aura_scores", filter: `room_id=eq.${r.id}` }, async () => {
-            setScores(await fetchScores(r.id));
+            if (!stop) setScores(await fetchScores(r.id));
           })
-          .on("postgres_changes", { event: "*", schema: "public", table: "aura_royale", filter: `room_id=eq.${r.id}` }, async () => {
-            setRoyale(await fetchRoyale(r.id));
+          .on("postgres_changes", { event: "*", schema: "public", table: "aura_royale", filter: `room_id=eq.${r.id}` }, () => {
+            if (royaleWait) return;
+            royaleWait = window.setTimeout(async () => {
+              royaleWait = 0;
+              if (!stop) setRoyale(await fetchRoyale(r.id).catch(() => [] as RoyaleState[]));
+            }, 400);
           })
           .subscribe();
       } catch (e) {
@@ -53,6 +63,7 @@ export function useRoom(code: string | null) {
 
     return () => {
       stop = true;
+      window.clearTimeout(royaleWait);
       if (channel) sb.removeChannel(channel);
     };
   }, [code]);
