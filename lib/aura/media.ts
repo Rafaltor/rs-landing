@@ -63,6 +63,29 @@ export function seekTo(video: HTMLVideoElement, t: number) {
   });
 }
 
+const PORTRAIT_VIDEO: MediaTrackConstraints = {
+  facingMode: { ideal: "user" },
+  aspectRatio: { ideal: 9 / 16 },
+  width: { ideal: 720 },
+  height: { ideal: 1280 },
+  resizeMode: "crop-and-scale",
+};
+
+async function preferPortrait(stream: MediaStream) {
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+  try {
+    await track.applyConstraints({
+      aspectRatio: { ideal: 9 / 16 },
+      width: { ideal: 720 },
+      height: { ideal: 1280 },
+      resizeMode: "crop-and-scale",
+    });
+  } catch {
+    /* le flux reste tel quel, le CSS croppe en portrait */
+  }
+}
+
 export async function startCamera(cam: HTMLVideoElement) {
   const live = cam.srcObject instanceof MediaStream && cam.srcObject.getVideoTracks().some((t) => t.readyState === "live");
   if (live) {
@@ -70,7 +93,9 @@ export async function startCamera(cam: HTMLVideoElement) {
     return cam.srcObject as MediaStream;
   }
   const tries: MediaStreamConstraints[] = [
-    { video: { facingMode: { ideal: "user" }, width: { ideal: 720 }, height: { ideal: 1280 } }, audio: false },
+    { video: PORTRAIT_VIDEO, audio: false },
+    { video: { facingMode: { ideal: "user" }, aspectRatio: { ideal: 9 / 16 } }, audio: false },
+    { video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } }, audio: false },
     { video: { facingMode: "user" }, audio: false },
     { video: true, audio: false },
   ];
@@ -84,6 +109,7 @@ export async function startCamera(cam: HTMLVideoElement) {
       cam.setAttribute("playsinline", "true");
       cam.setAttribute("webkit-playsinline", "true");
       await cam.play();
+      await preferPortrait(stream);
       return stream;
     } catch (e) {
       last = e;
