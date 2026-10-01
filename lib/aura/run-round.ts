@@ -23,6 +23,7 @@ export async function runRound(opts: {
   muted: boolean;
   getTime: () => number;
   abort: AbortSignal;
+  followClock?: boolean;
   cb: RoundCallbacks;
 }): Promise<{ aura: number; prec: number }> {
   const { cam, skel, picto, samples, mirror, muted, abort, cb } = opts;
@@ -31,8 +32,9 @@ export async function runRound(opts: {
 
   if (opts.ref) {
     opts.ref.pause();
-    await seekTo(opts.ref, 0);
-    opts.ref.muted = muted;
+    const at = opts.followClock ? Math.max(0, opts.getTime()) : 0;
+    await seekTo(opts.ref, at);
+    opts.ref.muted = opts.followClock ? true : muted;
     try {
       await opts.ref.play();
     } catch {
@@ -59,8 +61,11 @@ export async function runRound(opts: {
       const t = opts.getTime();
       const duration = opts.duration || opts.ref?.duration || 0;
       cb.onTime(t, duration);
+      if (opts.followClock && opts.ref && Number.isFinite(opts.ref.duration) && Math.abs(opts.ref.currentTime - t) > 0.45) {
+        opts.ref.currentTime = Math.min(t, Math.max(0, opts.ref.duration - 0.05));
+      }
       if (duration && t >= duration - 0.05) return resolve();
-      if (opts.ref?.ended) return resolve();
+      if (!opts.followClock && opts.ref?.ended) return resolve();
 
       if (picto) {
         const on = drawPicto(picto, samples, t, mirror);

@@ -177,7 +177,6 @@
 .royale-rank small { display: block; font-family: var(--body); font-weight: 800; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; text-shadow: none; }
 .royale-rank.danger { color: var(--red); text-shadow: 0 2px 0 var(--paper); }
 
-.game--royale #refPane { display: none; }
 .game--royale { flex-direction: column; }
 .game--royale > .pane.cam { flex: 1 1 auto; min-height: 0; }
 

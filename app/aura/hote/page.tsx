@@ -324,7 +324,8 @@ function HostConsole({
           </p>
         </div>
         <div className="host-video">
-          {hasVideo ? <video ref={videoRef} playsInline /> : <canvas ref={modelRef} width={720} height={1280} />}
+          <video ref={videoRef} playsInline />
+          {!hasVideo && <canvas ref={modelRef} width={720} height={1280} />}
         </div>
         <div className="pills">
           {players.map((p) => {
@@ -381,7 +382,8 @@ function HostConsole({
           </p>
         </div>
         <div className="host-video">
-          {hasVideo ? <video ref={videoRef} playsInline /> : <canvas ref={modelRef} width={720} height={1280} />}
+          <video ref={videoRef} playsInline />
+          {!hasVideo && <canvas ref={modelRef} width={720} height={1280} />}
         </div>
         <div className="pills">
           {players.map((p) => (

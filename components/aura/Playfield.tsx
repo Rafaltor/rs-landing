@@ -219,14 +219,15 @@ export function Playfield({
     t0.current = performance.now();
     const goAt = startedAt ?? Date.now();
     const result = await runRound({
-      ref: royale ? null : hasVideo ? refEl.current : null,
+      ref: hasVideo ? refEl.current : null,
       duration: durationRef.current,
       cam,
       skel,
-      picto,
+      picto: royale ? null : picto,
       samples: samplesRef.current,
       mirror: mirrorDefault,
-      muted,
+      muted: royale ? true : muted,
+      followClock: royale,
       getTime: () => {
         if (royale) return Math.max(0, (Date.now() - goAt) / 1000);
         if (hasVideo && refEl.current) return refEl.current.currentTime;
