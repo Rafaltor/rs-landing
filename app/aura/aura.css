@@ -107,6 +107,12 @@
   height: 100%;
   width: auto;
   max-width: 100%;
+  isolation: isolate;
+  transform: translateZ(0);
+  clip-path: inset(0);
+  -webkit-clip-path: inset(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
 }
 @supports (width: 1cqw) {
   .cam-stage {
@@ -115,15 +121,20 @@
     max-height: 100%;
   }
 }
-.pane.cam.mirror .cam-stage { transform: scaleX(-1); }
+.pane.cam.mirror .cam-stage { transform: translateZ(0) scaleX(-1); }
 .cam-stage video,
 .cam-stage canvas {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 50%;
+  left: 50%;
+  width: auto;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: cover;
-  object-position: center;
+  transform: translate(-50%, -50%);
 }
 .pane canvas { z-index: 1; }
 .pane-label {

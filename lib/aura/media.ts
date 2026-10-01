@@ -87,8 +87,76 @@ async function preferPortrait(stream: MediaStream) {
       resizeMode: "crop-and-scale",
     });
   } catch {
-    /* le flux reste tel quel, le CSS croppe en portrait */
+    /* iOS ignore souvent les contraintes : on recadre en pixels */
   }
+}
+
+/** iOS ignore object-fit sur un flux getUserMedia. On taille le cadre 9:16 et la vidéo en px. */
+export function layoutPortraitCam(cam: HTMLVideoElement) {
+  const stage = cam.closest(".cam-stage") as HTMLElement | null;
+  const pane = cam.closest(".pane.cam") as HTMLElement | null;
+  if (!stage || !pane) return;
+  const pw = pane.clientWidth;
+  const ph = pane.clientHeight;
+  if (pw < 2 || ph < 2) return;
+  const w = Math.min(pw, (ph * 9) / 16);
+  const h = (w * 16) / 9;
+  stage.style.width = `${Math.round(w)}px`;
+  stage.style.height = `${Math.round(h)}px`;
+
+  const vw = cam.videoWidth || 16;
+  const vh = cam.videoHeight || 9;
+  const scale = Math.max(w / vw, h / vh);
+  const dw = vw * scale;
+  const dh = vh * scale;
+  const left = (w - dw) / 2;
+  const top = (h - dh) / 2;
+  const place = (el: HTMLElement) => {
+    el.style.position = "absolute";
+    el.style.margin = "0";
+    el.style.maxWidth = "none";
+    el.style.maxHeight = "none";
+    el.style.objectFit = "fill";
+    el.style.transform = "none";
+    el.style.width = `${dw}px`;
+    el.style.height = `${dh}px`;
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+    el.style.right = "auto";
+    el.style.bottom = "auto";
+  };
+  place(cam);
+  const canvas = stage.querySelector("canvas");
+  if (canvas instanceof HTMLElement) place(canvas);
+}
+
+export function watchPortraitCam(cam: HTMLVideoElement) {
+  const pane = cam.closest(".pane.cam");
+  const fit = () => layoutPortraitCam(cam);
+  fit();
+  cam.addEventListener("loadedmetadata", fit);
+  cam.addEventListener("resize", fit);
+  window.addEventListener("resize", fit);
+  window.addEventListener("orientationchange", fit);
+  window.visualViewport?.addEventListener("resize", fit);
+  const ro = pane ? new ResizeObserver(fit) : null;
+  if (pane) ro?.observe(pane);
+  let frames = 0;
+  let raf = 0;
+  const tick = () => {
+    fit();
+    if (++frames < 45) raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  return () => {
+    cam.removeEventListener("loadedmetadata", fit);
+    cam.removeEventListener("resize", fit);
+    window.removeEventListener("resize", fit);
+    window.removeEventListener("orientationchange", fit);
+    window.visualViewport?.removeEventListener("resize", fit);
+    ro?.disconnect();
+    cancelAnimationFrame(raf);
+  };
 }
 
 export async function startCamera(cam: HTMLVideoElement) {
@@ -115,6 +183,13 @@ export async function startCamera(cam: HTMLVideoElement) {
       cam.setAttribute("webkit-playsinline", "true");
       await cam.play();
       await preferPortrait(stream);
+      if (!cam.videoWidth) {
+        await new Promise<void>((resolve) => {
+          cam.addEventListener("loadedmetadata", () => resolve(), { once: true });
+          window.setTimeout(() => resolve(), 800);
+        });
+      }
+      layoutPortraitCam(cam);
       return stream;
     } catch (e) {
       last = e;

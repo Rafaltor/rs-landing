@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RANKS, SYNTHETIC_DURATION, type MoveDef } from "@/lib/aura/config";
-import { analyseVideo, bindMove, keepAwake, seekTo, startCamera, unlockMedia, waitMeta } from "@/lib/aura/media";
+import { analyseVideo, bindMove, keepAwake, seekTo, startCamera, unlockMedia, waitMeta, watchPortraitCam } from "@/lib/aura/media";
 import { loadModel } from "@/lib/aura/landmarker";
 import { drawModel } from "@/lib/aura/draw";
 import { runRound } from "@/lib/aura/run-round";
@@ -78,6 +78,7 @@ export function Playfield({
 
   useEffect(() => {
     let gone = false;
+    let stopFit = () => {};
 
     async function playWatch(exists: boolean, gen: number) {
       setPhase("watch");
@@ -123,6 +124,7 @@ export function Playfield({
         }
         setStatus("Autorise la caméra pour jouer");
         await startCamera(camEl.current!);
+        stopFit = watchPortraitCam(camEl.current!);
         keepAwake();
         setStatus("Chargement du juge…");
         await loadModel();
@@ -170,6 +172,7 @@ export function Playfield({
     })();
     return () => {
       gone = true;
+      stopFit();
       abortRef.current?.abort();
       cancelAnimationFrame(watchRaf.current);
     };
