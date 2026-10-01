@@ -81,3 +81,41 @@ export const MOVES: MoveDef[] = [
 ];
 
 export const SYNTHETIC_DURATION = 6;
+
+export const ROYALE: MoveDef = {
+  slug: "royale",
+  src: "/moves/royale.mp4",
+  title: "Battle Royale",
+};
+
+/** Durée de repli (~2 min 51, IMG_0139) si la vidéo n’a pas encore de metadata. */
+export const ROYALE_DURATION_FALLBACK = 171;
+
+export type RoyaleWave = { frac: number; keep: number };
+
+/** Coupes Fall Guys : du lobby vers 1 survivant, jusqu’à 7 vagues. */
+export function royaleWaves(playerCount: number): RoyaleWave[] {
+  const n = Math.max(1, playerCount);
+  if (n <= 1) return [{ frac: 1, keep: 1 }];
+  const waves = Math.min(7, n - 1);
+  const raw: RoyaleWave[] = [];
+  for (let i = 1; i <= waves; i++) {
+    raw.push({
+      frac: i / waves,
+      keep: i === waves ? 1 : Math.max(1, Math.round(n * (1 - i / waves))),
+    });
+  }
+  const out: RoyaleWave[] = [];
+  let prev = n;
+  for (const w of raw) {
+    const keep = Math.max(1, Math.min(w.keep, prev - 1));
+    if (keep >= prev) continue;
+    out.push({ frac: w.frac, keep });
+    prev = keep;
+    if (prev === 1) break;
+  }
+  if (!out.length || out[out.length - 1].keep !== 1) {
+    out.push({ frac: 1, keep: 1 });
+  }
+  return out;
+}

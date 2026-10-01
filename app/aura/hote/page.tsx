@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MOVES } from "@/lib/aura/config";
+import { MOVES, ROYALE, ROYALE_DURATION_FALLBACK, royaleWaves } from "@/lib/aura/config";
 import { drawModel } from "@/lib/aura/draw";
 import { loadModel } from "@/lib/aura/landmarker";
 import { analyseVideo, keepAwake, unlockMedia, waitMeta } from "@/lib/aura/media";
@@ -10,8 +10,12 @@ import {
   createRoom,
   makeCode,
   makeSecret,
+  setRoomMode,
+  cutoffRoyale,
   upsertSamples,
+  fetchSamples,
   type Player,
+  type RoyaleState,
   type Score,
 } from "@/lib/aura/room";
 import { moveFileExists, syntheticSamples } from "@/lib/aura/synthetic";
@@ -91,15 +95,17 @@ function HostConsole({
   busy: string;
   setBusy: (s: string) => void;
 }) {
-  const { room, players, scores, error } = useRoom(code);
+  const { room, players, scores, royale, error } = useRoom(code);
   const videoRef = useRef<HTMLVideoElement>(null);
   const modelRef = useRef<HTMLCanvasElement>(null);
   const [hasVideo, setHasVideo] = useState(false);
   const samplesCache = useRef<Record<string, Awaited<ReturnType<typeof syntheticSamples>>>>({});
   const t0 = useRef(0);
   const raf = useRef(0);
+  const cutsFired = useRef<Set<number>>(new Set());
+  const [clock, setClock] = useState({ t: 0, duration: ROYALE_DURATION_FALLBACK });
 
-  const move = MOVES[room?.round ?? 0] ?? MOVES[0];
+  const move = room?.mode === "royale" ? ROYALE : MOVES[room?.round ?? 0] ?? MOVES[0];
   const roundScores = scores.filter((s) => s.round === (room?.round ?? 0));
   const totals = useMemo(() => tally(players, scores), [players, scores]);
 
@@ -171,6 +177,34 @@ function HostConsole({
     }
   }
 
+  async function startRoyale() {
+    setBusy("Battle Royale : calibration du clip…");
+    try {
+      await setRoomMode(code, token, "royale");
+      await loadModel();
+      const exists = await moveFileExists(ROYALE.src);
+      if (!exists) throw new Error("Dépose royale.mp4 dans public/moves.");
+      let samples = samplesCache.current[ROYALE.slug] ?? (await fetchSamples(ROYALE.slug).catch(() => null));
+      if (!samples || samples.length < 10) {
+        const v = document.createElement("video");
+        v.playsInline = true;
+        v.muted = true;
+        v.src = ROYALE.src;
+        samples = await analyseVideo(v, (_p, msg) => setBusy(msg));
+      }
+      samplesCache.current[ROYALE.slug] = samples;
+      await upsertSamples(code, token, ROYALE.slug, samples);
+      setBusy("");
+      await advanceRoom(code, token, "playing", 0);
+    } catch (e) {
+      setBusy(e instanceof Error ? e.message : "Battle Royale impossible");
+    }
+  }
+
+  async function finishRoyale() {
+    await advanceRoom(code, token, "finished", 0);
+  }
+
   async function showMove(round: number) {
     setBusy("");
     await advanceRoom(code, token, "preview", round);
@@ -192,6 +226,7 @@ function HostConsole({
   }
 
   useEffect(() => {
+    if (room?.mode === "royale") return;
     if (room?.status !== "playing") return;
     if (players.length > 0 && roundScores.length >= players.length) {
       const t = window.setTimeout(() => {
@@ -199,7 +234,37 @@ function HostConsole({
       }, 1200);
       return () => clearTimeout(t);
     }
-  }, [room?.status, room?.round, roundScores.length, players.length, code, token]);
+  }, [room?.status, room?.round, room?.mode, roundScores.length, players.length, code, token]);
+
+  useEffect(() => {
+    if (room?.mode !== "royale" || room.status !== "playing") return;
+    const v = videoRef.current;
+    if (!v) return;
+    const onEnd = () => {
+      advanceRoom(code, token, "finished", 0).catch(() => {});
+    };
+    v.addEventListener("ended", onEnd);
+    return () => v.removeEventListener("ended", onEnd);
+  }, [room?.mode, room?.status, hasVideo, code, token]);
+
+  useEffect(() => {
+    if (room?.mode !== "royale" || room.status !== "playing") return;
+    cutsFired.current = new Set();
+    const id = window.setInterval(() => {
+      const v = videoRef.current;
+      const duration = v?.duration && Number.isFinite(v.duration) && v.duration > 1 ? v.duration : ROYALE_DURATION_FALLBACK;
+      const t = v && Number.isFinite(v.currentTime) ? v.currentTime : 0;
+      setClock({ t, duration });
+      for (const w of royaleWaves(players.length)) {
+        const at = duration * w.frac;
+        if (t >= at - 0.08 && !cutsFired.current.has(w.frac)) {
+          cutsFired.current.add(w.frac);
+          cutoffRoyale(code, token, w.keep).catch(() => {});
+        }
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [room?.mode, room?.status, players.length, code, token, hasVideo]);
 
   if (!room) {
     return (
@@ -226,13 +291,79 @@ function HostConsole({
         </div>
         <div className="controls">
           <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={() => showMove(0)}>
-            Montrer le move
+            15 manches
+          </button>
+          <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={startRoyale}>
+            Battle Royale
           </button>
           <button className="btn secondary" type="button" onClick={prepare} disabled={!!busy} style={{ background: "transparent", color: "#fff", boxShadow: "inset 0 0 0 2px #fff" }}>
             Préparer l&apos;aura des moves
           </button>
-          <p className="note" style={{ color: "#bbb" }}>{busy || "Sans tes MP4, un move synthétique tourne pour les tests."}</p>
+          <p className="note" style={{ color: "#bbb" }}>{busy || "15 manches : démo puis danse. Battle Royale : live, pas de démo, les derniers du classement sortent à chaque coupe."}</p>
         </div>
+      </section>
+    );
+  }
+
+  if (room.mode === "royale" && (room.status === "playing" || room.status === "preview")) {
+    const aliveRows = [...royale].filter((r) => r.alive).sort((a, b) => b.aura - a.aura || b.max_combo - a.max_combo || b.combo - a.combo);
+    const waves = royaleWaves(players.length);
+    const next = waves.find((w) => w.keep < Math.max(aliveRows.length, 1));
+    const keep = next?.keep ?? 1;
+    const remain = Math.max(0, (next ? clock.duration * next.frac : clock.duration) - clock.t);
+    return (
+      <section className="screen col gap ink" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+          <p className="kicker">Battle Royale · live</p>
+          <p className="note" style={{ color: "#bbb" }}>
+            {next ? `Coupe dans ${Math.ceil(remain)}s · top ${keep} reste` : "Dernière ligne droite"}
+            {" · "}
+            {aliveRows.length}/{players.length} debout
+          </p>
+        </div>
+        <div className="host-video">
+          {hasVideo ? <video ref={videoRef} playsInline /> : <canvas ref={modelRef} width={720} height={1280} />}
+        </div>
+        <div className="pills">
+          {players.map((p) => {
+            const st = royale.find((r) => r.player_id === p.id);
+            const dead = st ? !st.alive : false;
+            const place = dead ? -1 : aliveRows.findIndex((r) => r.player_id === p.id) + 1;
+            const danger = !dead && place > keep;
+            return (
+              <span
+                className={`pill ${dead ? "" : danger ? "danger" : "done"}`}
+                key={p.id}
+                style={dead ? { opacity: 0.4, textDecoration: "line-through" } : undefined}
+              >
+                {dead ? p.name : `#${place} ${p.name}`} {st ? `${st.aura.toLocaleString("fr-FR")}` : ""}
+              </span>
+            );
+          })}
+        </div>
+        <button className="btn red" type="button" onClick={finishRoyale}>Couronner le survivant</button>
+      </section>
+    );
+  }
+
+  if (room.mode === "royale" && room.status === "finished") {
+    return (
+      <section className="screen col between gap redbg scroll">
+        <div>
+          <p className="kicker" style={{ color: "#fff" }}>Battle Royale</p>
+          <h1 className="big">Roi du mog</h1>
+        </div>
+        <Board dark rows={rankRoyale(players, royale)} unit=" combo max" />
+        <button
+          className="btn"
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem(HOST_KEY);
+            location.reload();
+          }}
+        >
+          Nouveau salon
+        </button>
       </section>
     );
   }
@@ -320,7 +451,17 @@ function tally(players: Player[], scores: Score[]) {
     .sort((a, b) => b.aura - a.aura);
 }
 
-function Board({ rows, dark }: { rows: { name: string; aura: number; prec: number }[]; dark?: boolean }) {
+function rankRoyale(players: Player[], royale: RoyaleState[]) {
+  return [...royale]
+    .sort((a, b) => Number(b.alive) - Number(a.alive) || b.aura - a.aura || b.max_combo - a.max_combo)
+    .map((r) => ({
+      name: (players.find((p) => p.id === r.player_id)?.name ?? "NPC") + (r.alive ? "" : " · out"),
+      aura: r.aura,
+      prec: r.max_combo,
+    }));
+}
+
+function Board({ rows, dark, unit = " % de précision" }: { rows: { name: string; aura: number; prec: number }[]; dark?: boolean; unit?: string }) {
   if (!rows.length) return <p className="note">Personne n&apos;a encore scoré.</p>;
   return (
     <div className="versus">
@@ -328,7 +469,7 @@ function Board({ rows, dark }: { rows: { name: string; aura: number; prec: numbe
         <article className={`card ${i === 0 ? "win" : ""}`} key={r.name + i} style={dark && i !== 0 ? { boxShadow: "inset 0 0 0 2px #fff" } : undefined}>
           <h3>{i === 0 ? "Roi du mog · " : `#${i + 1} · `}{r.name}</h3>
           <div className="pts">{r.aura.toLocaleString("fr-FR")}</div>
-          <p>{r.prec} % de précision</p>
+          <p>{r.prec}{unit}</p>
         </article>
       ))}
     </div>

@@ -10,7 +10,7 @@ import { fetchSamples } from "@/lib/aura/room";
 import { syntheticSamples, moveFileExists } from "@/lib/aura/synthetic";
 import type { Sample } from "@/lib/aura/pose";
 
-type PlayResult = { aura: number; prec: number };
+type PlayResult = { aura: number; prec: number; lives?: number; maxCombo?: number; eliminated?: boolean };
 type Phase = "boot" | "watch" | "armed" | "playing";
 
 export function Playfield({
@@ -19,6 +19,12 @@ export function Playfield({
   muted = false,
   watchFirst = true,
   scoring = true,
+  royale = false,
+  autoStart = false,
+  startedAt = null,
+  royalePlace = null,
+  royaleKeep = null,
+  onPulse,
   onFinished,
 }: {
   move: MoveDef;
@@ -26,6 +32,12 @@ export function Playfield({
   muted?: boolean;
   watchFirst?: boolean;
   scoring?: boolean;
+  royale?: boolean;
+  autoStart?: boolean;
+  startedAt?: number | null;
+  royalePlace?: number | null;
+  royaleKeep?: number | null;
+  onPulse?: (s: { aura: number; combo: number; lives: number; alive: boolean; maxCombo: number }) => void;
   onFinished: (r: PlayResult) => void;
 }) {
   const refEl = useRef<HTMLVideoElement>(null);
@@ -49,6 +61,10 @@ export function Playfield({
   const t0 = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const watchRaf = useRef(0);
+  const startedRound = useRef(false);
+  const maxComboRef = useRef(0);
+  const auraRef = useRef(0);
+  const comboRef = useRef(0);
 
   function stopWatch() {
     watchGen.current += 1;
@@ -134,11 +150,11 @@ export function Playfield({
         samplesRef.current = samples;
         durationRef.current = exists && refEl.current?.duration ? refEl.current.duration : (samples.at(-1)?.t ?? SYNTHETIC_DURATION);
         setProgress(null);
-        if (watchFirst) {
+        if (watchFirst && !royale) {
           const gen = watchGen.current;
           await playWatch(exists, gen);
         } else {
-          setStatus("Mets-toi en entier dans le cadre");
+          setStatus(royale ? "Caméra ok. Regarde l'écran. Pas de démo." : "Mets-toi en entier dans le cadre");
           setPhase("armed");
         }
       } catch (e) {
@@ -150,7 +166,7 @@ export function Playfield({
       abortRef.current?.abort();
       cancelAnimationFrame(watchRaf.current);
     };
-  }, [move.slug, move.src, watchFirst]);
+  }, [move.slug, move.src, watchFirst, royale]);
 
   useEffect(() => {
     const wasScoring = scoringRef.current;
@@ -169,18 +185,30 @@ export function Playfield({
     setPhase(scoring ? "armed" : "watch");
   }
 
+  useEffect(() => {
+    if (!autoStart || !scoring || phase !== "armed") return;
+    queueMicrotask(() => {
+      void begin();
+    });
+    // begin is recreated each render; the startedRound ref prevents a double start.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, scoring, phase]);
+
   async function begin() {
     const cam = camEl.current, skel = skelEl.current, picto = pictoEl.current;
-    if (!cam || !skel || !scoring) return;
+    if (!cam || !skel || !scoring || startedRound.current) return;
+    startedRound.current = true;
     unlockMedia(refEl.current);
     keepAwake();
     setPhase("playing");
     setStatus("");
+    maxComboRef.current = 0;
     const ac = new AbortController();
     abortRef.current = ac;
     t0.current = performance.now();
+    const goAt = startedAt ?? Date.now();
     const result = await runRound({
-      ref: hasVideo ? refEl.current : null,
+      ref: royale ? null : hasVideo ? refEl.current : null,
       duration: durationRef.current,
       cam,
       skel,
@@ -189,13 +217,29 @@ export function Playfield({
       mirror: mirrorDefault,
       muted,
       getTime: () => {
+        if (royale) return Math.max(0, (Date.now() - goAt) / 1000);
         if (hasVideo && refEl.current) return refEl.current.currentTime;
         return (performance.now() - t0.current) / 1000;
       },
       abort: ac.signal,
       cb: {
-        onAura: (a, c) => { setAura(a); setCombo(c); },
-        onJudge: (word, sub, bad) => setJudge({ word, sub, bad, n: Date.now() }),
+        onAura: (a, c) => {
+          auraRef.current = a;
+          comboRef.current = c;
+          setAura(a);
+          setCombo(c);
+          if (c > maxComboRef.current) maxComboRef.current = c;
+        },
+        onJudge: (word, sub, bad) => {
+          setJudge({ word, sub, bad, n: Date.now() });
+          onPulse?.({
+            aura: auraRef.current,
+            combo: comboRef.current,
+            lives: 0,
+            alive: true,
+            maxCombo: maxComboRef.current,
+          });
+        },
         onGauge: setGauge,
         onStatus: (t) => setStatus(t ?? ""),
         onTime: (t) => {
@@ -204,14 +248,18 @@ export function Playfield({
       },
     });
     setPhase("armed");
-    onFinished(result);
+    onFinished({
+      ...result,
+      maxCombo: maxComboRef.current,
+      eliminated: false,
+    });
   }
 
   const watching = phase === "watch";
   const showHud = phase === "playing";
 
   return (
-    <section className={`screen game ${watching ? "game--watch" : "game--play"}`}>
+    <section className={`screen game ${watching ? "game--watch" : "game--play"}${royale ? " game--royale" : ""}`}>
       <div className="pane" id="refPane">
         {hasVideo ? (
           <video ref={refEl} playsInline preload="auto" />
@@ -236,6 +284,12 @@ export function Playfield({
               <div className="gauge-track"><i style={{ width: `${gauge}%` }} /></div>
               <span className="gauge-label">{gauge >= 95 ? "Aura max" : "Jauge d'aura"}</span>
             </div>
+            {royale && royalePlace != null && (
+              <div className={`royale-rank ${royaleKeep != null && royalePlace > royaleKeep ? "danger" : ""}`}>
+                #{royalePlace}
+                <small>{royaleKeep != null ? `Top ${royaleKeep} passe` : "Classement"}</small>
+              </div>
+            )}
           </div>
           <div className="combo">{combo >= 3 ? "×" + combo : ""}</div>
         </div>
@@ -258,7 +312,7 @@ export function Playfield({
       <button className="btn secondary ready" hidden={phase !== "watch"} onClick={skipWatch} type="button">
         Passer
       </button>
-      <button className="btn red ready" hidden={phase !== "armed" || !scoring} onClick={begin} type="button">
+      <button className="btn red ready" hidden={phase !== "armed" || !scoring || autoStart} onClick={begin} type="button">
         Cultiver l&apos;aura
       </button>
     </section>

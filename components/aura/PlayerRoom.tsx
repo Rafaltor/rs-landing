@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Playfield } from "@/components/aura/Playfield";
-import { MOVES } from "@/lib/aura/config";
-import { joinRoom, makeSecret, submitScore } from "@/lib/aura/room";
+import { MOVES, ROYALE, royaleWaves } from "@/lib/aura/config";
+import { joinRoom, makeSecret, pulseRoyale, submitScore } from "@/lib/aura/room";
 import { useRoom } from "@/hooks/aura/useRoom";
 
 type Me = { id: string; secret: string; name: string; code: string };
@@ -25,7 +25,7 @@ export function PlayerRoom({ code }: { code: string }) {
   const q = useSearchParams();
   const router = useRouter();
   const name = q.get("nom") || "NPC";
-  const { room, players, scores, error } = useRoom(code);
+  const { room, players, scores, royale, error } = useRoom(code);
   const savedRaw = useSyncExternalStore(subscribe, () => readPlayer(code), () => null);
   const saved = savedRaw ? (JSON.parse(savedRaw) as Me) : null;
   const [joinedMe, setJoinedMe] = useState<Me | null>(null);
@@ -66,6 +66,75 @@ export function PlayerRoom({ code }: { code: string }) {
         <h1 className="big">On entre dans le salon…</h1>
       </section>
     );
+  }
+
+  if (room.mode === "royale") {
+    const mine = royale.find((r) => r.player_id === me.id);
+    if (room.status === "finished") {
+      const ranked = [...royale].sort((a, b) => Number(b.alive) - Number(a.alive) || b.aura - a.aura || b.max_combo - a.max_combo);
+      const place = ranked.findIndex((r) => r.player_id === me.id) + 1;
+      const win = place === 1;
+      return (
+        <section className={`screen col center gap ${win ? "redbg" : "ink"} scroll`}>
+          <p className="kicker">{win ? "Dernier mog debout" : "Battle Royale"}</p>
+          <h1 className="big">{win ? "Roi du mog" : place ? `#${place}` : "Out"}</h1>
+          <p className="lede" style={{ color: "#fff" }}>
+            {(mine?.aura ?? 0).toLocaleString("fr-FR")} aura · combo max ×{mine?.max_combo ?? 0}
+          </p>
+          <button className="btn" type="button" onClick={() => router.push("/aura")}>Accueil</button>
+        </section>
+      );
+    }
+    if (room.status === "playing" && mine && !mine.alive) {
+      return (
+        <section className="screen col center gap ink">
+          <p className="kicker">Battle Royale</p>
+          <h1 className="big">T&apos;es out</h1>
+          <p className="lede" style={{ color: "#fff" }}>
+            Trop bas au classement. Les mieux classés passent. Regarde l&apos;écran.
+          </p>
+        </section>
+      );
+    }
+    if (room.status === "lobby" || room.status === "playing") {
+      const startedAt = room.round_started_at ? Date.parse(room.round_started_at) : null;
+      const aliveRanked = [...royale]
+        .filter((r) => r.alive)
+        .sort((a, b) => b.aura - a.aura || b.max_combo - a.max_combo || b.combo - a.combo);
+      const place = aliveRanked.findIndex((r) => r.player_id === me.id) + 1;
+      const next = royaleWaves(players.length).find((w) => w.keep < Math.max(aliveRanked.length, 1));
+      return (
+        <Playfield
+          key="royale"
+          move={ROYALE}
+          muted
+          mirrorDefault
+          watchFirst={false}
+          scoring={room.status === "playing"}
+          royale
+          autoStart={room.status === "playing"}
+          startedAt={startedAt && Number.isFinite(startedAt) ? startedAt : null}
+          royalePlace={place || null}
+          royaleKeep={next?.keep ?? 1}
+          onPulse={(s) => {
+            void pulseRoyale(me.id, me.secret, s).catch(() => {});
+          }}
+          onFinished={async (r) => {
+            try {
+              await pulseRoyale(me.id, me.secret, {
+                lives: 0,
+                combo: 0,
+                aura: r.aura,
+                alive: true,
+                maxCombo: r.maxCombo ?? 0,
+              });
+            } catch {
+              /* last pulse may already be on the host */
+            }
+          }}
+        />
+      );
+    }
   }
 
   const move = MOVES[room.round] ?? MOVES[0];
@@ -120,7 +189,7 @@ export function PlayerRoom({ code }: { code: string }) {
   }
 
   if (room.status === "reveal") {
-    const mine = scores.find((s) => s.player_id === me.id && s.round === room.round);
+    const mineScore = scores.find((s) => s.player_id === me.id && s.round === room.round);
     const ranked = scores.filter((s) => s.round === room.round).sort((a, b) => b.aura - a.aura);
     const place = ranked.findIndex((s) => s.player_id === me.id) + 1;
     return (
@@ -128,7 +197,7 @@ export function PlayerRoom({ code }: { code: string }) {
         <p className="kicker">{move.title}</p>
         <h1 className="big">{place === 1 ? "Roi du mog" : place ? `#${place}` : "En attente"}</h1>
         <p className="lede" style={{ color: "#fff" }}>
-          {mine ? `${mine.aura.toLocaleString("fr-FR")} aura · ${mine.prec} %` : "Pas de score sur ce move."}
+          {mineScore ? `${mineScore.aura.toLocaleString("fr-FR")} aura · ${mineScore.prec} %` : "Pas de score sur ce move."}
         </p>
         <p className="note" style={{ color: "#bbb" }}>Regarde l&apos;écran. Le suivant arrive.</p>
       </section>

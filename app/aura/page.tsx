@@ -25,7 +25,7 @@ export default function Home() {
     <section className="screen col between scroll">
       <div>
         <h1 className="title">Just<br />Aura</h1>
-        <p className="lede">Rejoins le salon du roi du mog, reproduis ses moves, et que la loi de la jungle tranche.</p>
+        <p className="lede">Rejoins le salon du roi du mog. 15 manches, ou Battle Royale live : pas de démo, reste haut au classement ou t&apos;es out.</p>
       </div>
       <form className="controls" onSubmit={join}>
         <label className="field">

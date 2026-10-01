@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Player, Room, Score } from "@/lib/aura/room";
-import { fetchPlayers, fetchRoom, fetchScores } from "@/lib/aura/room";
+import type { Player, Room, RoyaleState, Score } from "@/lib/aura/room";
+import { fetchPlayers, fetchRoom, fetchRoyale, fetchScores } from "@/lib/aura/room";
 import { getSupabase } from "@/lib/aura/supabase";
 
 export function useRoom(code: string | null) {
   const [room, setRoom] = useState<Room | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
+  const [royale, setRoyale] = useState<RoyaleState[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -24,11 +25,12 @@ export function useRoom(code: string | null) {
           if (!stop) setError("Salon introuvable.");
           return;
         }
-        const [p, s] = await Promise.all([fetchPlayers(r.id), fetchScores(r.id)]);
+        const [p, s, ry] = await Promise.all([fetchPlayers(r.id), fetchScores(r.id), fetchRoyale(r.id).catch(() => [] as RoyaleState[])]);
         if (stop) return;
         setRoom(r);
         setPlayers(p);
         setScores(s);
+        setRoyale(ry);
         channel = sb
           .channel("aura-" + r.id)
           .on("postgres_changes", { event: "*", schema: "public", table: "aura_rooms", filter: `id=eq.${r.id}` }, (payload) => {
@@ -39,6 +41,9 @@ export function useRoom(code: string | null) {
           })
           .on("postgres_changes", { event: "*", schema: "public", table: "aura_scores", filter: `room_id=eq.${r.id}` }, async () => {
             setScores(await fetchScores(r.id));
+          })
+          .on("postgres_changes", { event: "*", schema: "public", table: "aura_royale", filter: `room_id=eq.${r.id}` }, async () => {
+            setRoyale(await fetchRoyale(r.id));
           })
           .subscribe();
       } catch (e) {
@@ -52,5 +57,5 @@ export function useRoom(code: string | null) {
     };
   }, [code]);
 
-  return { room, players, scores, error, setError };
+  return { room, players, scores, royale, error, setError };
 }

@@ -5,8 +5,10 @@ Place tes clips ici, un par move :
   …
   move15.mp4
 
-MP4 H.264, corps entier visible, 4 à 8 secondes idéalement.
+  royale.mp4   ← Battle Royale (une seule vidéo, ~2–3 min, moves enchaînés)
 
-L’ordre des fichiers = l’ordre des manches (move1 en premier).
+MP4 H.264, corps entier visible. 4 à 8 secondes par move. Royale : pas de démo, live.
+
+L’ordre des fichiers 1–15 = l’ordre des manches classiques.
 
 Sans fichier, l’app utilise un move synthétique pour tester le lobby et le scoring.
