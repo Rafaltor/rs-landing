@@ -22,18 +22,42 @@ const createLandmarker = (d: "GPU" | "CPU") =>
     numPoses: 1,
   });
 
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("juge trop long")), ms);
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
 export async function loadModel() {
   if (landmarker) return;
   const vision = await import("@mediapipe/tasks-vision");
   PoseLandmarker = vision.PoseLandmarker;
   FilesetResolver = vision.FilesetResolver;
-  files = await FilesetResolver.forVisionTasks(WASM_URL);
+  files = await withTimeout(FilesetResolver.forVisionTasks(WASM_URL), 12000);
+  const gpu = createLandmarker("GPU");
   try {
-    landmarker = await createLandmarker("GPU");
+    landmarker = await withTimeout(gpu, 4000);
     delegate = "GPU";
   } catch {
+    gpu.then((l) => {
+      try {
+        l.close();
+      } catch {
+        /* ignore */
+      }
+    }).catch(() => {});
     delegate = "CPU";
-    landmarker = await createLandmarker("CPU");
+    landmarker = await withTimeout(createLandmarker("CPU"), 15000);
   }
 }
 

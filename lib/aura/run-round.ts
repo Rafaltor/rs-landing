@@ -1,7 +1,7 @@
 import { JUDGMENTS, WINDOW_MS } from "./config";
 import { drawPicto, drawSkeleton } from "./draw";
 import { detect } from "./landmarker";
-import { seekTo } from "./media";
+import { portraitCrop, seekTo } from "./media";
 import { angles, bestMatch, type Landmark, type Sample } from "./pose";
 
 export type RoundCallbacks = {
@@ -71,13 +71,25 @@ export async function runRound(opts: {
         lastCamT = cam.currentTime;
         const res = detect(cam);
         const lm = (res?.landmarks?.[0] ?? null) as Landmark[] | null;
-        if (skel.width !== cam.videoWidth || skel.height !== cam.videoHeight) {
-          skel.width = cam.videoWidth || 720;
-          skel.height = cam.videoHeight || 1280;
+        const view = skel.parentElement?.querySelector("canvas.cam-view");
+        const box = view instanceof HTMLCanvasElement ? view : skel;
+        const w = box.clientWidth || 360;
+        const h = box.clientHeight || 640;
+        if (skel.width !== w || skel.height !== h) {
+          skel.width = w;
+          skel.height = h;
         }
-        lastScore = lm ? bestMatch(angles(lm, cam.videoWidth / (cam.videoHeight || 1)), t, mirror, samples) : null;
+        const vw = cam.videoWidth || 16;
+        const vh = cam.videoHeight || 9;
+        const crop = portraitCrop(vw, vh);
+        const mapped = lm?.map((p) => ({
+          ...p,
+          x: (p.x * vw - crop.sx) / crop.sw,
+          y: (p.y * vh - crop.sy) / crop.sh,
+        })) ?? null;
+        lastScore = lm ? bestMatch(angles(lm, vw / vh), t, mirror, samples) : null;
         const ok = lastScore != null && lastScore >= 0.62;
-        drawSkeleton(ctx, lm, skel.width, skel.height, ok ? "#FFFFFF" : "#FF1A1A");
+        drawSkeleton(ctx, mapped, skel.width, skel.height, ok ? "#FFFFFF" : "#FF1A1A");
         if (lastScore != null) frames.push(lastScore);
       }
 

@@ -91,70 +91,47 @@ async function preferPortrait(stream: MediaStream) {
   }
 }
 
-/** iOS ignore object-fit sur un flux getUserMedia. On taille le cadre 9:16 et la vidéo en px. */
-export function layoutPortraitCam(cam: HTMLVideoElement) {
-  const stage = cam.closest(".cam-stage") as HTMLElement | null;
-  const pane = cam.closest(".pane.cam") as HTMLElement | null;
-  if (!stage || !pane) return;
-  const pw = pane.clientWidth;
-  const ph = pane.clientHeight;
-  if (pw < 2 || ph < 2) return;
-  const w = Math.min(pw, (ph * 9) / 16);
-  const h = (w * 16) / 9;
-  stage.style.width = `${Math.round(w)}px`;
-  stage.style.height = `${Math.round(h)}px`;
-
-  const vw = cam.videoWidth || 16;
-  const vh = cam.videoHeight || 9;
-  const scale = Math.max(w / vw, h / vh);
-  const dw = vw * scale;
-  const dh = vh * scale;
-  const left = (w - dw) / 2;
-  const top = (h - dh) / 2;
-  const place = (el: HTMLElement) => {
-    el.style.position = "absolute";
-    el.style.margin = "0";
-    el.style.maxWidth = "none";
-    el.style.maxHeight = "none";
-    el.style.objectFit = "fill";
-    el.style.transform = "none";
-    el.style.width = `${dw}px`;
-    el.style.height = `${dh}px`;
-    el.style.left = `${left}px`;
-    el.style.top = `${top}px`;
-    el.style.right = "auto";
-    el.style.bottom = "auto";
-  };
-  place(cam);
-  const canvas = stage.querySelector("canvas");
-  if (canvas instanceof HTMLElement) place(canvas);
+/** Centre 9:16 d’un flux souvent 16:9. iOS n’applique pas object-fit sur getUserMedia. */
+export function portraitCrop(vw: number, vh: number) {
+  const target = 9 / 16;
+  const src = vw / Math.max(vh, 1);
+  if (src > target) {
+    const sw = vh * target;
+    return { sx: (vw - sw) / 2, sy: 0, sw, sh: vh };
+  }
+  const sh = vw / target;
+  return { sx: 0, sy: Math.max(0, (vh - sh) / 2), sw: vw, sh };
 }
 
-export function watchPortraitCam(cam: HTMLVideoElement) {
-  const pane = cam.closest(".pane.cam");
-  const fit = () => layoutPortraitCam(cam);
-  fit();
-  cam.addEventListener("loadedmetadata", fit);
-  cam.addEventListener("resize", fit);
-  window.addEventListener("resize", fit);
-  window.addEventListener("orientationchange", fit);
-  window.visualViewport?.addEventListener("resize", fit);
-  const ro = pane ? new ResizeObserver(fit) : null;
-  if (pane) ro?.observe(pane);
-  let frames = 0;
+export function drawPortraitFrame(cam: HTMLVideoElement, canvas: HTMLCanvasElement) {
+  const vw = cam.videoWidth;
+  const vh = cam.videoHeight;
+  if (!vw || !vh || cam.readyState < 2) return null;
+  const stage = canvas.parentElement;
+  const w = Math.max(2, stage?.clientWidth || canvas.clientWidth || 360);
+  const h = Math.max(2, stage?.clientHeight || canvas.clientHeight || 640);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const crop = portraitCrop(vw, vh);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return crop;
+  ctx.drawImage(cam, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, w, h);
+  return crop;
+}
+
+export function watchPortraitCam(cam: HTMLVideoElement, view: HTMLCanvasElement) {
   let raf = 0;
+  let stop = false;
   const tick = () => {
-    fit();
-    if (++frames < 45) raf = requestAnimationFrame(tick);
+    if (stop) return;
+    drawPortraitFrame(cam, view);
+    raf = requestAnimationFrame(tick);
   };
   raf = requestAnimationFrame(tick);
   return () => {
-    cam.removeEventListener("loadedmetadata", fit);
-    cam.removeEventListener("resize", fit);
-    window.removeEventListener("resize", fit);
-    window.removeEventListener("orientationchange", fit);
-    window.visualViewport?.removeEventListener("resize", fit);
-    ro?.disconnect();
+    stop = true;
     cancelAnimationFrame(raf);
   };
 }
@@ -183,13 +160,6 @@ export async function startCamera(cam: HTMLVideoElement) {
       cam.setAttribute("webkit-playsinline", "true");
       await cam.play();
       await preferPortrait(stream);
-      if (!cam.videoWidth) {
-        await new Promise<void>((resolve) => {
-          cam.addEventListener("loadedmetadata", () => resolve(), { once: true });
-          window.setTimeout(() => resolve(), 800);
-        });
-      }
-      layoutPortraitCam(cam);
       return stream;
     } catch (e) {
       last = e;

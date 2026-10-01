@@ -42,6 +42,7 @@ export function Playfield({
 }) {
   const refEl = useRef<HTMLVideoElement>(null);
   const camEl = useRef<HTMLVideoElement>(null);
+  const viewEl = useRef<HTMLCanvasElement>(null);
   const skelEl = useRef<HTMLCanvasElement>(null);
   const pictoEl = useRef<HTMLCanvasElement>(null);
   const modelEl = useRef<HTMLCanvasElement>(null);
@@ -124,7 +125,7 @@ export function Playfield({
         }
         setStatus("Autorise la caméra pour jouer");
         await startCamera(camEl.current!);
-        stopFit = watchPortraitCam(camEl.current!);
+        if (viewEl.current) stopFit = watchPortraitCam(camEl.current!, viewEl.current);
         keepAwake();
         setStatus("Chargement du juge…");
         await loadModel();
@@ -277,7 +278,8 @@ export function Playfield({
       </div>
       <div className={`pane cam ${mirrorDefault ? "mirror" : ""}`}>
         <div className="cam-stage">
-          <video ref={camEl} playsInline muted autoPlay />
+          <video ref={camEl} className="cam-src" playsInline muted autoPlay />
+          <canvas ref={viewEl} className="cam-view" />
           <canvas ref={skelEl} />
         </div>
         <span className="pane-label">Toi</span>
