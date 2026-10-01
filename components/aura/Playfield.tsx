@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RANKS, SYNTHETIC_DURATION, type MoveDef } from "@/lib/aura/config";
-import { analyseVideo, keepAwake, seekTo, startCamera, unlockMedia, waitMeta } from "@/lib/aura/media";
+import { analyseVideo, bindMove, keepAwake, seekTo, startCamera, unlockMedia, waitMeta } from "@/lib/aura/media";
 import { loadModel } from "@/lib/aura/landmarker";
 import { drawModel } from "@/lib/aura/draw";
 import { runRound } from "@/lib/aura/run-round";
@@ -129,19 +129,22 @@ export function Playfield({
         const exists = await moveFileExists(move.src);
         if (gone) return;
         setHasVideo(exists);
-        if (exists && refEl.current) {
-          refEl.current.src = move.src;
-          refEl.current.setAttribute("playsinline", "true");
-          refEl.current.setAttribute("webkit-playsinline", "true");
-          refEl.current.playsInline = true;
-          await waitMeta(refEl.current);
+        const ref = refEl.current;
+        if (exists && ref) {
+          bindMove(ref, move.src);
+          await waitMeta(ref);
         }
+        if (gone) return;
+        setStatus("Préparation de l'aura…");
         let samples = await fetchSamples(move.slug).catch(() => null);
-        const clipDur = exists && refEl.current?.duration && Number.isFinite(refEl.current.duration) ? refEl.current.duration : 0;
+        const clipDur = exists && ref?.duration && Number.isFinite(ref.duration) ? ref.duration : 0;
         const cachedOk = !!(samples && samples.length >= 10 && (clipDur < 20 || samplesCoverDuration(samples, clipDur)));
         if (!cachedOk) {
-          if (exists && refEl.current) {
-            samples = await analyseVideo(refEl.current, (p, msg) => {
+          if (exists) {
+            const v = refEl.current ?? document.createElement("video");
+            bindMove(v, move.src);
+            await waitMeta(v);
+            samples = await analyseVideo(v, (p, msg) => {
               setStatus(msg);
               setProgress(p);
             });
@@ -265,11 +268,8 @@ export function Playfield({
   return (
     <section className={`screen game ${watching ? "game--watch" : "game--play"}${royale ? " game--royale" : ""}`}>
       <div className="pane" id="refPane">
-        {hasVideo ? (
-          <video ref={refEl} playsInline preload="auto" />
-        ) : (
-          <canvas ref={modelEl} width={360} height={640} />
-        )}
+        <video ref={refEl} playsInline preload="auto" />
+        {!hasVideo && <canvas ref={modelEl} width={360} height={640} />}
         <span className="pane-label">{watching ? "Le move" : "Le modèle"}</span>
       </div>
       <div className={`pane cam ${mirrorDefault ? "mirror" : ""}`}>

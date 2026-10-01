@@ -20,12 +20,31 @@ export async function keepAwake() {
   }
 }
 
-export function waitMeta(v: HTMLVideoElement) {
+export function waitMeta(v: HTMLVideoElement, ms = 8000) {
   if (v.readyState >= 1) return Promise.resolve();
   return new Promise<void>((resolve, reject) => {
-    v.addEventListener("loadedmetadata", () => resolve(), { once: true });
-    v.addEventListener("error", () => reject(new Error("vidéo illisible")), { once: true });
+    const finish = (err?: Error) => {
+      window.clearTimeout(timer);
+      v.removeEventListener("loadedmetadata", onMeta);
+      v.removeEventListener("error", onErr);
+      if (err) reject(err);
+      else resolve();
+    };
+    const onMeta = () => finish();
+    const onErr = () => finish(new Error("vidéo illisible"));
+    const timer = window.setTimeout(() => finish(new Error("vidéo trop longue à charger")), ms);
+    v.addEventListener("loadedmetadata", onMeta, { once: true });
+    v.addEventListener("error", onErr, { once: true });
   });
+}
+
+export function bindMove(video: HTMLVideoElement, src: string) {
+  video.playsInline = true;
+  video.muted = true;
+  video.preload = "auto";
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  if (video.getAttribute("src") !== src) video.src = src;
 }
 
 export function seekTo(video: HTMLVideoElement, t: number) {
