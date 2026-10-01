@@ -207,6 +207,18 @@ function HostConsole({
     await advanceRoom(code, token, "finished", 0);
   }
 
+  async function startClassic() {
+    setBusy("");
+    await setRoomMode(code, token, "classic");
+    await advanceRoom(code, token, "preview", 0);
+  }
+
+  async function stopGame() {
+    setBusy("");
+    cutsFired.current = new Set();
+    await advanceRoom(code, token, "lobby", 0);
+  }
+
   async function showMove(round: number) {
     setBusy("");
     await advanceRoom(code, token, "preview", round);
@@ -292,7 +304,7 @@ function HostConsole({
           ))}
         </div>
         <div className="controls">
-          <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={() => showMove(0)}>
+          <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={startClassic}>
             15 manches
           </button>
           <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={startRoyale}>
@@ -345,6 +357,7 @@ function HostConsole({
           })}
         </div>
         <button className="btn red" type="button" onClick={finishRoyale}>Couronner le survivant</button>
+        <button className="btn secondary" type="button" onClick={stopGame}>Arrêter le jeu</button>
       </section>
     );
   }
@@ -367,6 +380,7 @@ function HostConsole({
         >
           Nouveau salon
         </button>
+        <button className="btn secondary" type="button" onClick={stopGame}>Arrêter le jeu</button>
       </section>
     );
   }
@@ -397,6 +411,7 @@ function HostConsole({
         ) : (
           <button className="btn red" type="button" onClick={reveal}>Passer au classement</button>
         )}
+        <button className="btn secondary" type="button" onClick={stopGame}>Arrêter le jeu</button>
       </section>
     );
   }
@@ -417,6 +432,7 @@ function HostConsole({
         <button className="btn red" type="button" onClick={next}>
           {room.round + 1 >= MOVES.length ? "Couronner le roi du mog" : "Move suivant"}
         </button>
+        <button className="btn secondary" type="button" onClick={stopGame}>Arrêter le jeu</button>
       </section>
     );
   }
@@ -438,6 +454,7 @@ function HostConsole({
       >
         Nouveau salon
       </button>
+      <button className="btn secondary" type="button" onClick={stopGame}>Arrêter le jeu</button>
     </section>
   );
 }

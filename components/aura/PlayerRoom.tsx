@@ -96,7 +96,7 @@ export function PlayerRoom({ code }: { code: string }) {
         </section>
       );
     }
-    if (room.status === "lobby" || room.status === "playing") {
+    if (room.status === "playing") {
       const startedAt = room.round_started_at ? Date.parse(room.round_started_at) : null;
       const aliveRanked = [...royale]
         .filter((r) => r.alive)
