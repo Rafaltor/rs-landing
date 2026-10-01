@@ -223,7 +223,7 @@ export function Playfield({
       duration: durationRef.current,
       cam,
       skel,
-      picto: royale ? null : picto,
+      picto,
       samples: samplesRef.current,
       mirror: mirrorDefault,
       muted: royale ? true : muted,
