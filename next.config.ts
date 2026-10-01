@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { getApexHostname, getCanonicalSiteUrl } from "./lib/siteConfig";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@mediapipe/tasks-vision"],
   images: {
     remotePatterns: [
       {

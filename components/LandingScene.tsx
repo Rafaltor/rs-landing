@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import PanoramaHint from "./PanoramaHint";
+import AuraHero from "./AuraHero";
+import MiiDock from "./MiiDock";
 import { registerMiiStudioHandlers } from "@/lib/landing/miiStudioBus";
 
 const PannellumViewer = dynamic(() => import("./PannellumViewer"), {
@@ -27,7 +29,7 @@ export default function LandingScene() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("studio") !== "mii") return;
 
-    setMiiStudioOpen(true);
+    queueMicrotask(() => setMiiStudioOpen(true));
     params.delete("studio");
     const qs = params.toString();
     const cleanUrl = qs
@@ -40,6 +42,8 @@ export default function LandingScene() {
     <>
       <PannellumViewer />
       <PanoramaHint />
+      <AuraHero />
+      <MiiDock onOpen={() => setMiiStudioOpen(true)} />
       <LandingAvatarPanel
         open={miiStudioOpen}
         onOpenChange={setMiiStudioOpen}

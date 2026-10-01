@@ -2137,3 +2137,146 @@ img {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Aura Dance — CTA central (l'accueil lowtaper67.fr) */
+.rs-aura-hero {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.rs-aura-hero__card {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(420px, 92vw);
+  padding: 22px 22px 20px;
+  background: #000;
+  color: #fff;
+  box-shadow:
+    0 0 0 3px #ff1a1a,
+    0 24px 60px rgba(0, 0, 0, 0.55);
+  text-align: left;
+}
+
+.rs-aura-hero__kicker {
+  font-family: var(--rs-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff1a1a;
+}
+
+.rs-aura-hero__title {
+  font-family: var(--rs-font-display);
+  font-size: clamp(42px, 12vw, 72px);
+  line-height: 0.88;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: #ff1a1a;
+}
+
+.rs-aura-hero__lede {
+  font-family: var(--rs-font-body);
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.86);
+  max-width: 28ch;
+}
+
+.rs-aura-hero__cta {
+  margin-top: 8px;
+  display: block;
+  text-align: center;
+  padding: 14px 16px;
+  border-radius: 999px;
+  background: #ff1a1a;
+  color: #fff;
+  font-family: var(--rs-font-body);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.rs-aura-hero__card:hover .rs-aura-hero__cta,
+.rs-aura-hero__card:focus-visible .rs-aura-hero__cta {
+  background: #fff;
+  color: #000;
+}
+
+.rs-aura-hero__card:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
+/* Configurateur Mii — coin bas gauche */
+.rs-mii-dock {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left, 0px) + 10px);
+  bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: min(220px, 58vw);
+  padding: 12px 14px 14px;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-lg);
+  background: rgba(228, 224, 204, 0.96);
+  color: var(--rs-eu-blue-dark);
+  box-shadow: var(--rs-shadow-card);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rs-mii-dock:hover {
+  border-color: var(--rs-color-brand-hover);
+}
+
+.rs-mii-dock:focus-visible {
+  outline: 3px solid #ff1a1a;
+  outline-offset: 3px;
+}
+
+.rs-mii-dock__tag {
+  font-family: var(--rs-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border: 1px solid var(--rs-color-border);
+  border-radius: var(--rs-radius-md);
+  background: var(--lt-fluoro);
+}
+
+.rs-mii-dock__title {
+  font-family: var(--rs-font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.rs-mii-dock__cta {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 10px;
+  text-align: center;
+  font-family: var(--rs-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--lt-carpet);
+  color: var(--lt-fluoro);
+  border-radius: var(--rs-radius-md);
+}

@@ -16,10 +16,8 @@ import {
   startAvatarWanderLoop,
   stopAvatarWanderLoop,
 } from "@/lib/panorama/avatarWanderLoop";
-import { openMiiStudio } from "@/lib/landing/miiStudioBus";
 import { layoutRegisteredAvatarHotspots } from "@/lib/panorama/avatarHotspotElements";
 import { getPanoramaPath } from "@/lib/siteConfig";
-import { BRAND_COPY } from "@/lib/branding/copy";
 
 const PANNELLUM_JS =
   "https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js";
@@ -34,84 +32,6 @@ const DEFAULT_SCENE_VIEW = {
 
 /** true = clic dans le 360 → pitch/yaw dans la console. */
 const HOTSPOT_DEBUG = false;
-
-type MiiStudioHotspotArgs = Record<string, never>;
-
-const MII_PANEL_COPY = {
-  title: BRAND_COPY.panelTitle,
-  desc: BRAND_COPY.panelDesc,
-  cta: BRAND_COPY.panelCta,
-} as const;
-
-const bindMiiStudioOpen = (el: HTMLElement) => {
-  const stop = (e: Event) => {
-    e.stopPropagation();
-  };
-  const open = (e: Event) => {
-    e.stopPropagation();
-    e.preventDefault();
-    openMiiStudio();
-  };
-
-  el.addEventListener("pointerdown", stop);
-  el.addEventListener("mousedown", stop);
-  el.addEventListener("mouseup", stop);
-  el.addEventListener("touchstart", stop, { passive: true });
-  el.addEventListener("touchend", stop, { passive: true });
-  el.addEventListener("pointerup", (e) => {
-    stop(e);
-    open(e);
-  });
-  el.addEventListener("click", (e) => {
-    stop(e);
-    open(e);
-  });
-};
-
-const centerHotspotPanel = (
-  hotSpotDiv: HTMLElement,
-  panel: HTMLElement,
-) => {
-  const tw = panel.offsetWidth;
-  const th = panel.offsetHeight;
-  const dw = hotSpotDiv.offsetWidth;
-  panel.style.marginLeft = `${-((tw - dw) / 2)}px`;
-  panel.style.marginTop = `${-(th / 2)}px`;
-};
-
-const createMiiStudioHotspot = (
-  hotSpotDiv: HTMLElement,
-  _args: MiiStudioHotspotArgs,
-) => {
-  hotSpotDiv.classList.add("rs-mii-studio-hotspot", "pnlm-pointer");
-  hotSpotDiv.style.width = "10px";
-  hotSpotDiv.style.height = "10px";
-  hotSpotDiv.style.background = "transparent";
-  hotSpotDiv.style.border = "none";
-  hotSpotDiv.style.overflow = "visible";
-
-  const panel = document.createElement("button");
-  panel.type = "button";
-  panel.className = "rs-mii-studio-panel";
-  panel.setAttribute("aria-label", BRAND_COPY.hotspotAria);
-  panel.innerHTML = `
-    <span class="rs-mii-studio-panel__tags">
-      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--fluoro">${BRAND_COPY.tagConfigurator}</span>
-      <span class="rs-mii-studio-panel__tag rs-mii-studio-panel__tag--muted">${BRAND_COPY.tagPanorama}</span>
-    </span>
-    <span class="rs-mii-studio-panel__title">${MII_PANEL_COPY.title}</span>
-    <span class="rs-mii-studio-panel__desc">${MII_PANEL_COPY.desc}</span>
-    <span class="rs-mii-studio-panel__cta">${MII_PANEL_COPY.cta}</span>
-  `;
-
-  bindMiiStudioOpen(panel);
-  hotSpotDiv.appendChild(panel);
-
-  bindMiiStudioOpen(hotSpotDiv);
-
-  requestAnimationFrame(() => centerHotspotPanel(hotSpotDiv, panel));
-  setTimeout(() => centerHotspotPanel(hotSpotDiv, panel), 120);
-};
 
 function getMouseZoom(): boolean {
   if (typeof window === "undefined") return false;
@@ -146,17 +66,7 @@ function buildViewerConfig() {
         mouseZoom: getMouseZoom(),
         hfov: getSceneHfov(),
         hotSpotDebug: HOTSPOT_DEBUG,
-        hotSpots: [
-          {
-            pitch: DEFAULT_SCENE_VIEW.pitch,
-            yaw: DEFAULT_SCENE_VIEW.yaw,
-            scale: false,
-            cssClass: "rs-mii-studio-hotspot",
-            createTooltipFunc: createMiiStudioHotspot,
-            createTooltipArgs: {},
-            clickHandlerFunc: () => openMiiStudio(),
-          },
-        ],
+        hotSpots: [],
       },
     },
   };
