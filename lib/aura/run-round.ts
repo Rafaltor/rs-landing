@@ -68,7 +68,8 @@ export async function runRound(opts: {
       if (!opts.followClock && opts.ref?.ended) return resolve();
 
       if (picto) {
-        const on = drawPicto(picto, samples, t, mirror);
+        const live = opts.followClock && opts.ref && Number.isFinite(opts.ref.currentTime) ? opts.ref.currentTime : t;
+        const on = drawPicto(picto, samples, opts.followClock ? live : t, mirror, opts.followClock ? 0 : undefined);
         picto.parentElement?.classList.toggle("on", on);
       }
 

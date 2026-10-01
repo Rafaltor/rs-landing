@@ -308,7 +308,7 @@ export function Playfield({
       )}
       <div className="picto" id="picto">
         <canvas ref={pictoEl} width={80} height={104} />
-        <span>Prochain mog</span>
+        <span>{royale ? "Le move" : "Prochain mog"}</span>
       </div>
       {judge && (
         <div key={judge.n} className={`judge show ${judge.bad ? "bad" : ""}`}>

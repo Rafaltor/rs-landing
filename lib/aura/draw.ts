@@ -42,12 +42,14 @@ export function drawPicto(
   samples: Sample[],
   t: number,
   mirror: boolean,
+  lead = PICTO_LEAD,
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return false;
-  const s = sampleAt(samples, t + PICTO_LEAD);
+  const s = sampleAt(samples, t + lead);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!s?.lm || s.t < t - 0.05) return false;
+  if (!s?.lm) return false;
+  if (lead > 0 ? s.t < t - 0.05 : Math.abs(s.t - t) > 0.35) return false;
   const { minX, minY, maxX, maxY } = box(s.lm);
   const pad = 0.08;
   const bw = maxX - minX || 0.4;
