@@ -38,8 +38,8 @@ export const BRAND_COPY = {
   randomAvatar: "Génération aléatoire",
 
   panoramaHintTitle: "Glissez pour explorer",
-  panoramaHintSubMobile: "Pincez pour zoomer · Aura Dance au centre · Mii en bas à gauche",
+  panoramaHintSubMobile: "Pincez pour zoomer · Just Aura devant toi · Mii en bas à gauche",
   panoramaHintSubDesktop:
-    "Molette pour zoomer · Aura Dance au centre · Mii en bas à gauche",
+    "Molette pour zoomer · Just Aura devant toi · Mii en bas à gauche",
   panoramaHintTag: "Vue 360°",
 } as const;

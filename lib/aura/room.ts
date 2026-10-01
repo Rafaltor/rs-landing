@@ -1,7 +1,7 @@
 import type { Sample } from "./pose";
 import { getSupabase } from "./supabase";
 
-export type RoomStatus = "lobby" | "playing" | "reveal" | "finished";
+export type RoomStatus = "lobby" | "preview" | "playing" | "reveal" | "finished";
 
 export type Room = {
   id: string;

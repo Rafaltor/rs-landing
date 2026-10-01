@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import PanoramaHint from "./PanoramaHint";
-import AuraHero from "./AuraHero";
 import MiiDock from "./MiiDock";
 import { registerMiiStudioHandlers } from "@/lib/landing/miiStudioBus";
 
@@ -42,7 +41,6 @@ export default function LandingScene() {
     <>
       <PannellumViewer />
       <PanoramaHint />
-      <AuraHero />
       <MiiDock onOpen={() => setMiiStudioOpen(true)} />
       <LandingAvatarPanel
         open={miiStudioOpen}

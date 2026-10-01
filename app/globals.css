@@ -293,6 +293,100 @@ img {
   border-color: var(--rs-color-brand);
 }
 
+/* Just Aura — hotspot fixe dans le 360 (comme l’ancien panneau Mii) */
+.rs-just-aura-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: min(280px, 58vw);
+  margin: 0;
+  padding: 14px 14px 16px;
+  border: 0;
+  background: #000;
+  color: #fff;
+  box-shadow:
+    0 0 0 3px #ff1a1a,
+    0 24px 60px rgba(0, 0, 0, 0.55);
+  font-family: var(--rs-font-body);
+  text-align: left;
+  text-decoration: none;
+  appearance: none;
+  -webkit-appearance: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.rs-just-aura-panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.rs-just-aura-panel__tag {
+  font-family: var(--rs-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--rs-radius-md);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #ff1a1a;
+  color: #fff;
+}
+
+.rs-just-aura-panel__tag--muted {
+  background: #1a1a1a;
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.rs-just-aura-panel__title {
+  display: block;
+  margin: 0 0 8px;
+  font-family: var(--rs-font-display);
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #ff1a1a;
+}
+
+.rs-just-aura-panel__desc {
+  display: block;
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.rs-just-aura-panel__cta {
+  display: block;
+  text-align: center;
+  padding: 12px 12px;
+  border-radius: 999px;
+  background: #ff1a1a;
+  color: #fff;
+  font-family: var(--rs-font-body);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.rs-just-aura-panel:hover .rs-just-aura-panel__cta,
+.rs-just-aura-panel:focus-visible .rs-just-aura-panel__cta {
+  background: #fff;
+  color: #000;
+}
+
+.rs-just-aura-panel:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
 /* Modal configurateur — DA RS (rs-home-kit-overlay) */
 .rs-mii-studio-overlay {
   position: fixed;
@@ -819,6 +913,12 @@ img {
     width: min(240px, 72vw);
     padding: 12px 12px 14px;
     background: rgba(255, 255, 255, 0.98);
+    transform: translateZ(0);
+  }
+
+  .rs-just-aura-panel {
+    width: min(240px, 72vw);
+    padding: 12px 12px 14px;
     transform: translateZ(0);
   }
 
@@ -2136,84 +2236,6 @@ img {
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
-}
-
-/* Aura Dance — CTA central (l'accueil lowtaper67.fr) */
-.rs-aura-hero {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  pointer-events: none;
-}
-
-.rs-aura-hero__card {
-  pointer-events: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  width: min(420px, 92vw);
-  padding: 22px 22px 20px;
-  background: #000;
-  color: #fff;
-  box-shadow:
-    0 0 0 3px #ff1a1a,
-    0 24px 60px rgba(0, 0, 0, 0.55);
-  text-align: left;
-}
-
-.rs-aura-hero__kicker {
-  font-family: var(--rs-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #ff1a1a;
-}
-
-.rs-aura-hero__title {
-  font-family: var(--rs-font-display);
-  font-size: clamp(42px, 12vw, 72px);
-  line-height: 0.88;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-  color: #ff1a1a;
-}
-
-.rs-aura-hero__lede {
-  font-family: var(--rs-font-body);
-  font-size: 15px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.86);
-  max-width: 28ch;
-}
-
-.rs-aura-hero__cta {
-  margin-top: 8px;
-  display: block;
-  text-align: center;
-  padding: 14px 16px;
-  border-radius: 999px;
-  background: #ff1a1a;
-  color: #fff;
-  font-family: var(--rs-font-body);
-  font-weight: 800;
-  font-size: 16px;
-}
-
-.rs-aura-hero__card:hover .rs-aura-hero__cta,
-.rs-aura-hero__card:focus-visible .rs-aura-hero__cta {
-  background: #fff;
-  color: #000;
-}
-
-.rs-aura-hero__card:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 4px;
 }
 
 /* Configurateur Mii — coin bas gauche */

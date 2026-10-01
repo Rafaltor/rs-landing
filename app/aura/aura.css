@@ -1,4 +1,4 @@
-/* Aura Dance — scopé pour ne pas casser le salon 360 */
+/* Just Aura — scopé pour ne pas casser le salon 360 */
 
 .aura-root {
   --red: #ff1a1a;
@@ -204,6 +204,54 @@
 
 @media (max-height: 520px) {
   .center { justify-content: flex-start; }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .game {
+    flex-direction: column;
+  }
+  .game--play > .pane.cam {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .game--play > #refPane {
+    position: absolute;
+    top: calc(56px + env(safe-area-inset-top));
+    right: 12px;
+    width: 30%;
+    max-width: 132px;
+    aspect-ratio: 9 / 16;
+    height: auto;
+    flex: none;
+    z-index: 5;
+    border-radius: 12px;
+    box-shadow: 0 0 0 2px var(--red), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .game--watch > #refPane {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .game--watch > .pane.cam {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 12px;
+    width: 28%;
+    max-width: 120px;
+    aspect-ratio: 9 / 16;
+    height: auto;
+    flex: none;
+    z-index: 5;
+    border-radius: 12px;
+    box-shadow: 0 0 0 2px var(--paper), 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .game .pane video,
+  .game .pane canvas {
+    object-fit: contain;
+  }
+  .game--play > .pane.cam video,
+  .game--play > .pane.cam canvas {
+    object-fit: contain;
+  }
 }
 
 }

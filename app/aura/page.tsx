@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <section className="screen col between scroll">
       <div>
-        <h1 className="title">Aura<br />Dance</h1>
+        <h1 className="title">Just<br />Aura</h1>
         <p className="lede">Rejoins le salon du roi du mog, reproduis ses moves, et que la loi de la jungle tranche.</p>
       </div>
       <form className="controls" onSubmit={join}>
@@ -42,7 +42,7 @@ export default function Home() {
           />
         </label>
         <label className="field">
-          Ton nom de mogueur
+          Ton nom de mog
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}

@@ -15,7 +15,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "Aura Dance · LowTaper67",
+  title: "Just Aura · LowTaper67",
   description: "Just Dance version aura. Reproduis les mouvements du roi du mog. Rien n'est enregistré.",
 };
 

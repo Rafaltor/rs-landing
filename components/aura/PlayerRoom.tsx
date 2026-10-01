@@ -88,13 +88,15 @@ export function PlayerRoom({ code }: { code: string }) {
     );
   }
 
-  if (room.status === "playing" && !submitted) {
+  if (room.status === "preview" || (room.status === "playing" && !submitted)) {
     return (
       <Playfield
-        key={move.slug + room.round}
+        key={move.slug + "-" + room.round}
         move={move}
         muted
         mirrorDefault
+        watchFirst
+        scoring={room.status === "playing"}
         onFinished={async ({ aura, prec }) => {
           try {
             await submitScore(me.id, me.secret, room.round, aura, prec);
@@ -111,7 +113,7 @@ export function PlayerRoom({ code }: { code: string }) {
     return (
       <section className="screen col center gap ink">
         <p className="kicker">Move envoyé</p>
-        <h1 className="big">Les autres moguent encore…</h1>
+        <h1 className="big">Les autres mog encore…</h1>
         <p className="note" style={{ color: "#bbb" }}>{scores.filter((s) => s.round === room.round).length}/{players.length} ont fini</p>
       </section>
     );

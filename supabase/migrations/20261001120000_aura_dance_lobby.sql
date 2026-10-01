@@ -6,7 +6,7 @@ create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.aura_rooms (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
-  status text not null default 'lobby' check (status in ('lobby', 'playing', 'reveal', 'finished')),
+  status text not null default 'lobby' check (status in ('lobby', 'preview', 'playing', 'reveal', 'finished')),
   round int not null default 0 check (round >= 0),
   round_started_at timestamptz,
   host_token_hash text not null,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RANKS, SYNTHETIC_DURATION, type MoveDef } from "@/lib/aura/config";
-import { analyseVideo, keepAwake, startCamera, unlockMedia } from "@/lib/aura/media";
+import { analyseVideo, keepAwake, seekTo, startCamera, unlockMedia } from "@/lib/aura/media";
 import { loadModel } from "@/lib/aura/landmarker";
 import { drawModel } from "@/lib/aura/draw";
 import { runRound } from "@/lib/aura/run-round";
@@ -11,18 +11,21 @@ import { syntheticSamples, moveFileExists } from "@/lib/aura/synthetic";
 import type { Sample } from "@/lib/aura/pose";
 
 type PlayResult = { aura: number; prec: number };
+type Phase = "boot" | "watch" | "armed" | "playing";
 
 export function Playfield({
   move,
   mirrorDefault = true,
   muted = false,
-  autoReady = false,
+  watchFirst = true,
+  scoring = true,
   onFinished,
 }: {
   move: MoveDef;
   mirrorDefault?: boolean;
   muted?: boolean;
-  autoReady?: boolean;
+  watchFirst?: boolean;
+  scoring?: boolean;
   onFinished: (r: PlayResult) => void;
 }) {
   const refEl = useRef<HTMLVideoElement>(null);
@@ -32,8 +35,7 @@ export function Playfield({
   const modelEl = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState("Préparation de l'aura…");
   const [progress, setProgress] = useState<number | null>(null);
-  const [ready, setReady] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState<Phase>("boot");
   const [aura, setAura] = useState(0);
   const [combo, setCombo] = useState(0);
   const [gauge, setGauge] = useState(50);
@@ -42,11 +44,61 @@ export function Playfield({
   const [hasVideo, setHasVideo] = useState(false);
   const samplesRef = useRef<Sample[]>([]);
   const durationRef = useRef(SYNTHETIC_DURATION);
+  const scoringRef = useRef(scoring);
+  const watchGen = useRef(0);
   const t0 = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+  const watchRaf = useRef(0);
+
+  function stopWatch() {
+    watchGen.current += 1;
+    cancelAnimationFrame(watchRaf.current);
+    const v = refEl.current;
+    if (v) {
+      v.pause();
+      void seekTo(v, 0);
+    }
+  }
 
   useEffect(() => {
     let gone = false;
+
+    async function playWatch(exists: boolean, gen: number) {
+      setPhase("watch");
+      setStatus("Regarde le move. Ensuite tu copies.");
+      const v = refEl.current;
+      if (exists && v) {
+        v.muted = true;
+        await seekTo(v, 0);
+        try {
+          await v.play();
+        } catch {
+          /* muted autoplay */
+        }
+        await new Promise<void>((resolve) => {
+          if (v.ended) return resolve();
+          const onEnd = () => resolve();
+          v.addEventListener("ended", onEnd, { once: true });
+        });
+      } else {
+        t0.current = performance.now();
+        await new Promise<void>((resolve) => {
+          const tick = () => {
+            if (gen !== watchGen.current) return resolve();
+            const t = (performance.now() - t0.current) / 1000;
+            if (modelEl.current) drawModel(modelEl.current, samplesRef.current, t);
+            if (t >= durationRef.current) return resolve();
+            watchRaf.current = requestAnimationFrame(tick);
+          };
+          tick();
+        });
+      }
+      if (gone || gen !== watchGen.current) return;
+      const canScore = scoringRef.current;
+      setStatus(canScore ? "Tu as vu le move. À toi." : "Le roi du mog va lancer le mog.");
+      setPhase((p) => (p === "playing" ? p : canScore ? "armed" : "watch"));
+    }
+
     (async () => {
       try {
         if (!window.isSecureContext) throw new Error("La caméra ne fonctionne qu'en https.");
@@ -82,10 +134,12 @@ export function Playfield({
         samplesRef.current = samples;
         durationRef.current = exists && refEl.current?.duration ? refEl.current.duration : (samples.at(-1)?.t ?? SYNTHETIC_DURATION);
         setProgress(null);
-        setStatus("Mets-toi en entier dans le cadre");
-        setReady(true);
-        if (autoReady) {
-          /* host/player still taps on some devices; auto is for muted player after camera already granted */
+        if (watchFirst) {
+          const gen = watchGen.current;
+          await playWatch(exists, gen);
+        } else {
+          setStatus("Mets-toi en entier dans le cadre");
+          setPhase("armed");
         }
       } catch (e) {
         if (!gone) setError(e instanceof Error ? e.message : "Impossible de lancer la partie");
@@ -94,16 +148,33 @@ export function Playfield({
     return () => {
       gone = true;
       abortRef.current?.abort();
+      cancelAnimationFrame(watchRaf.current);
     };
-  }, [move.slug, move.src, autoReady]);
+  }, [move.slug, move.src, watchFirst]);
+
+  useEffect(() => {
+    const wasScoring = scoringRef.current;
+    scoringRef.current = scoring;
+    if (!scoring || wasScoring) return;
+    stopWatch();
+    queueMicrotask(() => {
+      setPhase((p) => (p === "watch" ? "armed" : p));
+      setStatus("À toi. Corps entier dans le cadre.");
+    });
+  }, [scoring]);
+
+  function skipWatch() {
+    stopWatch();
+    setStatus(scoring ? "À toi. Corps entier dans le cadre." : "Le roi du mog va lancer le mog.");
+    setPhase(scoring ? "armed" : "watch");
+  }
 
   async function begin() {
     const cam = camEl.current, skel = skelEl.current, picto = pictoEl.current;
-    if (!cam || !skel) return;
+    if (!cam || !skel || !scoring) return;
     unlockMedia(refEl.current);
     keepAwake();
-    setReady(false);
-    setRunning(true);
+    setPhase("playing");
     setStatus("");
     const ac = new AbortController();
     abortRef.current = ac;
@@ -132,38 +203,43 @@ export function Playfield({
         },
       },
     });
-    setRunning(false);
+    setPhase("armed");
     onFinished(result);
   }
 
+  const watching = phase === "watch";
+  const showHud = phase === "playing";
+
   return (
-    <section className="screen game">
+    <section className={`screen game ${watching ? "game--watch" : "game--play"}`}>
       <div className="pane" id="refPane">
         {hasVideo ? (
           <video ref={refEl} playsInline preload="auto" />
         ) : (
           <canvas ref={modelEl} width={360} height={640} />
         )}
-        <span className="pane-label">Le modèle</span>
+        <span className="pane-label">{watching ? "Le move" : "Le modèle"}</span>
       </div>
-      <div className={`pane ${mirrorDefault ? "mirror" : ""}`}>
+      <div className={`pane cam ${mirrorDefault ? "mirror" : ""}`}>
         <video ref={camEl} playsInline muted autoPlay />
         <canvas ref={skelEl} />
         <span className="pane-label">Toi</span>
       </div>
-      <div className="hud">
-        <div>
-          <div className="score">
-            {aura.toLocaleString("fr-FR")}
-            <small>points d&apos;aura</small>
+      {showHud && (
+        <div className="hud">
+          <div>
+            <div className="score">
+              {aura.toLocaleString("fr-FR")}
+              <small>points d&apos;aura</small>
+            </div>
+            <div className={`gauge ${gauge >= 95 ? "max" : ""}`}>
+              <div className="gauge-track"><i style={{ width: `${gauge}%` }} /></div>
+              <span className="gauge-label">{gauge >= 95 ? "Aura max" : "Jauge d'aura"}</span>
+            </div>
           </div>
-          <div className={`gauge ${gauge >= 95 ? "max" : ""}`}>
-            <div className="gauge-track"><i style={{ width: `${gauge}%` }} /></div>
-            <span className="gauge-label">{gauge >= 95 ? "Aura max" : "Jauge d'aura"}</span>
-          </div>
+          <div className="combo">{combo >= 3 ? "×" + combo : ""}</div>
         </div>
-        <div className="combo">{combo >= 3 ? "×" + combo : ""}</div>
-      </div>
+      )}
       <div className="picto" id="picto">
         <canvas ref={pictoEl} width={80} height={104} />
         <span>Prochain mog</span>
@@ -179,8 +255,11 @@ export function Playfield({
         {progress != null && <div className="bar"><i style={{ width: `${Math.round(progress * 100)}%` }} /></div>}
       </div>
       {error && <p className="error" style={{ position: "absolute", bottom: 80, left: 24, right: 24, zIndex: 8 }}>{error}</p>}
-      <button className="btn red ready" hidden={!ready || running} onClick={begin} type="button">
-        Je suis prêt
+      <button className="btn secondary ready" hidden={phase !== "watch"} onClick={skipWatch} type="button">
+        Passer
+      </button>
+      <button className="btn red ready" hidden={phase !== "armed" || !scoring} onClick={begin} type="button">
+        Cultiver l&apos;aura
       </button>
     </section>
   );

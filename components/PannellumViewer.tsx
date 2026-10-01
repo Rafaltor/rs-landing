@@ -33,6 +33,51 @@ const DEFAULT_SCENE_VIEW = {
 /** true = clic dans le 360 → pitch/yaw dans la console. */
 const HOTSPOT_DEBUG = false;
 
+const bindHotspotNav = (el: HTMLElement) => {
+  const stop = (e: Event) => e.stopPropagation();
+  el.addEventListener("pointerdown", stop);
+  el.addEventListener("mousedown", stop);
+  el.addEventListener("mouseup", stop);
+  el.addEventListener("touchstart", stop, { passive: true });
+  el.addEventListener("touchend", stop, { passive: true });
+};
+
+const centerHotspotPanel = (hotSpotDiv: HTMLElement, panel: HTMLElement) => {
+  const tw = panel.offsetWidth;
+  const th = panel.offsetHeight;
+  const dw = hotSpotDiv.offsetWidth;
+  panel.style.marginLeft = `${-((tw - dw) / 2)}px`;
+  panel.style.marginTop = `${-(th / 2)}px`;
+};
+
+const createJustAuraHotspot = (hotSpotDiv: HTMLElement) => {
+  hotSpotDiv.classList.add("rs-mii-studio-hotspot", "pnlm-pointer");
+  hotSpotDiv.style.width = "10px";
+  hotSpotDiv.style.height = "10px";
+  hotSpotDiv.style.background = "transparent";
+  hotSpotDiv.style.border = "none";
+  hotSpotDiv.style.overflow = "visible";
+
+  const panel = document.createElement("a");
+  panel.href = "/aura";
+  panel.className = "rs-just-aura-panel";
+  panel.setAttribute("aria-label", "Ouvrir Just Aura");
+  panel.innerHTML = `
+    <span class="rs-just-aura-panel__tags">
+      <span class="rs-just-aura-panel__tag">Live</span>
+      <span class="rs-just-aura-panel__tag rs-just-aura-panel__tag--muted">Salon 360°</span>
+    </span>
+    <span class="rs-just-aura-panel__title">Just Aura</span>
+    <span class="rs-just-aura-panel__desc">Reproduis les moves du roi du mog. La loi de la jungle tranche.</span>
+    <span class="rs-just-aura-panel__cta">Cultiver l'aura</span>
+  `;
+  bindHotspotNav(panel);
+  hotSpotDiv.appendChild(panel);
+  bindHotspotNav(hotSpotDiv);
+  requestAnimationFrame(() => centerHotspotPanel(hotSpotDiv, panel));
+  setTimeout(() => centerHotspotPanel(hotSpotDiv, panel), 120);
+};
+
 function getMouseZoom(): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth > 768;
@@ -66,7 +111,16 @@ function buildViewerConfig() {
         mouseZoom: getMouseZoom(),
         hfov: getSceneHfov(),
         hotSpotDebug: HOTSPOT_DEBUG,
-        hotSpots: [],
+        hotSpots: [
+          {
+            pitch: DEFAULT_SCENE_VIEW.pitch,
+            yaw: DEFAULT_SCENE_VIEW.yaw,
+            scale: false,
+            cssClass: "rs-mii-studio-hotspot",
+            createTooltipFunc: createJustAuraHotspot,
+            createTooltipArgs: {},
+          },
+        ],
       },
     },
   };

@@ -72,7 +72,7 @@ export default function HostPage() {
   if (!code || !token) {
     return (
       <section className="screen col center gap ink">
-        <p className="kicker">Aura Dance</p>
+        <p className="kicker">Just Aura</p>
         <h1 className="big">Ouverture du salon…</h1>
       </section>
     );
@@ -104,7 +104,7 @@ function HostConsole({
   const totals = useMemo(() => tally(players, scores), [players, scores]);
 
   useEffect(() => {
-    if (room?.status !== "playing") return;
+    if (room?.status !== "playing" && room?.status !== "preview") return;
     let stop = false;
     const video = videoRef.current;
     (async () => {
@@ -171,6 +171,11 @@ function HostConsole({
     }
   }
 
+  async function showMove(round: number) {
+    setBusy("");
+    await advanceRoom(code, token, "preview", round);
+  }
+
   async function startMove(round: number) {
     setBusy("");
     await advanceRoom(code, token, "playing", round);
@@ -183,7 +188,7 @@ function HostConsole({
   async function next() {
     const r = (room?.round ?? 0) + 1;
     if (r >= MOVES.length) await advanceRoom(code, token, "finished", room?.round ?? 0);
-    else await startMove(r);
+    else await showMove(r);
   }
 
   useEffect(() => {
@@ -199,7 +204,7 @@ function HostConsole({
   if (!room) {
     return (
       <section className="screen col center gap ink">
-        <p className="kicker">Aura Dance</p>
+        <p className="kicker">Just Aura</p>
         <h1 className="big">{error || "Connexion…"}</h1>
       </section>
     );
@@ -209,7 +214,7 @@ function HostConsole({
     return (
       <section className="screen col between gap ink scroll">
         <div>
-          <p className="kicker">Salon ouvert · {players.length} mogueur{players.length > 1 ? "s" : ""}</p>
+          <p className="kicker">Salon ouvert · {players.length} mog</p>
           <p className="code">{code}</p>
           <p className="lede" style={{ color: "#fff" }}>Les joueurs vont sur l&apos;accueil, tapent ce code, et attendent la loi de la jungle.</p>
         </div>
@@ -220,8 +225,8 @@ function HostConsole({
           ))}
         </div>
         <div className="controls">
-          <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={() => startMove(0)}>
-            Lancer le premier move
+          <button className="btn red" type="button" disabled={!players.length || !!busy} onClick={() => showMove(0)}>
+            Montrer le move
           </button>
           <button className="btn secondary" type="button" onClick={prepare} disabled={!!busy} style={{ background: "transparent", color: "#fff", boxShadow: "inset 0 0 0 2px #fff" }}>
             Préparer l&apos;aura des moves
@@ -232,24 +237,31 @@ function HostConsole({
     );
   }
 
-  if (room.status === "playing") {
+  if (room.status === "preview" || room.status === "playing") {
+    const watching = room.status === "preview";
     return (
       <section className="screen col gap ink" style={{ padding: "calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
           <p className="kicker">{move.title} · {room.round + 1}/{MOVES.length}</p>
-          <p className="note" style={{ color: "#bbb" }}>{roundScores.length}/{players.length} ont mogué</p>
+          <p className="note" style={{ color: "#bbb" }}>
+            {watching ? "Démo — tout le monde regarde" : `${roundScores.length}/${players.length} ont mog`}
+          </p>
         </div>
         <div className="host-video">
           {hasVideo ? <video ref={videoRef} playsInline /> : <canvas ref={modelRef} width={720} height={1280} />}
         </div>
         <div className="pills">
           {players.map((p) => (
-            <span className={`pill ${roundScores.some((s) => s.player_id === p.id) ? "done" : ""}`} key={p.id}>
+            <span className={`pill ${!watching && roundScores.some((s) => s.player_id === p.id) ? "done" : ""}`} key={p.id}>
               {p.name}
             </span>
           ))}
         </div>
-        <button className="btn red" type="button" onClick={reveal}>Passer au classement</button>
+        {watching ? (
+          <button className="btn red" type="button" onClick={() => startMove(room.round)}>Cultiver l&apos;aura</button>
+        ) : (
+          <button className="btn red" type="button" onClick={reveal}>Passer au classement</button>
+        )}
       </section>
     );
   }
