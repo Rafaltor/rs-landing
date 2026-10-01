@@ -68,7 +68,6 @@ const PORTRAIT_VIDEO: MediaTrackConstraints = {
   aspectRatio: { ideal: 9 / 16 },
   width: { ideal: 720 },
   height: { ideal: 1280 },
-  resizeMode: "crop-and-scale",
 };
 
 async function preferPortrait(stream: MediaStream) {
@@ -79,7 +78,6 @@ async function preferPortrait(stream: MediaStream) {
       aspectRatio: { ideal: 9 / 16 },
       width: { ideal: 720 },
       height: { ideal: 1280 },
-      resizeMode: "crop-and-scale",
     });
   } catch {
     /* iOS ignore souvent les contraintes : on recadre en pixels */
