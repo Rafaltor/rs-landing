@@ -1,7 +1,7 @@
 import { JUDGMENTS, WINDOW_MS } from "./config";
 import { drawPicto, drawSkeleton } from "./draw";
 import { detect } from "./landmarker";
-import { portraitCrop, seekTo } from "./media";
+import { portraitFrame, seekTo } from "./media";
 import { angles, bestMatch, type Landmark, type Sample } from "./pose";
 
 export type RoundCallbacks = {
@@ -81,11 +81,11 @@ export async function runRound(opts: {
         }
         const vw = cam.videoWidth || 16;
         const vh = cam.videoHeight || 9;
-        const crop = portraitCrop(vw, vh);
+        const frame = portraitFrame(vw, vh, skel.width, skel.height);
         const mapped = lm?.map((p) => ({
           ...p,
-          x: (p.x * vw - crop.sx) / crop.sw,
-          y: (p.y * vh - crop.sy) / crop.sh,
+          x: (frame.dx + ((p.x * vw - frame.sx) / frame.sw) * frame.dw) / skel.width,
+          y: (frame.dy + ((p.y * vh - frame.sy) / frame.sh) * frame.dh) / skel.height,
         })) ?? null;
         lastScore = lm ? bestMatch(angles(lm, vw / vh), t, mirror, samples) : null;
         const ok = lastScore != null && lastScore >= 0.62;

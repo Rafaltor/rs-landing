@@ -63,37 +63,61 @@ export function seekTo(video: HTMLVideoElement, t: number) {
   });
 }
 
-const PORTRAIT_VIDEO: MediaTrackConstraints = {
-  facingMode: { ideal: "user" },
-  aspectRatio: { ideal: 9 / 16 },
-  width: { ideal: 720 },
-  height: { ideal: 1280 },
-};
-
-async function preferPortrait(stream: MediaStream) {
+async function releaseZoom(stream: MediaStream) {
   const track = stream.getVideoTracks()[0];
-  if (!track) return;
+  const caps = track?.getCapabilities?.() as (MediaTrackCapabilities & { zoom?: { min?: number } }) | undefined;
+  const minZoom = caps?.zoom?.min;
+  if (!track || minZoom == null) return;
   try {
-    await track.applyConstraints({
-      aspectRatio: { ideal: 9 / 16 },
-      width: { ideal: 720 },
-      height: { ideal: 1280 },
-    });
+    await track.applyConstraints({ advanced: [{ zoom: minZoom }] } as unknown as MediaTrackConstraints);
   } catch {
-    /* iOS ignore souvent les contraintes : on recadre en pixels */
+    /* pas de zoom matériel */
   }
 }
 
-/** Centre 9:16 d’un flux souvent 16:9. iOS n’applique pas object-fit sur getUserMedia. */
+/** Moins serré que 9:16 : on élargit le cadre pour voir plus le corps. */
+const VIEW_ZOOM = 0.62;
+
+/** Centre du flux, élargi pour dézoomer. iOS n’applique pas object-fit sur getUserMedia. */
 export function portraitCrop(vw: number, vh: number) {
   const target = 9 / 16;
   const src = vw / Math.max(vh, 1);
+  let sw: number;
+  let sh: number;
   if (src > target) {
-    const sw = vh * target;
-    return { sx: (vw - sw) / 2, sy: 0, sw, sh: vh };
+    sh = vh;
+    sw = vh * target;
+  } else {
+    sw = vw;
+    sh = vw / target;
   }
-  const sh = vw / target;
-  return { sx: 0, sy: Math.max(0, (vh - sh) / 2), sw: vw, sh };
+  sw = Math.min(vw, sw / VIEW_ZOOM);
+  sh = Math.min(vh, sh / VIEW_ZOOM);
+  const sx = Math.max(0, (vw - sw) / 2);
+  const sy = Math.max(0, (vh - sh) / 2);
+  return { sx, sy, sw, sh };
+}
+
+export function portraitFrame(vw: number, vh: number, cw: number, ch: number) {
+  const crop = portraitCrop(vw, vh);
+  const aspect = crop.sw / Math.max(crop.sh, 1);
+  const canvasAspect = cw / Math.max(ch, 1);
+  let dw: number;
+  let dh: number;
+  if (aspect > canvasAspect) {
+    dw = cw;
+    dh = cw / aspect;
+  } else {
+    dh = ch;
+    dw = ch * aspect;
+  }
+  return {
+    ...crop,
+    dx: (cw - dw) / 2,
+    dy: (ch - dh) / 2,
+    dw,
+    dh,
+  };
 }
 
 export function drawPortraitFrame(cam: HTMLVideoElement, canvas: HTMLCanvasElement) {
@@ -107,11 +131,13 @@ export function drawPortraitFrame(cam: HTMLVideoElement, canvas: HTMLCanvasEleme
     canvas.width = w;
     canvas.height = h;
   }
-  const crop = portraitCrop(vw, vh);
+  const frame = portraitFrame(vw, vh, w, h);
   const ctx = canvas.getContext("2d");
-  if (!ctx) return crop;
-  ctx.drawImage(cam, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, w, h);
-  return crop;
+  if (!ctx) return frame;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(cam, frame.sx, frame.sy, frame.sw, frame.sh, frame.dx, frame.dy, frame.dw, frame.dh);
+  return frame;
 }
 
 export function watchPortraitCam(cam: HTMLVideoElement, view: HTMLCanvasElement) {
@@ -136,10 +162,8 @@ export async function startCamera(cam: HTMLVideoElement) {
     return cam.srcObject as MediaStream;
   }
   const tries: MediaStreamConstraints[] = [
-    { video: PORTRAIT_VIDEO, audio: false },
-    { video: { facingMode: { ideal: "user" }, aspectRatio: { ideal: 9 / 16 } }, audio: false },
-    { video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } }, audio: false },
     { video: { facingMode: "user" }, audio: false },
+    { video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false },
     { video: true, audio: false },
   ];
   let last: unknown;
@@ -152,7 +176,7 @@ export async function startCamera(cam: HTMLVideoElement) {
       cam.setAttribute("playsinline", "true");
       cam.setAttribute("webkit-playsinline", "true");
       await cam.play();
-      await preferPortrait(stream);
+      await releaseZoom(stream);
       return stream;
     } catch (e) {
       last = e;
