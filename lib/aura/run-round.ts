@@ -1,8 +1,8 @@
-import { JUDGMENTS, WINDOW_MS } from "./config";
+import { JUDGMENTS, LAG, WINDOW_MS } from "./config";
 import { drawPicto, drawSkeleton } from "./draw";
 import { detect } from "./landmarker";
 import { portraitFrame, seekTo } from "./media";
-import { angles, bestMatch, type Landmark, type Sample } from "./pose";
+import { angles, bestMatch, heldStill, poseDelta, sampleAt, type Angles, type Landmark, type Sample } from "./pose";
 
 export type RoundCallbacks = {
   onAura: (aura: number, combo: number) => void;
@@ -54,6 +54,9 @@ export async function runRound(opts: {
   let lastSeek = 0;
   let lastDetect = 0;
   let lastResume = 0;
+  let latestAngles: Angles | null = null;
+  let anchorUser: Angles | null = null;
+  let anchorModel: Angles | null = null;
 
   cb.onAura(0, 0);
   cb.onGauge(gauge);
@@ -107,7 +110,9 @@ export async function runRound(opts: {
           x: (frame.dx + ((p.x * vw - frame.sx) / frame.sw) * frame.dw) / skel.width,
           y: (frame.dy + ((p.y * vh - frame.sy) / frame.sh) * frame.dh) / skel.height,
         })) ?? null;
-        lastScore = lm ? bestMatch(angles(lm, vw / vh), t, mirror, samples) : null;
+        const userA = lm ? angles(lm, vw / vh) : null;
+        latestAngles = userA;
+        lastScore = userA ? bestMatch(userA, t, mirror, samples) : null;
         const ok = lastScore != null && lastScore >= 0.62;
         drawSkeleton(ctx, mapped, skel.width, skel.height, ok ? "#FFFFFF" : "#FF1A1A");
         if (lastScore != null) frames.push(lastScore);
@@ -115,11 +120,18 @@ export async function runRound(opts: {
 
       if (now - windowStart >= WINDOW_MS) {
         windowStart = now;
+        const modelNow = sampleAt(samples, Math.max(0, t - LAG));
+        let frozen = false;
+        if (frames.length > 0 && anchorUser && latestAngles && anchorModel && modelNow) {
+          frozen = heldStill(poseDelta(anchorUser, latestAngles), poseDelta(anchorModel, modelNow.a));
+        }
+        if (latestAngles) anchorUser = latestAngles;
+        if (modelNow) anchorModel = modelNow.a;
         if (frames.length === 0) {
           cb.onStatus("On ne te voit pas : recule pour être en entier dans le cadre");
         } else {
-          cb.onStatus(null);
-          const avg = frames.reduce((a, b) => a + b, 0) / frames.length;
+          cb.onStatus(frozen ? "Pose figée. Suis le move." : null);
+          const avg = frozen ? 0 : frames.reduce((a, b) => a + b, 0) / frames.length;
           allScores.push(avg);
           const j = JUDGMENTS.find((x) => avg >= x.min) ?? JUDGMENTS[JUDGMENTS.length - 1];
           combo = j.bad ? 0 : combo + 1;

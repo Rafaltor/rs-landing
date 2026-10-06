@@ -95,23 +95,30 @@ export function similarity(user: Angles, model: Angles, mirror: boolean): number
     sum += Math.abs(u - m);
     n++;
   }
-  if (n < 3) return null;
+  if (n < 6) return null;
   return Math.max(0, 1 - sum / n / TOLERANCE_DEG);
 }
 
+export function poseDelta(a: Angles, b: Angles): number | null {
+  let sum = 0, n = 0;
+  for (const k of Object.keys(JOINTS)) {
+    const x = a[k], y = b[k];
+    if (x == null || y == null) continue;
+    sum += Math.abs(x - y);
+    n++;
+  }
+  if (n < 6) return null;
+  return sum / n;
+}
+
+export function heldStill(userMove: number | null, modelMove: number | null) {
+  return modelMove != null && modelMove > 18 && (userMove == null || userMove < 8);
+}
+
 export function bestMatch(user: Angles, t: number, mirror: boolean, samples: Sample[]): number | null {
-  let lo = 0, hi = samples.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (samples[mid].t < t - LAG) lo = mid + 1;
-    else hi = mid;
-  }
-  let best: number | null = null;
-  for (let i = lo; i < samples.length && samples[i].t <= t + 0.05; i++) {
-    const s = similarity(user, samples[i].a, mirror);
-    if (s != null && (best == null || s > best)) best = s;
-  }
-  return best;
+  const at = sampleAt(samples, Math.max(0, t - LAG));
+  if (!at) return null;
+  return similarity(user, at.a, mirror);
 }
 
 export function sampleAt(samples: Sample[], t: number): Sample | null {
@@ -143,6 +150,13 @@ export function assertPoseLogic() {
   if (similarity(left, right, true) !== 1) throw new Error("pose en reflet doit faire 100 %");
   const far = all(180);
   if ((similarity(same, far, false) ?? 1) !== 0) throw new Error("pose différente doit faire 0 %");
+  const armsOnly: Angles = { lElbow: 90, rElbow: 90, lShoulder: 90 };
+  if (similarity(armsOnly, same, false) !== null) throw new Error("un corps incomplet ne doit pas marquer");
+  if (poseDelta(same, far) !== 90) throw new Error("le delta de pose doit mesurer l'écart moyen");
+  if (!heldStill(2, 30)) throw new Error("une pose figée devant un move qui bouge est un raté");
+  if (heldStill(20, 30)) throw new Error("un joueur qui suit le move n'est pas figé");
+  const timeline: Sample[] = Array.from({ length: 10 }, (_, i) => ({ t: i * 0.1, a: i % 2 === 0 ? same : far }));
+  if (bestMatch(same, 0.55, false, timeline) !== 0) throw new Error("la pose tenue ne doit pas piocher la frame la plus facile");
   const dense: Sample[] = Array.from({ length: 20 }, (_, i) => ({ t: i * 0.03, a: same }));
   if (compactSamples(dense).length > 8) throw new Error("compact doit sous-échantillonner");
 }
