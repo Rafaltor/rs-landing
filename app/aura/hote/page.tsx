@@ -95,7 +95,7 @@ function HostConsole({
   busy: string;
   setBusy: (s: string) => void;
 }) {
-  const { room, players, scores, royale, error } = useRoom(code);
+  const { room, players, scores, royale, error } = useRoom(code, { host: true });
   const videoRef = useRef<HTMLVideoElement>(null);
   const modelRef = useRef<HTMLCanvasElement>(null);
   const [hasVideo, setHasVideo] = useState(false);

@@ -171,9 +171,24 @@ export function Playfield({
         if (!gone) setError(e instanceof Error ? e.message : "Impossible de lancer la partie");
       }
     })();
+    const onVis = () => {
+      if (document.visibilityState !== "visible") return;
+      const cam = camEl.current;
+      if (cam) {
+        const stream = cam.srcObject instanceof MediaStream ? cam.srcObject : null;
+        const live = stream?.getVideoTracks().some((t) => t.readyState === "live");
+        if (!live) void startCamera(cam).catch(() => {});
+        else if (cam.paused) void cam.play().catch(() => {});
+      }
+      const ref = refEl.current;
+      if (ref?.paused && ref.src) void ref.play().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVis);
+
     return () => {
       gone = true;
       stopFit();
+      document.removeEventListener("visibilitychange", onVis);
       abortRef.current?.abort();
       cancelAnimationFrame(watchRaf.current);
     };

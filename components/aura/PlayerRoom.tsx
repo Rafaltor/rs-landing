@@ -13,9 +13,38 @@ function subscribe() {
   return () => {};
 }
 
+function seatKey(code: string) {
+  return "aura-player-" + code;
+}
+
 function readPlayer(code: string) {
+  const key = seatKey(code);
   try {
-    return sessionStorage.getItem("aura-player-" + code);
+    const session = sessionStorage.getItem(key);
+    const local = localStorage.getItem(key);
+    const raw = session || local;
+    if (!raw) return null;
+    if (!session) sessionStorage.setItem(key, raw);
+    if (!local) localStorage.setItem(key, raw);
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+function savePlayer(code: string, me: Me) {
+  const raw = JSON.stringify(me);
+  const key = seatKey(code);
+  try { sessionStorage.setItem(key, raw); } catch { /* navigation privée */ }
+  try { localStorage.setItem(key, raw); } catch { /* navigation privée */ }
+}
+
+function parseMe(raw: string | null): Me | null {
+  if (!raw) return null;
+  try {
+    const me = JSON.parse(raw) as Me;
+    if (!me?.id || !me?.secret) return null;
+    return me;
   } catch {
     return null;
   }
@@ -25,11 +54,13 @@ export function PlayerRoom({ code }: { code: string }) {
   const q = useSearchParams();
   const router = useRouter();
   const name = q.get("nom") || "NPC";
-  const { room, players, scores, royale, error } = useRoom(code);
+  const [retry, setRetry] = useState(0);
+  const { room, players, scores, royale, error } = useRoom(code, { retry });
   const savedRaw = useSyncExternalStore(subscribe, () => readPlayer(code), () => null);
-  const saved = savedRaw ? (JSON.parse(savedRaw) as Me) : null;
+  const saved = parseMe(savedRaw);
   const [joinedMe, setJoinedMe] = useState<Me | null>(null);
   const [joinErr, setJoinErr] = useState("");
+  const lastPulse = useRef(0);
   const joining = useRef(false);
   const [doneRound, setDoneRound] = useState<number | null>(null);
   const me = saved ?? joinedMe;
@@ -42,19 +73,20 @@ export function PlayerRoom({ code }: { code: string }) {
         const secret = makeSecret();
         const row = await joinRoom(code, name, secret);
         const m = { id: row.id, secret, name: row.name, code: row.code };
-        sessionStorage.setItem("aura-player-" + code, JSON.stringify(m));
+        savePlayer(code, m);
         setJoinedMe(m);
       } catch (e) {
         setJoinErr(e instanceof Error ? e.message : "Impossible de rejoindre");
       }
     })();
-  }, [code, name, me]);
+  }, [code, name, me, retry]);
 
   if (joinErr || error) {
     return (
       <section className="screen col center gap">
         <p className="kicker">Aura loss</p>
         <h1 className="big">{joinErr || error}</h1>
+        <button className="btn" type="button" onClick={() => { setJoinErr(""); joining.current = false; setRetry((n) => n + 1); }}>Réessayer</button>
         <button className="btn" type="button" onClick={() => router.push("/aura")}>Accueil</button>
       </section>
     );
@@ -117,6 +149,9 @@ export function PlayerRoom({ code }: { code: string }) {
           royalePlace={place || null}
           royaleKeep={next?.keep ?? 1}
           onPulse={(s) => {
+            const now = Date.now();
+            if (now - lastPulse.current < 2500) return;
+            lastPulse.current = now;
             void pulseRoyale(me.id, me.secret, s).catch(() => {});
           }}
           onFinished={async (r) => {

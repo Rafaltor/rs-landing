@@ -51,6 +51,9 @@ export async function runRound(opts: {
   let windowStart = performance.now();
   let lastCamT = -1;
   let lastScore: number | null = null;
+  let lastSeek = 0;
+  let lastDetect = 0;
+  let lastResume = 0;
 
   cb.onAura(0, 0);
   cb.onGauge(gauge);
@@ -61,8 +64,18 @@ export async function runRound(opts: {
       const t = opts.getTime();
       const duration = opts.duration || opts.ref?.duration || 0;
       cb.onTime(t, duration);
-      if (opts.followClock && opts.ref && Number.isFinite(opts.ref.duration) && Math.abs(opts.ref.currentTime - t) > 0.45) {
-        opts.ref.currentTime = Math.min(t, Math.max(0, opts.ref.duration - 0.05));
+      const now = performance.now();
+      if (opts.followClock && opts.ref && !opts.ref.seeking && Number.isFinite(opts.ref.duration)) {
+        const drift = Math.abs(opts.ref.currentTime - t);
+        if (drift > 1.5 && now - lastSeek > 3000) {
+          lastSeek = now;
+          opts.ref.currentTime = Math.min(t, Math.max(0, opts.ref.duration - 0.05));
+        }
+      }
+      if (now - lastResume > 2000) {
+        lastResume = now;
+        if (opts.followClock && opts.ref?.paused && !opts.ref.ended) void opts.ref.play().catch(() => {});
+        if (cam.paused && cam.srcObject) void cam.play().catch(() => {});
       }
       if (duration && t >= duration - 0.05) return resolve();
       if (!opts.followClock && opts.ref?.ended) return resolve();
@@ -73,8 +86,9 @@ export async function runRound(opts: {
         picto.parentElement?.classList.toggle("on", on);
       }
 
-      if (cam.readyState >= 2 && cam.currentTime !== lastCamT) {
+      if (cam.readyState >= 2 && cam.currentTime !== lastCamT && now - lastDetect >= 80) {
         lastCamT = cam.currentTime;
+        lastDetect = now;
         const res = detect(cam);
         const lm = (res?.landmarks?.[0] ?? null) as Landmark[] | null;
         const view = skel.parentElement?.querySelector("canvas.cam-view");
@@ -99,7 +113,6 @@ export async function runRound(opts: {
         if (lastScore != null) frames.push(lastScore);
       }
 
-      const now = performance.now();
       if (now - windowStart >= WINDOW_MS) {
         windowStart = now;
         if (frames.length === 0) {
